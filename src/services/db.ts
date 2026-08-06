@@ -55,14 +55,37 @@ export const localDB = {
     const found = students.find((s: any) => s.id === studentId || s.email === studentId);
     if (found) return found;
 
-    // Safe fallback candidate object to prevent null pointer exceptions
+    // Check spora_users to resolve real account name if registered via Auth
+    const users = JSON.parse(localStorage.getItem('spora_users') || '[]');
+    const matchedUser = users.find((u: any) => u.email === studentId || u.id === studentId || u.name === studentId);
+
+    if (matchedUser) {
+      return {
+        id: matchedUser.email || studentId,
+        name: matchedUser.name || 'Kandidat Vokasi',
+        email: matchedUser.email,
+        schoolName: matchedUser.school || matchedUser.institutionName || 'SMK Negeri 1 Cikarang',
+        major: matchedUser.major || 'Teknik Kendaraan Ringan (Otomotif EV)',
+        province: matchedUser.province || 'Jawa Barat',
+        city: matchedUser.city || 'Bekasi',
+        skills: ['EV Battery Assembly', 'High Voltage Safety', 'Quality Control'],
+        profileCompletion: 90,
+        status: 'active'
+      };
+    }
+
+    // Default active user fallback
+    const loggedInUserRaw = localStorage.getItem('spora_user');
+    const loggedUser = loggedInUserRaw ? JSON.parse(loggedInUserRaw) : null;
+
     return {
-      id: studentId || 'student-1',
+      id: studentId || loggedUser?.email || '3itcdigilab@gmail.com',
       userId: 'u-1',
-      name: 'Pelamar Vokasi EV',
+      name: loggedUser?.name || '3ITC',
+      email: loggedUser?.email || '3itcdigilab@gmail.com',
       schoolId: 'sch-1',
-      schoolName: 'SMK Negeri 1 Cikarang',
-      major: 'Teknik Kendaraan Ringan (Otomotif EV)',
+      schoolName: loggedUser?.school || 'SMK Negeri 1 Cikarang',
+      major: loggedUser?.major || 'Teknik Kendaraan Ringan (Otomotif EV)',
       graduationYear: 2025,
       province: 'Jawa Barat',
       city: 'Bekasi',
