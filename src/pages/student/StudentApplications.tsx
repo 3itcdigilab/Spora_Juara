@@ -1,0 +1,186 @@
+import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router';
+import { Card } from '../../components/ui/Card';
+import { Badge } from '../../components/ui/Badge';
+import { Tabs } from '../../components/ui/Tabs';
+import { Button } from '../../components/ui/Button';
+import { useToast } from '../../components/ui/Toast';
+import { localDB } from '../../services/db';
+import { Application } from '../../data/types';
+import { CheckCircle2, Clock, XCircle, ChevronRight, AlertCircle, Sparkles } from 'lucide-react';
+
+export const StudentApplications: React.FC = () => {
+  const studentId = 'student-1';
+  const { showToast } = useToast();
+  const [activeTab, setActiveTab] = useState('All');
+  
+  // Trigger state update when withdrawing
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const rawApps = useMemo(() => {
+    return localDB.getApplications(studentId);
+  }, [studentId, refreshKey]);
+
+  const stages = ['Applied', 'AI Screening', 'Shortlisted', 'Interview', 'Offered'];
+
+  const formattedApps = useMemo(() => {
+    const jobs = localDB.getJobs();
+
+    return rawApps.map((app: Application) => {
+      const job = jobs.find(j => j.id === app.jobId) || {
+        title: 'EV Position',
+        department: 'EV Partner',
+        location: 'Indonesia'
+      };
+
+      let stageIdx = 0;
+      if (app.status === 'ai_screening') stageIdx = 1;
+      if (app.status === 'shortlisted') stageIdx = 2;
+      if (app.status === 'interview') stageIdx = 3;
+      if (app.status === 'offered' || app.status === 'hired') stageIdx = 4;
+      
+      let displayCategory = 'Active';
+      if (app.status === 'hired') displayCategory = 'Hired';
+      if (app.status === 'rejected' || app.status === 'withdrawn') displayCategory = 'Closed';
+
+      return {
+        ...app,
+        jobTitle: job.title,
+        company: job.department,
+        currentStage: stageIdx,
+        displayCategory
+      };
+    });
+  }, [rawApps]);
+
+  const filteredApps = useMemo(() => {
+    if (activeTab === 'All') return formattedApps;
+    return formattedApps.filter(app => app.displayCategory === activeTab);
+  }, [formattedApps, activeTab]);
+
+  const handleWithdraw = (appId: string, title: string) => {
+    if (window.confirm(`Are you sure you want to withdraw your application for ${title}?`)) {
+      localDB.withdrawApplication(appId);
+      setRefreshKey(prev => prev + 1);
+      showToast('Application withdrawn.', 'info');
+    }
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto pb-10 space-y-6 font-sans">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">My Job Applications</h1>
+        <p className="text-xs sm:text-sm text-slate-500">Track your recruitment pipeline stages and interview invitations in real time.</p>
+      </div>
+      
+      <Tabs 
+        tabs={[
+          { id: 'All', label: 'All Applications' },
+          { id: 'Active', label: 'In Progress' },
+          { id: 'Hired', label: 'Hired / Offered' },
+          { id: 'Closed', label: 'Closed / Rejected' },
+        ]}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
+
+      <div className="space-y-4">
+        {filteredApps.map((app) => (
+          <Card key={app.id} className="p-6 hover:shadow-md transition-all border-slate-200">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-lg font-bold text-slate-900">{app.jobTitle}</h3>
+                  {app.status === 'hired' && (
+                    <Badge variant="success" className="bg-emerald-100 text-emerald-800 border-emerald-300 font-extrabold">
+                      🎉 Hired!
+                    </Badge>
+                  )}
+                  {app.status === 'rejected' && (
+                    <Badge variant="error" className="bg-red-50 text-red-700 border-red-200 font-semibold">
+                      Rejected
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 font-semibold">{app.company} • Applied on {app.appliedAt}</p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Badge variant="info" className="bg-cyan-50 text-[#0099B8] border-cyan-200 font-bold">
+                  {app.aiMatchScore}% AI Match
+                </Badge>
+                <Link to={`/student/jobs/${app.jobId}`} className="text-xs font-bold text-[#0099B8] hover:underline flex items-center gap-1">
+                  View Job <ChevronRight size={14} />
+                </Link>
+              </div>
+            </div>
+
+            {/* Pipeline Stepper */}
+            <div className="relative pt-2 mb-4">
+              <div className="overflow-hidden h-2.5 mb-3 text-xs flex rounded-full bg-slate-100">
+                <div 
+                  style={{ width: `${Math.max(10, (app.currentStage / (stages.length - 1)) * 100)}%` }} 
+                  className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500 ${
+                    app.status === 'rejected' ? 'bg-red-500' : app.status === 'hired' ? 'bg-emerald-600' : 'bg-[#0099B8]'
+                  }`}
+                />
+              </div>
+
+              <div className="flex justify-between text-[11px] font-bold text-slate-400">
+                {stages.map((stage, idx) => {
+                  const isCurrent = idx === app.currentStage;
+                  const isPassed = idx <= app.currentStage;
+
+                  let colorClass = 'text-slate-400';
+                  if (isPassed) colorClass = 'text-[#0099B8]';
+                  if (app.status === 'rejected' && isCurrent) colorClass = 'text-red-600';
+                  if (app.status === 'hired' && isPassed) colorClass = 'text-emerald-700';
+
+                  return (
+                    <span key={stage} className={colorClass}>
+                      {app.status === 'rejected' && isCurrent ? 'Not Selected' : stage}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+            
+            {/* Stage Actions & Rejection Reason */}
+            {app.status === 'rejected' && app.rejectionReason && (
+              <div className="mt-4 bg-red-50/80 p-3.5 rounded-xl border border-red-100 text-xs text-red-700 flex items-start gap-2">
+                <AlertCircle size={16} className="shrink-0 text-red-500 mt-0.5" />
+                <div>
+                  <p className="font-bold">Feedback from Recruiter:</p>
+                  <p className="mt-0.5">{app.rejectionReason}</p>
+                </div>
+              </div>
+            )}
+
+            {app.status === 'applied' && (
+              <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end">
+                <button 
+                  onClick={() => handleWithdraw(app.id, app.jobTitle)}
+                  className="text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors"
+                >
+                  Withdraw Application
+                </button>
+              </div>
+            )}
+          </Card>
+        ))}
+
+        {filteredApps.length === 0 && (
+          <div className="text-center py-14 text-slate-500 bg-white rounded-2xl border border-slate-200">
+            <p className="text-base font-bold text-slate-800 mb-1">No Applications Found</p>
+            <p className="text-xs text-slate-500 mb-4">You haven't submitted applications in this category yet.</p>
+            <Link to="/student/jobs">
+              <Button variant="primary" className="bg-[#0099B8] hover:bg-[#007A93] text-white text-xs font-bold px-4 py-2">
+                Browse EV Job Opportunities
+              </Button>
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

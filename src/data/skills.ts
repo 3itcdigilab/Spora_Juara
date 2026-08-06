@@ -1,0 +1,2 @@
+export const skillCategories = ['Technical', 'Soft Skills'];
+export const allSkills: string[] = ['EV Battery Assembly', 'Battery Management System', 'Electric Motor Winding', 'EV Wiring Harness', 'Quality Control', 'Safety Protocols', 'CNC Operation', 'PLC Programming', 'AutoCAD', 'SolidWorks'];
