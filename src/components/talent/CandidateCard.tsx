@@ -32,7 +32,7 @@ export const CandidateCard: React.FC<CandidateCardProps> = ({ student, id }) => 
       <div>
         <div className="flex items-center space-x-3.5 mb-4 pr-12">
           <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center text-white font-extrabold text-lg shadow-2xs shrink-0">
-            {candidateName.charAt(0)}
+            {(candidateName || 'K').charAt(0)}
           </div>
           <div className="overflow-hidden">
             <h3 className="font-extrabold text-slate-900 text-base truncate">{candidateName}</h3>

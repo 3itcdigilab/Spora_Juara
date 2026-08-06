@@ -50,7 +50,7 @@ export const CandidateDetail: React.FC = () => {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center space-x-5">
             <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl shadow-sm shrink-0">
-              {candidateName.charAt(0)}
+              {(candidateName || 'K').charAt(0)}
             </div>
             <div>
               <h1 className="text-2xl font-extrabold text-slate-900">{candidateName}</h1>

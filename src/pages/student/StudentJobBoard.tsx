@@ -96,7 +96,7 @@ export const StudentJobBoard: React.FC = () => {
               <div>
                 <div className="flex justify-between items-start mb-4">
                   <div className="w-12 h-12 bg-cyan-50 border border-cyan-100 rounded-xl flex items-center justify-center font-extrabold text-xl text-[#0099B8] shrink-0">
-                    {job.department.charAt(0)}
+                    {(job.department || job.company || job.title || 'E').charAt(0)}
                   </div>
                   {isApplied ? (
                     <Badge variant="success" className="bg-emerald-50 text-emerald-700 border-emerald-200 flex items-center gap-1">

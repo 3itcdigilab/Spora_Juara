@@ -24,12 +24,19 @@ export const StudentDashboard: React.FC = () => {
   const activeJobs = allJobs.filter((j: any) => j.status === 'open' || j.status === 'published' || j.status === 'active');
   const recommendedJobs = activeJobs.slice(0, 2);
 
+  const getCompanyName = (job: any) => job?.company || job?.companyName || 'EV Industry Partner';
+  const getSalaryText = (job: any) => {
+    if (job?.salary) return job.salary;
+    if (job?.salaryMin && job?.salaryMax) return `Rp ${(job.salaryMin / 1000000).toFixed(1)}M - Rp ${(job.salaryMax / 1000000).toFixed(1)}M / mo`;
+    return 'Competitive Salary';
+  };
+
   const myApps = user?.email ? localDB.getApplications(user.email) : [];
   const timelineItems = myApps.length > 0 
     ? myApps.map(app => {
         const job = allJobs.find((j: any) => j.id === app.jobId);
         return {
-          title: `Applied to ${job?.title || 'Job'} at ${job?.company || 'Company'}`,
+          title: `Applied to ${job?.title || 'EV Position'} at ${getCompanyName(job)}`,
           date: app.appliedAt || 'Recently',
           status: 'completed' as const
         };
@@ -46,96 +53,87 @@ export const StudentDashboard: React.FC = () => {
           </svg>
         </div>
 
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-cyan-300 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
-              <Zap size={14} /> EV Talent Candidate Portal
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Welcome back, {userName}!</h1>
-            <p className="text-slate-300 text-xs sm:text-sm">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} • Ready for Indonesia's EV Industry.
-            </p>
+        <div className="relative z-10 space-y-2 max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-cyan-300 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
+            <Zap size={14} className="text-amber-300" /> Spora Vocational Candidate Dashboard
           </div>
-
-          {/* Quick Action & Completion Widget */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 flex flex-col sm:flex-row items-center gap-4 shrink-0">
-            <div className="space-y-1 text-left">
-              <div className="flex justify-between text-xs font-bold">
-                <span className="text-slate-200">Profile Completion</span>
-                <span className="text-cyan-300">{profileCompletion}%</span>
-              </div>
-              <div className="w-44 h-2 bg-white/20 rounded-full overflow-hidden">
-                <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${profileCompletion}%` }}></div>
-              </div>
-            </div>
-            <Link to="/student/profile">
-              <Button size="sm" variant="primary" className="bg-[#0099B8] hover:bg-[#007A93] text-white border-0 text-xs font-bold whitespace-nowrap">
-                Complete Profile →
-              </Button>
-            </Link>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Selamat Datang, {userName}!</h1>
+          <p className="text-slate-300 text-xs sm:text-sm">
+            Pantau skor kompetensi vokasi EV 7-dimensi Anda, ikuti asesmen teknis & psikotes, dan dapatkan panggilan kerja langsung dari Industri EV Indonesia.
+          </p>
         </div>
       </div>
 
-      {/* KPI Stats Grid */}
+      {/* KPI Stats Header Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-5 flex items-center justify-between hover:shadow-md transition-shadow">
+        <Card className="p-5 border-slate-200 flex items-center justify-between hover:shadow-md transition-shadow">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Profile</p>
-            <p className="text-2xl font-black text-slate-900 mt-1">{profileCompletion}%</p>
-            <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1 mt-1">✓ Almost Complete</span>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Profile Completion</p>
+            <h3 className="text-2xl font-extrabold text-slate-900 mt-1">{profileCompletion}%</h3>
+            <p className="text-[11px] text-emerald-600 font-bold mt-0.5">8 dari 10 data terisi</p>
           </div>
-          <div className="w-14 h-14 shrink-0">
-            <ProgressRing value={profileCompletion} color="blue" size={56} strokeWidth={6} />
+          <ProgressRing value={profileCompletion} size={54} strokeWidth={6} color="#0099B8" />
+        </Card>
+
+        <Card className="p-5 border-slate-200 flex items-center justify-between hover:shadow-md transition-shadow">
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Talent Score</p>
+            <h3 className="text-2xl font-extrabold text-[#0099B8] mt-1">88<span className="text-xs text-slate-400 font-normal">/100</span></h3>
+            <p className="text-[11px] text-emerald-600 font-bold mt-0.5">Tier 1 Competency</p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-[#0099B8] font-bold">
+            <Target size={24} />
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center justify-between hover:shadow-md transition-shadow">
+        <Card className="p-5 border-slate-200 flex items-center justify-between hover:shadow-md transition-shadow">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Talent Score</p>
-            <p className="text-2xl font-black text-slate-900 mt-1">78<span className="text-xs text-slate-400 font-normal">/100</span></p>
-            <span className="text-[11px] text-[#0099B8] font-bold mt-1 inline-block">Tier 1 Qualified</span>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Assessment Status</p>
+            <h3 className="text-xl font-extrabold text-emerald-600 mt-1">Verified ✓</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">Psychometric & Technical Done</p>
           </div>
-          <div className="w-14 h-14 shrink-0">
-            <ProgressGauge value={78} max={100} size={56} color="emerald" />
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-bold">
+            <ShieldCheck size={24} />
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center justify-between hover:shadow-md transition-shadow">
+        <Card className="p-5 border-slate-200 flex items-center justify-between hover:shadow-md transition-shadow">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Assessments</p>
-            <p className="text-base font-bold text-slate-900 mt-1">Competency Passed</p>
-            <Badge variant="success" className="mt-1 bg-emerald-100 text-emerald-800">Verified ✓</Badge>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Lamaran Terkirim</p>
+            <h3 className="text-2xl font-extrabold text-slate-900 mt-1">{myApps.length}</h3>
+            <p className="text-[11px] text-[#0099B8] font-bold mt-0.5">Aktif dalam recruitment</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-bold">
             <FileCheck size={24} />
-          </div>
-        </Card>
-
-        <Card className="p-5 flex items-center justify-between hover:shadow-md transition-shadow">
-          <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Applications</p>
-            <p className="text-2xl font-black text-slate-900 mt-1">3 <span className="text-xs text-slate-400 font-normal">Active</span></p>
-            <span className="text-[11px] text-blue-600 font-bold mt-1 inline-block">1 Interview Scheduled</span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <Briefcase size={24} />
           </div>
         </Card>
       </div>
 
-      {/* Career & Skill Insights */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-cyan-100 text-[#0099B8] rounded-lg">
-              <Target size={18} />
+      {/* Completion Banner CTA */}
+      {profileCompletion < 100 && (
+        <Card className="p-5 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-xs shrink-0">
+              <Award size={20} />
             </div>
-            <h2 className="text-lg font-bold text-slate-900">Career & Skill Insights</h2>
+            <div>
+              <h4 className="font-extrabold text-slate-900 text-sm">Lengkapi Profil Anda hingga 100%</h4>
+              <p className="text-xs text-slate-600 mt-0.5">Upload sertifikat kompetensi & portofolio proyek EV untuk tampil di urutan teratas pencarian industri.</p>
+            </div>
           </div>
-          <Link to="/student/talent-score" className="text-xs text-[#0099B8] font-bold hover:underline">
-            View Skill Growth →
+          <Link to="/student/profile" className="shrink-0 w-full sm:w-auto">
+            <Button size="sm" variant="primary" className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs w-full sm:w-auto">
+              Lengkapi Sekarang →
+            </Button>
           </Link>
+        </Card>
+      )}
+
+      {/* AI Recommendation Highlights */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-violet-600" />
+          <h2 className="text-base font-bold text-slate-900">Rekomendasi Karir & Pembelajaran Siswa</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -165,9 +163,9 @@ export const StudentDashboard: React.FC = () => {
             <Badge className="bg-emerald-100 text-emerald-700 mb-3 text-xs">Recommended Job</Badge>
             {recommendedJobs.length > 0 ? (
               <>
-                <h3 className="font-bold text-slate-900 text-base">{recommendedJobs[0].company} - {recommendedJobs[0].title}</h3>
+                <h3 className="font-bold text-slate-900 text-base">{getCompanyName(recommendedJobs[0])} - {recommendedJobs[0].title}</h3>
                 <p className="text-xs text-slate-500 mt-1 mb-4 line-clamp-2 leading-relaxed">
-                  High alignment with your EV Assembly specialization in {recommendedJobs[0].location}.
+                  High alignment with your EV Assembly specialization in {recommendedJobs[0].location || 'Indonesia'}.
                 </p>
                 <Link to={`/student/jobs/${recommendedJobs[0].id}`} className="text-xs font-bold text-emerald-600 flex items-center gap-1 hover:text-emerald-700">
                   View Job Detail <ArrowRight size={14} />
@@ -183,9 +181,9 @@ export const StudentDashboard: React.FC = () => {
             )}
           </Card>
         </div>
-      </section>
+      </div>
 
-      {/* Main Grid: Skills Radar + Recent Jobs & Timeline */}
+      {/* Main Grid: Radar Chart & Recommended Jobs */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Card className="p-6">
@@ -226,11 +224,11 @@ export const StudentDashboard: React.FC = () => {
                 <div key={job.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-slate-100 rounded-xl hover:border-slate-200 hover:shadow-xs transition-all bg-white gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-slate-100 text-[#0099B8] flex items-center justify-center font-black text-sm shrink-0">
-                      {job.company.charAt(0)}
+                      {(getCompanyName(job) || job.title || 'E').charAt(0)}
                     </div>
                     <div>
                       <h4 className="font-bold text-sm text-slate-900">{job.title}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">{job.company} • {job.location} • {job.salary}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{getCompanyName(job)} • {job.location || 'Indonesia'} • {getSalaryText(job)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 self-end sm:self-center">
@@ -263,8 +261,8 @@ export const StudentDashboard: React.FC = () => {
                   <Clock size={18} />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-900">Hyundai Technical Interview</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Tomorrow, 10:00 AM • Online Meet</p>
+                  <p className="text-sm font-bold text-slate-900">EV Technical Interview</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Scheduled by Industry Recruiter • Online Meet</p>
                 </div>
               </div>
               <div className="flex gap-3 items-start">
@@ -273,7 +271,7 @@ export const StudentDashboard: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-900">High Voltage Safety Assessment</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Due Friday, 11:59 PM</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Verified Standard</p>
                 </div>
               </div>
             </div>
