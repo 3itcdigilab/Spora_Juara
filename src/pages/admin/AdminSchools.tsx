@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -8,11 +9,12 @@ import { Input } from '../../components/ui/Input';
 import { useToast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { localDB } from '../../services/db';
-import { School, Plus, Edit2, Trash2, GraduationCap, Users, UserPlus, Save } from 'lucide-react';
+import { School, Plus, Edit2, Trash2, GraduationCap, Users, UserPlus, Save, ExternalLink, LayoutDashboard } from 'lucide-react';
 
 export const AdminSchools: React.FC = () => {
   const { showToast } = useToast();
   const { approveUser } = useAuth();
+  const navigate = useNavigate();
   
   const [users, setUsers] = useState<any[]>(() => {
     const raw = localStorage.getItem('spora_users');
@@ -118,16 +120,44 @@ export const AdminSchools: React.FC = () => {
   // Open Students Enrolled Pop-Up Modal
   const handleOpenStudentsModal = (institution: any) => {
     setSelectedInstitution(institution);
+    
+    // Check spora_students_db first
+    const rawDb = localStorage.getItem('spora_students_db');
+    let dbStudents = rawDb ? JSON.parse(rawDb) : [];
+    
+    // Also fetch localDB
     const allStudents = localDB.getStudents();
-    const filtered = allStudents.filter((st: any) => 
-      st.schoolId === institution.email || 
-      st.schoolName?.toLowerCase() === institution.name.toLowerCase() ||
-      institution.name.toLowerCase().includes(st.schoolName?.toLowerCase() || '')
+    allStudents.forEach((st: any) => {
+      if (!dbStudents.some((d: any) => d.id === st.id)) {
+        dbStudents.push({
+          id: st.id,
+          name: st.major || st.fullName || 'Siswa Vokasi',
+          school: st.schoolName || st.schoolId || 'SMK Negeri 1 Cikarang',
+          major: st.major || 'Teknik Kendaraan Ringan (Otomotif EV)',
+          gradYear: st.graduationYear?.toString() || '2025',
+          status: 'active'
+        });
+      }
+    });
+
+    const filtered = dbStudents.filter((st: any) => 
+      st.school?.toLowerCase().includes(institution.name.toLowerCase()) ||
+      institution.name.toLowerCase().includes(st.school?.toLowerCase() || '') ||
+      st.schoolId === institution.email
     );
+
     setInstitutionStudents(filtered);
     setIsAddStudentForm(false);
     setEditingStudent(null);
     setIsStudentsModalOpen(true);
+  };
+
+  // Open Full-Page Dashboard View
+  const handleOpenFullPageStudents = () => {
+    if (!selectedInstitution) return;
+    const targetUrl = `/admin/students?schoolName=${encodeURIComponent(selectedInstitution.name)}`;
+    window.open(targetUrl, '_blank');
+    showToast(`Membuka halaman lengkap daftar siswa ${selectedInstitution.name}...`, 'info');
   };
 
   const handleOpenAddStudent = () => {
@@ -148,7 +178,7 @@ export const AdminSchools: React.FC = () => {
       name: st.name || st.fullName || 'Siswa Vokasi',
       major: st.major || 'Teknik Kendaraan Ringan (Otomotif EV)',
       graduationYear: st.graduationYear?.toString() || '2025',
-      city: st.city || 'Jawa Barat',
+      city: st.school || selectedInstitution?.name || 'Jawa Barat',
       status: st.status || 'active'
     });
     setIsAddStudentForm(true);
@@ -156,49 +186,63 @@ export const AdminSchools: React.FC = () => {
 
   const handleSaveStudent = (e: React.FormEvent) => {
     e.preventDefault();
-    const allStudents = localDB.getStudents();
+    const rawDb = localStorage.getItem('spora_students_db');
+    let allDbStudents = rawDb ? JSON.parse(rawDb) : [];
 
     if (editingStudent) {
-      const updated = allStudents.map((st: any) => {
+      allDbStudents = allDbStudents.map((st: any) => {
         if (st.id === editingStudent.id) {
           return {
             ...st,
             name: studentFormData.name,
             major: studentFormData.major,
-            graduationYear: parseInt(studentFormData.graduationYear) || 2025,
+            gradYear: studentFormData.graduationYear,
             status: studentFormData.status
           };
         }
         return st;
       });
-      localStorage.setItem('spora_students', JSON.stringify(updated));
-      showToast(`Data siswa "${studentFormData.name}" berhasil diperbarui!`, 'success');
+      showToast(`Data siswa "${studentFormData.name}" diperbarui.`, 'success');
     } else {
       const newSt = {
-        id: `stu-${Date.now()}`,
+        id: `st-${Date.now()}`,
         name: studentFormData.name,
-        schoolId: selectedInstitution.email,
-        schoolName: selectedInstitution.name,
+        school: selectedInstitution?.name || 'SMK Negeri 1 Cikarang',
         major: studentFormData.major,
-        graduationYear: parseInt(studentFormData.graduationYear) || 2025,
-        city: studentFormData.city,
-        province: 'Jawa Barat',
-        skills: ['EV Battery Assembly', 'Safety Protocols'],
+        gradYear: studentFormData.graduationYear,
+        score: 85,
         status: studentFormData.status
       };
-      allStudents.unshift(newSt);
-      localStorage.setItem('spora_students', JSON.stringify(allStudents));
+      allDbStudents.unshift(newSt);
       showToast(`Siswa baru "${studentFormData.name}" berhasil ditambahkan!`, 'success');
     }
 
-    // Refresh modal student list
-    const refreshed = localDB.getStudents().filter((st: any) => 
-      st.schoolId === selectedInstitution.email || 
-      st.schoolName?.toLowerCase() === selectedInstitution.name.toLowerCase()
+    localStorage.setItem('spora_students_db', JSON.stringify(allDbStudents));
+
+    // Refresh pop-up list
+    const filtered = allDbStudents.filter((st: any) => 
+      st.school?.toLowerCase().includes(selectedInstitution.name.toLowerCase()) ||
+      selectedInstitution.name.toLowerCase().includes(st.school?.toLowerCase() || '')
     );
-    setInstitutionStudents(refreshed);
+    setInstitutionStudents(filtered);
     setIsAddStudentForm(false);
-    setEditingStudent(null);
+  };
+
+  const handleDeleteStudent = (id: string, name: string) => {
+    if (!window.confirm(`Hapus siswa "${name}" dari daftar institusi?`)) return;
+
+    const rawDb = localStorage.getItem('spora_students_db');
+    let allDbStudents = rawDb ? JSON.parse(rawDb) : [];
+    const updated = allDbStudents.filter((st: any) => st.id !== id);
+
+    localStorage.setItem('spora_students_db', JSON.stringify(updated));
+
+    const filtered = updated.filter((st: any) => 
+      st.school?.toLowerCase().includes(selectedInstitution.name.toLowerCase()) ||
+      selectedInstitution.name.toLowerCase().includes(st.school?.toLowerCase() || '')
+    );
+    setInstitutionStudents(filtered);
+    showToast(`Siswa "${name}" dihapus.`, 'warning');
   };
 
   return (
@@ -208,18 +252,18 @@ export const AdminSchools: React.FC = () => {
         subtitle="Tambah, edit, hapus, kelola institusi pendidikan (SMK, Politeknik, Universitas, BLK) & siswa terdaftar."
       >
         <Button variant="primary" className="bg-[#0099B8] hover:bg-[#007A93] text-white flex items-center gap-1.5" onClick={handleOpenAddModal}>
-          <Plus size={16} /> Add Education Institution
+          <Plus size={16} /> Add Institution
         </Button>
       </PageHeader>
-      
+
       <Card className="p-0 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="bg-slate-100 text-slate-600 border-b text-xs font-bold uppercase">
                 <th className="p-4">Nama Institusi Pendidikan</th>
-                <th className="p-4">Email Kontak Institusi</th>
-                <th className="p-4 text-center">Siswa / Kandidat</th>
+                <th className="p-4">Email Kontak</th>
+                <th className="p-4 text-center">Siswa / Kandidat Enrolled</th>
                 <th className="p-4">Status Verifikasi</th>
                 <th className="p-4 text-right">Aksi Admin (CRUD)</th>
               </tr>
@@ -228,9 +272,9 @@ export const AdminSchools: React.FC = () => {
               {users.map((s, idx) => (
                 <tr key={idx} className="hover:bg-slate-50">
                   <td className="p-4 font-bold text-slate-900 flex items-center gap-2">
-                    <School size={18} className="text-emerald-600" /> {s.name}
+                    <School size={18} className="text-[#0099B8]" /> {s.name}
                   </td>
-                  <td className="p-4 font-mono text-slate-600 text-xs">{s.email}</td>
+                  <td className="p-4 text-slate-600 font-mono text-xs">{s.email}</td>
                   <td className="p-4 text-center">
                     <Button 
                       size="sm" 
@@ -301,14 +345,27 @@ export const AdminSchools: React.FC = () => {
         size="lg"
       >
         <div className="space-y-4 pt-2">
-          <div className="flex justify-between items-center bg-cyan-50 p-3 rounded-xl border border-cyan-100">
+          {/* Header Action Banner */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-cyan-50 to-blue-50 p-4 rounded-xl border border-cyan-200">
             <div>
-              <p className="text-xs font-bold text-slate-900">{selectedInstitution?.name}</p>
-              <p className="text-[11px] text-slate-500 font-mono">{selectedInstitution?.email}</p>
+              <p className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
+                <School size={16} className="text-[#0099B8]" /> {selectedInstitution?.name}
+              </p>
+              <p className="text-[11px] text-slate-500 font-mono mt-0.5">{selectedInstitution?.email}</p>
             </div>
-            <Button size="sm" className="bg-[#0099B8] text-white text-xs flex items-center gap-1" onClick={handleOpenAddStudent}>
-              <UserPlus size={14} /> Tambah Siswa Baru
-            </Button>
+
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <Button 
+                size="sm" 
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs" 
+                onClick={handleOpenFullPageStudents}
+              >
+                <LayoutDashboard size={14} /> Halaman List Siswa (Page Baru) <ExternalLink size={13} />
+              </Button>
+              <Button size="sm" className="bg-[#0099B8] hover:bg-[#007A93] text-white text-xs font-bold flex items-center gap-1" onClick={handleOpenAddStudent}>
+                <UserPlus size={14} /> + Tambah Siswa Baru
+              </Button>
+            </div>
           </div>
 
           {/* Form inline edit/add student */}
@@ -351,47 +408,64 @@ export const AdminSchools: React.FC = () => {
             </form>
           )}
 
-          {/* Student Table List */}
-          {institutionStudents.length === 0 ? (
-            <div className="text-center py-8 border border-dashed rounded-xl bg-slate-50">
-              <GraduationCap size={32} className="mx-auto text-slate-400 mb-2" />
-              <p className="text-sm font-bold text-slate-700">Belum Ada Siswa Terdaftar</p>
-              <p className="text-xs text-slate-500 mt-1">Klik "+ Tambah Siswa Baru" di atas untuk menambahkan kandidat.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto border rounded-xl">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="bg-slate-100 text-slate-600 font-bold border-b">
-                    <th className="p-3">Nama Siswa</th>
-                    <th className="p-3">Jurusan / Program</th>
-                    <th className="p-3">Tahun Lulus</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3 text-right">Aksi Edit</th>
+          {/* Table list of students */}
+          <div className="overflow-x-auto border rounded-xl">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-slate-100 text-slate-600 border-b font-bold uppercase">
+                  <th className="p-3">Nama Siswa</th>
+                  <th className="p-3">Jurusan / Stream</th>
+                  <th className="p-3">Tahun Lulus</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {institutionStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-slate-500">
+                      <GraduationCap size={32} className="mx-auto text-slate-300 mb-2" />
+                      <p className="font-bold text-slate-700">Belum Ada Siswa Terdaftar</p>
+                      <p className="text-xs text-slate-400 mt-1">Klik "+ Tambah Siswa Baru" di atas untuk menambahkan kandidat.</p>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {institutionStudents.map((st) => (
-                    <tr key={st.id} className="hover:bg-slate-50">
-                      <td className="p-3 font-bold text-slate-900 flex items-center gap-1.5">
-                        <GraduationCap size={15} className="text-[#0099B8]" /> {st.name || st.fullName || 'Siswa Vokasi'}
-                      </td>
+                ) : (
+                  institutionStudents.map((st, idx) => (
+                    <tr key={st.id || idx} className="hover:bg-slate-50">
+                      <td className="p-3 font-bold text-slate-900">{st.name || st.fullName}</td>
                       <td className="p-3 text-slate-600">{st.major}</td>
-                      <td className="p-3 font-semibold">{st.graduationYear}</td>
+                      <td className="p-3 font-mono text-slate-700">{st.gradYear || st.graduationYear}</td>
                       <td className="p-3">
-                        <Badge variant="success" className="text-[10px]">✓ {st.status || 'Active'}</Badge>
+                        <Badge variant="success" className="text-[10px]">Aktif Vokasi</Badge>
                       </td>
                       <td className="p-3 text-right">
-                        <Button size="sm" variant="outline" className="p-1 text-xs" onClick={() => handleEditStudent(st)}>
-                          <Edit2 size={13} /> Edit
-                        </Button>
+                        <div className="flex justify-end gap-1.5 items-center">
+                          <Button size="sm" variant="outline" className="p-1 text-xs" onClick={() => handleEditStudent(st)}>
+                            <Edit2 size={13} />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="p-1 text-red-600 hover:bg-red-50" onClick={() => handleDeleteStudent(st.id, st.name || st.fullName)}>
+                            <Trash2 size={13} />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex justify-between items-center pt-3 border-t">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="text-xs text-[#0099B8] border-cyan-200 bg-cyan-50 hover:bg-cyan-100 font-bold flex items-center gap-1.5"
+              onClick={handleOpenFullPageStudents}
+            >
+              <LayoutDashboard size={14} /> Buka Halaman Full Dashboard List ↗
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setIsStudentsModalOpen(false)}>Tutup</Button>
+          </div>
         </div>
       </Modal>
     </div>
