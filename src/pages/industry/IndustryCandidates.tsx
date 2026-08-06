@@ -4,45 +4,19 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { localDB } from '../../services/db';
 import { Users, GraduationCap, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router';
 
 export const IndustryCandidates: React.FC = () => {
   const studentsPool = useMemo(() => {
-    const list = localDB.getStudents();
-    if (list.length > 0) return list;
-
-    // Fallback candidate list if clean database is active
-    return [
-      {
-        id: 'stu-1',
-        name: 'Usman Domiri',
-        major: 'Teknik Kendaraan Ringan (Otomotif EV)',
-        province: 'Jawa Barat',
-        city: 'Bekasi',
-        skills: ['EV Battery Assembly', 'High Voltage Safety', 'Quality Control'],
-        score: 88
-      },
-      {
-        id: 'stu-2',
-        name: 'Ahmad Fauzi',
-        major: 'Teknik Elektronika Industri',
-        province: 'Jawa Barat',
-        city: 'Karawang',
-        skills: ['Battery Management System', 'PLC Programming', 'Circuit Diagnostics'],
-        score: 85
-      },
-      {
-        id: 'stu-3',
-        name: 'Siti Rahmawati',
-        major: 'Teknik Mekatronika',
-        province: 'Jawa Barat',
-        city: 'Cikarang',
-        skills: ['Electric Motor Winding', 'EV Wiring Harness', 'AutoCAD'],
-        score: 92
-      }
-    ];
+    return localDB.getStudents();
   }, []);
 
-  const [selected, setSelected] = useState<string[]>(() => [studentsPool[0]?.id || 'stu-1', studentsPool[1]?.id || 'stu-2']);
+  const [selected, setSelected] = useState<string[]>(() => {
+    if (studentsPool.length > 0) {
+      return studentsPool.slice(0, 3).map((s: any) => s.id);
+    }
+    return [];
+  });
 
   const toggleSelect = (id: string) => {
     if (selected.includes(id)) {
@@ -55,6 +29,32 @@ export const IndustryCandidates: React.FC = () => {
   const selectedStudents = useMemo(() => {
     return studentsPool.filter((s: any) => selected.includes(s.id));
   }, [studentsPool, selected]);
+
+  if (studentsPool.length === 0) {
+    return (
+      <div className="space-y-6 font-sans pb-10">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Candidate Side-by-Side Comparison</h1>
+          <p className="text-slate-500 text-sm">Bandingkan nilai kompetensi dan kualifikasi kandidat siswa vokasi secara langsung.</p>
+        </div>
+
+        <Card className="p-16 text-center text-slate-500 border-slate-200">
+          <Users size={48} className="mx-auto text-slate-300 mb-3" />
+          <h3 className="text-lg font-bold text-slate-800 mb-1">Belum Ada Kandidat Terdaftar</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto mb-6">
+            Belum ada data siswa vokasi yang mendaftar ke platform. Ketika siswa melakukan pendaftaran, Anda dapat membandingkan nilai kompetensi dan mengundang kandidat di sini.
+          </p>
+          <div className="flex justify-center gap-3">
+            <Link to="/industry/vacancies">
+              <Button variant="primary" className="bg-[#0099B8] hover:bg-[#007A93] text-white font-bold text-xs">
+                Kelola Lowongan
+              </Button>
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 font-sans pb-10">
@@ -89,11 +89,11 @@ export const IndustryCandidates: React.FC = () => {
       {selectedStudents.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {selectedStudents.map((student: any) => {
-            const candidateName = student.name || student.fullName || student.major || 'Usman Domiri';
+            const candidateName = student.name || student.fullName || student.major || 'Kandidat Vokasi';
             const score = localDB.getTalentScore(student.id);
 
             return (
-              <Card key={student.id} className="p-6 space-y-4 border-t-4 border-t-[#0099B8] border-slate-200 shadow-2xs hover:shadow-md transition-all">
+              <Card key={student.id} className="p-6 space-y-4 border-t-4 border-t-[#0099B8] border-slate-200 shadow-2xs hover:shadow-md transition-all font-sans">
                 <div className="flex justify-between items-start">
                   <div>
                     <h2 className="font-extrabold text-base text-slate-900">{candidateName}</h2>
