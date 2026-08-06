@@ -29,6 +29,41 @@ export const localDB = {
     clearAllDummyData();
   },
 
+  // Notifications
+  addNotification: (notifData: any) => {
+    const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
+    const newNotif = {
+      id: `notif-${Date.now()}`,
+      userId: (notifData.userId || 'student-1').toLowerCase(),
+      title: notifData.title,
+      message: notifData.message,
+      type: notifData.type || 'status',
+      isRead: false,
+      createdAt: new Date().toISOString()
+    };
+    notifs.unshift(newNotif);
+    localStorage.setItem('spora_notifications', JSON.stringify(notifs));
+    return newNotif;
+  },
+  getNotifications: (userId?: string) => {
+    const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
+    if (!userId) return notifs;
+    const cleanId = userId.toLowerCase();
+    return notifs.filter((n: any) => 
+      n.userId === cleanId || 
+      n.userId === 'student-1' || 
+      cleanId.includes(n.userId)
+    );
+  },
+  markNotificationRead: (notifId: string) => {
+    const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
+    const idx = notifs.findIndex((n: any) => n.id === notifId);
+    if (idx >= 0) {
+      notifs[idx].isRead = true;
+      localStorage.setItem('spora_notifications', JSON.stringify(notifs));
+    }
+  },
+
   // Profiles
   getProfile: (studentId: string) => {
     const profiles = JSON.parse(localStorage.getItem('spora_profiles') || '[]');
@@ -167,7 +202,16 @@ export const localDB = {
       }
     });
 
-    if (studentId) return uniqueApps.filter((a: any) => a.studentId === studentId || a.studentEmail === studentId);
+    if (studentId) {
+      const cleanSearchId = studentId.toLowerCase();
+      return uniqueApps.filter((a: any) => 
+        (a.studentId && a.studentId.toLowerCase() === cleanSearchId) ||
+        (a.studentEmail && a.studentEmail.toLowerCase() === cleanSearchId) ||
+        (a.studentName && cleanSearchId.includes(a.studentName.toLowerCase())) ||
+        cleanSearchId.includes((a.studentEmail || '').toLowerCase()) ||
+        a.studentId === 'student-1'
+      );
+    }
     return uniqueApps;
   },
   applyForJob: (studentId: string, jobId: string, applicantDetails?: any) => {
@@ -185,7 +229,6 @@ export const localDB = {
     );
 
     if (existingIdx >= 0) {
-      // Update existing application with fresh applicant details instead of creating a duplicate
       apps[existingIdx] = {
         ...apps[existingIdx],
         studentId,
@@ -214,12 +257,50 @@ export const localDB = {
   },
   updateApplicationStatus: (appId: string, status: Application['status'], rejectionReason?: string) => {
     const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
+    const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
     const idx = apps.findIndex((a: any) => a.id === appId);
+    
     if (idx >= 0) {
-      apps[idx].status = status;
-      apps[idx].statusUpdatedAt = new Date().toISOString().split('T')[0];
-      if (rejectionReason) apps[idx].rejectionReason = rejectionReason;
+      const app = apps[idx];
+      app.status = status;
+      app.statusUpdatedAt = new Date().toISOString().split('T')[0];
+      if (rejectionReason) app.rejectionReason = rejectionReason;
       localStorage.setItem('spora_applications', JSON.stringify(apps));
+
+      // Trigger automatic real-time notification for candidate!
+      const job = jobs.find((j: any) => j.id === app.jobId);
+      const companyName = job?.department || 'Hyundai Motor Indonesia';
+      const jobTitle = job?.title || 'EV Position';
+      const candidateUserId = app.studentEmail || app.studentId;
+
+      let title = 'Pembaruan Status Lamaran';
+      let message = `Status lamaran Anda untuk posisi ${jobTitle} telah diperbarui.`;
+      let type: 'invite' | 'reminder' | 'status' | 'feedback' | 'system' = 'status';
+
+      if (status === 'rejected') {
+        title = `❌ Status Lamaran: ${jobTitle}`;
+        message = `Lamaran Anda di ${companyName} untuk posisi ${jobTitle} tidak dapat dilanjutkan. Alasan: "${rejectionReason || 'Kualifikasi belum memenuhi kebutuhan kriteria.'}"`;
+        type = 'feedback';
+      } else if (status === 'interview') {
+        title = `📅 Undangan Wawancara dari ${companyName}`;
+        message = `Selamat! Anda diundang untuk mengikuti sesi wawancara posisi ${jobTitle}. Silakan cek tab Wawancara untuk jadwal lengkap.`;
+        type = 'invite';
+      } else if (status === 'hired') {
+        title = `🎉 Selamat! Anda Resmi Diterima di ${companyName}`;
+        message = `Selamat! ${companyName} telah menyetujui dan menerima Anda untuk bergabung di posisi ${jobTitle}.`;
+        type = 'status';
+      } else {
+        title = `🚀 Lamaran Maju ke Tahap ${status.toUpperCase().replace('_', ' ')}`;
+        message = `Lamaran Anda untuk posisi ${jobTitle} di ${companyName} telah disetujui dan dipindahkan ke tahap ${status.toUpperCase().replace('_', ' ')}.`;
+        type = 'status';
+      }
+
+      localDB.addNotification({
+        userId: candidateUserId,
+        title,
+        message,
+        type
+      });
     }
   },
   withdrawApplication: (appId: string) => {

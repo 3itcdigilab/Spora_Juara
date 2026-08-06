@@ -7,26 +7,41 @@ import { Button } from '../../components/ui/Button';
 import { useToast } from '../../components/ui/Toast';
 import { localDB } from '../../services/db';
 import { Application } from '../../data/types';
+import { useAuth } from '../../contexts/AuthContext';
 import { CheckCircle2, Clock, XCircle, ChevronRight, AlertCircle, Briefcase } from 'lucide-react';
 
 export const StudentApplications: React.FC = () => {
-  const studentId = 'student-1';
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('All');
   
+  const studentId = user?.email || (user as any)?.id || 'student-1';
+
   // Trigger state update when withdrawing
   const [refreshKey, setRefreshKey] = useState(0);
 
   const rawApps = useMemo(() => {
-    return localDB.getApplications(studentId);
-  }, [studentId, refreshKey]);
+    // Fetch applications for logged-in user or all applications
+    const apps = localDB.getApplications();
+    const userEmail = (user?.email || '').toLowerCase();
+    const userName = (user?.name || '').toLowerCase();
+
+    if (userEmail) {
+      return apps.filter((a: any) => 
+        (a.studentEmail && a.studentEmail.toLowerCase() === userEmail) ||
+        (a.studentId && a.studentId.toLowerCase() === userEmail) ||
+        (userName && a.studentName && a.studentName.toLowerCase().includes(userName)) ||
+        a.studentId === 'student-1'
+      );
+    }
+    return apps;
+  }, [user, refreshKey]);
 
   const stages = ['Applied', 'Document Screening', 'Shortlisted', 'Interview', 'Offered'];
 
   const formattedApps = useMemo(() => {
     const jobs = localDB.getJobs();
 
-    // Only include applications for jobs that currently exist
     return rawApps.map((app: Application) => {
       const job = jobs.find((j: any) => j.id === app.jobId);
       if (!job) return null;
@@ -64,6 +79,10 @@ export const StudentApplications: React.FC = () => {
     }
   };
 
+  const countActive = formattedApps.filter((a: any) => a.displayCategory === 'Active').length;
+  const countHired = formattedApps.filter((a: any) => a.displayCategory === 'Hired').length;
+  const countClosed = formattedApps.filter((a: any) => a.displayCategory === 'Closed').length;
+
   return (
     <div className="max-w-5xl mx-auto pb-10 space-y-6 font-sans">
       <div>
@@ -74,9 +93,9 @@ export const StudentApplications: React.FC = () => {
       <Tabs 
         tabs={[
           { id: 'All', label: `All Applications (${formattedApps.length})` },
-          { id: 'Active', label: 'In Progress' },
-          { id: 'Hired', label: 'Hired / Offered' },
-          { id: 'Closed', label: 'Closed / Rejected' },
+          { id: 'Active', label: `In Progress (${countActive})` },
+          { id: 'Hired', label: `Hired / Offered (${countHired})` },
+          { id: 'Closed', label: `Closed / Rejected (${countClosed})` },
         ]}
         activeTab={activeTab}
         onChange={setActiveTab}
@@ -148,7 +167,7 @@ export const StudentApplications: React.FC = () => {
               <div className="mt-4 bg-red-50/80 p-3.5 rounded-xl border border-red-100 text-xs text-red-700 flex items-start gap-2">
                 <AlertCircle size={16} className="shrink-0 text-red-500 mt-0.5" />
                 <div>
-                  <p className="font-bold">Feedback from Recruiter:</p>
+                  <p className="font-bold">Feedback / Catatan dari Rekruter:</p>
                   <p className="mt-0.5">{app.rejectionReason}</p>
                 </div>
               </div>
@@ -171,7 +190,7 @@ export const StudentApplications: React.FC = () => {
           <div className="text-center py-14 text-slate-500 bg-white rounded-2xl border border-slate-200">
             <Briefcase size={40} className="mx-auto text-slate-300 mb-3" />
             <h3 className="text-base font-bold text-slate-800 mb-1">Belum Ada Lamaran Pekerjaan</h3>
-            <p className="text-xs text-slate-500 mb-4">Anda belum memiliki lamaran aktif di kategori ini.</p>
+            <p className="text-xs text-slate-500 mb-4">Anda belum memiliki lamaran di kategori ini.</p>
             <Link to="/student/jobs">
               <Button variant="primary" className="bg-[#0099B8] hover:bg-[#007A93] text-white text-xs font-bold px-4 py-2">
                 Browse EV Job Opportunities
