@@ -29,15 +29,28 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Initial default user accounts in LocalStorage
 export const initUsersDB = () => {
-  if (!localStorage.getItem('spora_users')) {
-    const defaultUsers = [
-      { email: 'sporaadmin@spora.id', password: 'sporaev', name: 'Spora Admin Master', role: 'admin', status: 'active', avatarUrl: '' },
-      { email: 'tubagus@spora.id', password: 'demo123', name: 'Tubagus', role: 'student', status: 'active', avatarUrl: '' },
-      { email: '3itcdigilab@gmail.com', password: 'demo123', name: '3ITC', role: 'student', status: 'active', avatarUrl: '' },
-      { email: 'school@spora.id', password: 'demo123', name: 'SMKN 1 Cikarang', role: 'school', status: 'active', avatarUrl: '' },
-      { email: 'industry@spora.id', password: 'demo123', name: 'Hyundai Motor Indonesia', role: 'industry', status: 'active', avatarUrl: '' }
-    ];
+  const defaultUsers = [
+    { email: 'sporaadmin@spora.id', password: 'sporaev', name: 'Spora Admin Master', role: 'admin', status: 'active', avatarUrl: '' },
+    { email: 'tubagus@spora.id', password: 'demo123', name: 'Tubagus', role: 'student', status: 'active', avatarUrl: '' },
+    { email: '3itcdigilab@gmail.com', password: 'demo123', name: '3ITC', role: 'industry', status: 'active', avatarUrl: '' },
+    { email: 'school@spora.id', password: 'demo123', name: 'SMKN 1 Cikarang', role: 'school', status: 'active', avatarUrl: '' },
+    { email: 'industry@spora.id', password: 'demo123', name: 'Hyundai Motor Indonesia', role: 'industry', status: 'active', avatarUrl: '' }
+  ];
+
+  const rawUsers = localStorage.getItem('spora_users');
+  if (!rawUsers) {
     localStorage.setItem('spora_users', JSON.stringify(defaultUsers));
+  } else {
+    // Sync 3ITC account role to industry
+    const users = JSON.parse(rawUsers);
+    const idx = users.findIndex((u: any) => u.email.toLowerCase() === '3itcdigilab@gmail.com');
+    if (idx >= 0) {
+      users[idx].role = 'industry';
+      localStorage.setItem('spora_users', JSON.stringify(users));
+    } else {
+      users.push(defaultUsers[2]);
+      localStorage.setItem('spora_users', JSON.stringify(users));
+    }
   }
 };
 
@@ -45,18 +58,20 @@ initUsersDB();
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, setState] = useState<AuthState>(() => {
-    const savedProfile = localDB.getProfile('stu-1');
     const saved = localStorage.getItem('auth');
 
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.user && parsed.user.name) {
+          // Force correct role for 3ITC
+          const resolvedRole = parsed.user.email?.toLowerCase() === '3itcdigilab@gmail.com' ? 'industry' : parsed.role;
           return {
             ...parsed,
+            role: resolvedRole,
             user: {
               ...parsed.user,
-              avatarUrl: parsed.user.avatarUrl || savedProfile?.avatarUrl || ''
+              avatarUrl: parsed.user.avatarUrl || ''
             }
           };
         }
@@ -67,12 +82,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return {
       user: { 
-        name: savedProfile?.fullName || '3ITC', 
+        name: '3ITC', 
         email: '3itcdigilab@gmail.com', 
-        avatarUrl: savedProfile?.avatarUrl || '',
+        avatarUrl: '',
         status: 'active' 
       },
-      role: 'student',
+      role: 'industry',
       tenantId: 't1',
       isAuthenticated: true,
       permissions: []
@@ -94,11 +109,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const resolvedName = foundUser.name || 'User';
-    const roleName = foundUser.role || 'student';
+    const roleName = foundUser.email.toLowerCase() === '3itcdigilab@gmail.com' ? 'industry' : (foundUser.role || 'student');
     const userStatus = foundUser.status || 'active';
     let userAvatar = foundUser.avatarUrl || '';
 
-    // Load LocalStorage profile avatar for student
     if (roleName === 'student') {
       const studentProfile = localDB.getProfile('stu-1');
       if (studentProfile?.avatarUrl) userAvatar = studentProfile.avatarUrl;

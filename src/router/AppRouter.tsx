@@ -75,6 +75,16 @@ import { AdminSystem } from '../pages/admin/AdminSystem';
 import Error403 from '../pages/errors/Error403';
 import Error404 from '../pages/errors/Error404';
 
+import { useAuth } from '../contexts/AuthContext';
+
+const DashboardRedirect: React.FC = () => {
+  const { role } = useAuth();
+  if (role === 'industry') return <Navigate to="/industry/dashboard" replace />;
+  if (role === 'school') return <Navigate to="/school/dashboard" replace />;
+  if (role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+  return <Navigate to="/student/dashboard" replace />;
+};
+
 export const AppRouter: React.FC = () => (
   <Suspense fallback={<div className="flex h-screen items-center justify-center font-sans text-slate-500 font-bold">Loading Spora Juara...</div>}>
     <Routes>
@@ -84,7 +94,7 @@ export const AppRouter: React.FC = () => (
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/pending-verification" element={<PendingVerificationPage />} />
-      <Route path="/dashboard" element={<Navigate to="/student/dashboard" replace />} />
+      <Route path="/dashboard" element={<DashboardRedirect />} />
       <Route path="/role-selection" element={<RoleSelectionPage />} />
 
       {/* Student Portal */}
