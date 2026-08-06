@@ -10,11 +10,17 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { Users, TrendingUp, Award, CheckCircle, Activity, School, MessageSquare, AlertTriangle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
+interface Feedback {
+  company: string;
+  rating: number;
+  comment: string;
+}
+
 export const SchoolDashboard: React.FC = () => {
   const { user } = useAuth();
   const schoolName = user?.name || 'SMK Negeri 1 Cikarang';
   // Mock fetching feedback or just leave empty if not present.
-  const feedbacks = [];
+  const feedbacks: Feedback[] = [];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10 font-sans">
