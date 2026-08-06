@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Logo } from '../../components/ui/Logo';
-import { GraduationCap, School, Factory, CheckCircle2 } from 'lucide-react';
+import { GraduationCap, School, Factory, CheckCircle2, Phone, Mail, User, Lock } from 'lucide-react';
 
 const roleMeta: Record<string, { title: string; subtitle: string; icon: any; color: string }> = {
   student: {
@@ -39,6 +39,7 @@ export const RegisterPage: React.FC = () => {
     role: roleParam,
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
     // Student specific
@@ -202,17 +203,32 @@ export const RegisterPage: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                <input 
-                  type="email" 
-                  name="email" 
-                  required 
-                  placeholder={formData.role === 'school' ? 'admin@smkn1cikarang.sch.id' : formData.role === 'industry' ? 'hr@hyundai.co.id' : 'tubagus@gmail.com'}
-                  className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
-                  value={formData.email} 
-                  onChange={handleChange} 
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                  <input 
+                    type="email" 
+                    name="email" 
+                    required 
+                    placeholder={formData.role === 'school' ? 'admin@smkn1cikarang.sch.id' : formData.role === 'industry' ? 'hr@hyundai.co.id' : 'tubagus@gmail.com'}
+                    className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
+                    value={formData.email} 
+                    onChange={handleChange} 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Phone / WhatsApp Number (No. HP / WA)</label>
+                  <input 
+                    type="tel" 
+                    name="phone" 
+                    required 
+                    placeholder="e.g. 0812-3456-7890"
+                    className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
+                    value={formData.phone} 
+                    onChange={handleChange} 
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -248,154 +264,142 @@ export const RegisterPage: React.FC = () => {
           {step === 2 && (
             <div className="space-y-4 animate-fadeIn">
               <h3 className="text-base font-bold text-slate-900 border-b pb-2">
-                Step 2: {formData.role === 'student' ? 'Academic & Vocational Profile' : 
-                        formData.role === 'industry' ? 'Company & Hiring Profile' : 'School & Curriculum Profile'}
+                Step 2: {formData.role === 'student' ? 'Education & Competency Profile' : formData.role === 'industry' ? 'Company Details' : 'School Profile'}
               </h3>
 
-              {/* Student Role Fields */}
+              {/* Student Fields */}
               {formData.role === 'student' && (
                 <>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Vocational School (SMK)</label>
                     <select 
                       name="school" 
-                      required 
-                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
-                      value={formData.school} 
+                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white"
+                      value={formData.school}
                       onChange={handleChange}
                     >
-                      <option value="SMKN 1 Cikarang">SMKN 1 Cikarang (Jawa Barat)</option>
-                      <option value="SMKN 2 Karawang">SMKN 2 Karawang (Jawa Barat)</option>
-                      <option value="SMKN 1 Bekasi">SMKN 1 Bekasi (Jawa Barat)</option>
-                      <option value="SMKN 2 Bandung">SMKN 2 Bandung (Jawa Barat)</option>
-                      <option value="SMKN 5 Surabaya">SMKN 5 Surabaya (Jawa Timur)</option>
-                      <option value="Other Vocational School">Other SMK School</option>
+                      <option value="SMKN 1 Cikarang">SMKN 1 Cikarang (Kabupaten Bekasi)</option>
+                      <option value="SMKN 2 Karawang">SMKN 2 Karawang (Kabupaten Karawang)</option>
+                      <option value="SMKN 1 Bekasi">SMKN 1 Bekasi (Kota Bekasi)</option>
+                      <option value="SMKN 5 Surabaya">SMKN 5 Surabaya (Kota Surabaya)</option>
+                      <option value="SMKN 2 Bandung">SMKN 2 Bandung (Kota Bandung)</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Major / Vocational Stream</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Major / Vocational Specialization</label>
                     <select 
                       name="major" 
-                      required 
-                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
-                      value={formData.major} 
+                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white"
+                      value={formData.major}
                       onChange={handleChange}
                     >
                       <option value="Teknik Kendaraan Ringan (Otomotif EV)">Teknik Kendaraan Ringan (Otomotif EV)</option>
                       <option value="Teknik Elektronika Industri">Teknik Elektronika Industri</option>
                       <option value="Teknik Mekatronika">Teknik Mekatronika</option>
-                      <option value="Teknik Listrik & High Voltage">Teknik Listrik & High Voltage</option>
+                      <option value="Teknik Listrik Industri">Teknik Listrik Industri</option>
+                      <option value="Teknik Sepeda Motor (EV Conversion)">Teknik Sepeda Motor (EV Conversion)</option>
                     </select>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Graduation Year</label>
                       <select 
                         name="graduationYear" 
-                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white" 
-                        value={formData.graduationYear} 
+                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white"
+                        value={formData.graduationYear}
                         onChange={handleChange}
                       >
                         <option value="2024">2024 (Graduated)</option>
                         <option value="2025">2025 (Final Year)</option>
-                        <option value="2026">2026</option>
-                        <option value="2027">2027</option>
+                        <option value="2026">2026 (Grade 11)</option>
                       </select>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Province</label>
-                      <select 
+                      <input 
+                        type="text" 
                         name="province" 
-                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white" 
                         value={formData.province} 
                         onChange={handleChange}
-                      >
-                        <option value="Jawa Barat">Jawa Barat</option>
-                        <option value="DKI Jakarta">DKI Jakarta</option>
-                        <option value="Jawa Tengah">Jawa Tengah</option>
-                        <option value="Jawa Timur">Jawa Timur</option>
-                        <option value="Banten">Banten</option>
-                      </select>
+                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">City / Regency</label>
+                      <input 
+                        type="text" 
+                        name="city" 
+                        value={formData.city} 
+                        onChange={handleChange}
+                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
+                      />
                     </div>
                   </div>
                 </>
               )}
 
-              {/* Industry Role Fields */}
+              {/* Industry Fields */}
               {formData.role === 'industry' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Company / Industry Name</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
                     <input 
                       type="text" 
                       name="companyName" 
                       required 
-                      placeholder="e.g. Hyundai Motor Manufacturing Indonesia"
-                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8]" 
+                      placeholder="e.g. PT Hyundai Motor Manufacturing Indonesia"
+                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
                       value={formData.companyName} 
                       onChange={handleChange} 
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Industry Sector</label>
-                    <select 
-                      name="sector" 
-                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white" 
-                      value={formData.sector} 
-                      onChange={handleChange}
-                    >
-                      <option value="EV Battery Assembly">EV Battery Assembly & Thermal Tech</option>
-                      <option value="EV Automotive Manufacturing">EV Automotive Manufacturing</option>
-                      <option value="Charging Network Infrastructure">Charging Network Infrastructure</option>
-                      <option value="EV Fleet & Maintenance">EV Fleet & Maintenance Operations</option>
-                    </select>
-                  </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Office Location</label>
-                      <input 
-                        type="text" 
-                        name="officeCity" 
-                        placeholder="e.g. Cikarang, Jawa Barat"
-                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm" 
-                        value={formData.officeCity} 
-                        onChange={handleChange} 
-                      />
+                      <label className="block text-sm font-medium text-slate-700 mb-1">EV Industry Sector</label>
+                      <select 
+                        name="sector" 
+                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white"
+                        value={formData.sector}
+                        onChange={handleChange}
+                      >
+                        <option value="EV Battery Assembly">EV Battery Assembly & Manufacturing</option>
+                        <option value="Electric Motor Manufacturing">Electric Motor Manufacturing</option>
+                        <option value="EV 2W/4W Conversion Workshop">EV 2W/4W Conversion Workshop</option>
+                        <option value="Charging Infrastructure (SPKLU)">Charging Infrastructure (SPKLU)</option>
+                        <option value="EV Fleet Maintenance">EV Fleet Maintenance</option>
+                      </select>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Annual Hiring Target</label>
-                      <select 
-                        name="hiringTarget" 
-                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white" 
-                        value={formData.hiringTarget} 
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Plant / Office Location</label>
+                      <input 
+                        type="text" 
+                        name="officeCity" 
+                        value={formData.officeCity} 
                         onChange={handleChange}
-                      >
-                        <option value="1-10 Graduates / Year">1 - 10 Graduates / Year</option>
-                        <option value="10-50 Graduates / Year">10 - 50 Graduates / Year</option>
-                        <option value="50+ Graduates / Year">50+ Graduates / Year</option>
-                      </select>
+                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
+                      />
                     </div>
                   </div>
                 </>
               )}
 
-              {/* School Role Fields */}
+              {/* School Fields */}
               {formData.role === 'school' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">School Name</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">School Official Name</label>
                     <input 
                       type="text" 
                       name="schoolName" 
                       required 
-                      placeholder="e.g. SMKN 1 Cikarang"
-                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8]" 
+                      placeholder="e.g. SMKN 1 Cikarang Barat"
+                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
                       value={formData.schoolName} 
                       onChange={handleChange} 
                     />
@@ -403,28 +407,29 @@ export const RegisterPage: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">School Status</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">School Type</label>
                       <select 
                         name="schoolType" 
-                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white" 
-                        value={formData.schoolType} 
+                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white"
+                        value={formData.schoolType}
                         onChange={handleChange}
                       >
-                        <option value="State Vocational School (SMKN)">State School (SMKN)</option>
-                        <option value="Private Vocational School (SMKS)">Private School (SMKS)</option>
+                        <option value="State Vocational School (SMKN)">State Vocational School (SMKN)</option>
+                        <option value="Private Vocational School (SMKS)">Private Vocational School (SMKS)</option>
+                        <option value="Vocational Training Center (BLK)">Vocational Training Center (BLK)</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Annual Graduates Cohort</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Annual EV Graduates Count</label>
                       <select 
                         name="totalGraduates" 
-                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white" 
-                        value={formData.totalGraduates} 
+                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white"
+                        value={formData.totalGraduates}
                         onChange={handleChange}
                       >
-                        <option value="50-100 Graduates / Year">50 - 100 Graduates / Year</option>
-                        <option value="100-300 Graduates / Year">100 - 300 Graduates / Year</option>
+                        <option value="50-100 Graduates / Year">50-100 Graduates / Year</option>
+                        <option value="100-300 Graduates / Year">100-300 Graduates / Year</option>
                         <option value="300+ Graduates / Year">300+ Graduates / Year</option>
                       </select>
                     </div>
@@ -434,68 +439,77 @@ export const RegisterPage: React.FC = () => {
             </div>
           )}
 
-          {/* STEP 3: Confirmation Summary */}
+          {/* STEP 3: Review & Submit */}
           {step === 3 && (
-            <div className="space-y-4 animate-fadeIn text-center">
-              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                <CheckCircle2 size={28} />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">Review & Complete Registration</h3>
-              <p className="text-xs text-slate-500">Verify your information before initializing your Spora Juara account.</p>
-              
-              <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-left text-sm space-y-2">
-                <div className="flex justify-between border-b pb-2">
-                  <span className="text-slate-500">Selected Role:</span>
-                  <span className="font-bold capitalize text-[#0099B8]">{formData.role}</span>
+            <div className="space-y-4 animate-fadeIn">
+              <div className="text-center space-y-2 py-2">
+                <div className="w-12 h-12 bg-cyan-50 text-[#0099B8] rounded-full flex items-center justify-center mx-auto shadow-sm">
+                  <CheckCircle2 size={28} />
                 </div>
-                <div className="flex justify-between border-b pb-2">
-                  <span className="text-slate-500">Full Name / Entity:</span>
-                  <span className="font-semibold text-slate-800">{formData.name || 'Tubagus'}</span>
+                <h3 className="text-lg font-bold text-slate-900">Review & Complete Registration</h3>
+                <p className="text-xs text-slate-500">Verify your information before initializing your Spora Juara account.</p>
+                
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-left text-sm space-y-2 mt-4">
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-slate-500">Account Role:</span>
+                    <span className="font-bold text-slate-900 capitalize">{formData.role}</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-slate-500">Name / Org:</span>
+                    <span className="font-bold text-slate-900">{formData.name || 'Not provided'}</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-slate-500">Email Address:</span>
+                    <span className="font-bold text-slate-900">{formData.email}</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-slate-500">Phone / WA:</span>
+                    <span className="font-bold text-slate-900">{formData.phone || '081234567890'}</span>
+                  </div>
+                  {formData.role === 'student' && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">School & Major:</span>
+                      <span className="font-bold text-slate-900">{formData.school} • {formData.major}</span>
+                    </div>
+                  )}
+                  {formData.role === 'industry' && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Company & Sector:</span>
+                      <span className="font-bold text-slate-900">{formData.companyName} • {formData.sector}</span>
+                    </div>
+                  )}
+                  {formData.role === 'school' && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">School Name:</span>
+                      <span className="font-bold text-slate-900">{formData.schoolName}</span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex justify-between border-b pb-2">
-                  <span className="text-slate-500">Email Address:</span>
-                  <span className="font-mono text-slate-800">{formData.email}</span>
-                </div>
-                {formData.role === 'student' && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">School & Stream:</span>
-                    <span className="font-semibold text-slate-800">{formData.school}</span>
-                  </div>
-                )}
-                {formData.role === 'industry' && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Industry Company:</span>
-                    <span className="font-semibold text-slate-800">{formData.companyName || 'Hyundai Motor'}</span>
-                  </div>
-                )}
-                {formData.role === 'school' && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Registered School:</span>
-                    <span className="font-semibold text-slate-800">{formData.schoolName || 'SMKN 1 Cikarang'}</span>
-                  </div>
-                )}
               </div>
             </div>
           )}
 
-          {/* Navigation Controls */}
+          {/* Form Action Controls */}
           <div className="flex justify-between pt-4 border-t border-slate-100">
             {step > 1 ? (
-              <Button type="button" variant="outline" onClick={prevStep}>Back</Button>
-            ) : (
-              <div />
-            )}
-            <Button type="submit" variant="primary" className="bg-[#0099B8] hover:bg-[#007A93]">
-              {step < 3 ? 'Next Step' : 'Initialize Account'}
+              <Button type="button" variant="outline" onClick={prevStep} className="px-6 text-slate-700">
+                Previous
+              </Button>
+            ) : <div />}
+
+            <Button type="submit" variant="primary" className="bg-[#0099B8] hover:bg-[#007A93] text-white px-8 font-bold">
+              {step === 3 ? 'Complete Registration ➔' : 'Next Step ➔'}
             </Button>
           </div>
         </form>
 
-        <div className="mt-6 text-center text-xs text-slate-500">
-          Already have an account?{' '}
-          <Link to="/login" className="font-semibold text-[#0099B8] hover:underline">
-            Sign In Here
-          </Link>
+        <div className="mt-6 text-center pt-4 border-t border-slate-100">
+          <p className="text-xs text-slate-500">
+            Already have an account?{' '}
+            <Link to="/login" className="font-bold text-[#0099B8] hover:underline">
+              Sign In
+            </Link>
+          </p>
         </div>
       </div>
     </div>
