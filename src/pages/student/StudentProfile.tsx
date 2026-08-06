@@ -158,8 +158,8 @@ export const StudentProfile: React.FC = () => {
           tabs={[
             { id: 'Personal Info', label: 'Personal Info' },
             { id: 'Education', label: 'Education' },
-            { id: 'Skills', label: 'Skills & Competencies' },
-            { id: 'Experience', label: 'Resume & Documents' },
+            { id: 'Skills & Competencies', label: 'Skills & Competencies' },
+            { id: 'Resume & Documents', label: 'Resume & Documents' },
           ]}
           activeTab={activeTab}
           onChange={setActiveTab}
@@ -242,7 +242,7 @@ export const StudentProfile: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'Experience' && (
+          {activeTab === 'Resume & Documents' && (
             <div className="space-y-4 animate-fadeIn">
               <div className="p-4 border border-dashed border-slate-300 rounded-xl bg-slate-50 text-center space-y-2">
                 <p className="text-xs font-bold text-slate-800">Current Resume: {resumeName}</p>
