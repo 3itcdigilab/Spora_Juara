@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { SearchBar } from '../ui/SearchBar';
 import { Avatar } from '../ui/Avatar';
@@ -13,14 +13,30 @@ export const Topbar = ({ onMenuToggle }: any) => {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const userName = user?.name || user?.email || 'Administrator';
-  const userInitials = userName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || 'AD';
+  const userName = user?.name || user?.email || '3ITC';
+  const userInitials = userName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || '3I';
 
-  // Dynamic avatar detection from AuthContext & LocalStorage Profile
-  const avatarUrl = useMemo(() => {
-    if (user?.avatarUrl) return user.avatarUrl;
+  // Dynamic avatar detection with event listener sync
+  const [avatarUrl, setAvatarUrl] = useState(() => {
     const profile = localDB.getProfile('stu-1');
-    return profile?.avatarUrl || '';
+    return user?.avatarUrl || profile?.avatarUrl || '';
+  });
+
+  useEffect(() => {
+    const updateAvatar = () => {
+      const profile = localDB.getProfile('stu-1');
+      const newUrl = user?.avatarUrl || profile?.avatarUrl || '';
+      setAvatarUrl(newUrl);
+    };
+
+    updateAvatar();
+
+    window.addEventListener('profile-updated', updateAvatar);
+    window.addEventListener('storage', updateAvatar);
+    return () => {
+      window.removeEventListener('profile-updated', updateAvatar);
+      window.removeEventListener('storage', updateAvatar);
+    };
   }, [user]);
 
   const handleLogout = () => {

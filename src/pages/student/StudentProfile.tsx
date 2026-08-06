@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Avatar } from '../../components/ui/Avatar';
 import { Input } from '../../components/ui/Input';
@@ -43,6 +43,12 @@ export const StudentProfile: React.FC = () => {
 
   const completion = 90;
 
+  useEffect(() => {
+    if (savedProfile?.avatarUrl && !avatarUrl) {
+      setAvatarUrl(savedProfile.avatarUrl);
+    }
+  }, [savedProfile]);
+
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -62,7 +68,8 @@ export const StudentProfile: React.FC = () => {
           avatarUrl: base64
         });
         updateUser({ avatarUrl: base64 });
-        showToast('Foto profil berhasil diunggah dari galeri!', 'success');
+        window.dispatchEvent(new Event('profile-updated'));
+        showToast('Foto profil berhasil diunggah dari galeri & diperbarui di topbar!', 'success');
       }
     };
     reader.readAsDataURL(file);
@@ -81,6 +88,7 @@ export const StudentProfile: React.FC = () => {
     });
     setSavedProfile(updated);
     updateUser({ name: fullName, avatarUrl });
+    window.dispatchEvent(new Event('profile-updated'));
     showToast('Profil kandidat berhasil disimpan & diperbarui!', 'success');
   };
 
