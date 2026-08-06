@@ -210,17 +210,23 @@ export const localDB = {
       return a;
     });
 
-    // Deduplicate applications by (jobId + studentEmail/studentName) so only 1 unique application per candidate per job is returned
-    const uniqueApps: any[] = [];
-    const seenKeys = new Set<string>();
+    // Deduplicate applications by (jobId + studentEmail/studentName)
+    // PREFER 'rejected', 'hired', or 'interview' status over older 'applied' duplicate!
+    const appMap = new Map<string, any>();
 
     repairedApps.forEach((a: any) => {
       const candidateKey = `${a.jobId}_${(a.studentName || a.studentEmail || a.studentId || 'default').toLowerCase()}`;
-      if (!seenKeys.has(candidateKey)) {
-        seenKeys.add(candidateKey);
-        uniqueApps.push(a);
+      if (!appMap.has(candidateKey)) {
+        appMap.set(candidateKey, a);
+      } else {
+        const existing = appMap.get(candidateKey);
+        if (a.status === 'rejected' || a.status === 'hired' || a.status === 'interview') {
+          appMap.set(candidateKey, a);
+        }
       }
     });
+
+    const uniqueApps = Array.from(appMap.values());
 
     if (studentId) {
       const cleanSearchId = studentId.toLowerCase();
@@ -285,6 +291,15 @@ export const localDB = {
       app.status = status;
       app.statusUpdatedAt = new Date().toISOString().split('T')[0];
       if (rejectionReason) app.rejectionReason = rejectionReason;
+      
+      // Update any duplicate entries for the same candidate & jobId to status
+      apps.forEach((otherApp: any) => {
+        if (otherApp.jobId === app.jobId && (otherApp.studentId === app.studentId || otherApp.studentEmail === app.studentEmail)) {
+          otherApp.status = status;
+          if (rejectionReason) otherApp.rejectionReason = rejectionReason;
+        }
+      });
+
       localStorage.setItem('spora_applications', JSON.stringify(apps));
 
       // Trigger automatic real-time notification for candidate!
@@ -325,6 +340,36 @@ export const localDB = {
   },
   withdrawApplication: (appId: string) => {
     const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
+    const targetApp = apps.find((a: any) => a.id === appId);
+    
+    if (targetApp) {
+      const targetJobId = targetApp.jobId;
+      const targetStudentId = (targetApp.studentId || '').toLowerCase();
+      const targetEmail = (targetApp.studentEmail || '').toLowerCase();
+      const targetName = (targetApp.studentName || '').toLowerCase();
+
+      // Cascade delete ALL application records for this candidate and jobId
+      const filtered = apps.filter((a: any) => {
+        if (a.id === appId) return false;
+        if (a.jobId === targetJobId) {
+          const sId = (a.studentId || '').toLowerCase();
+          const sEmail = (a.studentEmail || '').toLowerCase();
+          const sName = (a.studentName || '').toLowerCase();
+          if (
+            (targetStudentId && sId === targetStudentId) ||
+            (targetEmail && sEmail === targetEmail) ||
+            (targetName && sName === targetName) ||
+            sId === 'student-1'
+          ) {
+            return false;
+          }
+        }
+        return true;
+      });
+      localStorage.setItem('spora_applications', JSON.stringify(filtered));
+      return;
+    }
+
     const filtered = apps.filter((a: any) => a.id !== appId);
     localStorage.setItem('spora_applications', JSON.stringify(filtered));
   },
