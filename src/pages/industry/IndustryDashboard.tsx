@@ -6,23 +6,54 @@ import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { useToast } from '../../components/ui/Toast';
-import { PlusCircle, Search, Sparkles, Briefcase, Users, Calendar, ArrowRight, CheckCircle2, Factory, ShieldCheck, UserCheck, Phone, Mail, Edit2, Save } from 'lucide-react';
+import { PlusCircle, Search, Sparkles, Briefcase, Users, Calendar, ArrowRight, CheckCircle2, Factory, ShieldCheck, UserCheck, Phone, Mail, Edit2, Save, UserPlus, Trash2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { localDB } from '../../services/db';
+
+export interface IndustryPIC {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  notes?: string;
+}
 
 export const IndustryDashboard: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { showToast } = useToast();
   const companyName = user?.name || '3ITC Digital Academy';
 
+  // Managing Director State
+  const [directorName, setDirectorName] = useState(() => (user as any)?.directorName || 'Tubagus Aria');
+  const [isEditingDirector, setIsEditingDirector] = useState(false);
+
+  // Multi-PIC list State
+  const [picsList, setPicsList] = useState<IndustryPIC[]>(() => {
+    const existing = (user as any)?.pics;
+    if (existing && Array.isArray(existing) && existing.length > 0) return existing;
+    return [
+      {
+        id: 'pic-1',
+        name: (user as any)?.picName || user?.name || '3ITC',
+        role: (user as any)?.picRole || 'Direktur / Head of HR',
+        email: user?.email || 'tubagusaria31@gmail.com',
+        phone: (user as any)?.picPhone || '087780092090',
+        notes: 'Penanggung jawab utama rekrutmen lulusan SMK Vokasi & magang industri.'
+      }
+    ];
+  });
+
+  // Add / Edit PIC Modal State
   const [isPicModalOpen, setIsPicModalOpen] = useState(false);
-  const [picFormData, setPicFormData] = useState({
-    directorName: (user as any)?.directorName || 'Ir. H. Bambang Soesilo, M.T.',
-    picName: (user as any)?.picName || user?.name || 'Hendra Pratama, S.Psi',
-    picEmail: user?.email || '3itcdigilab@gmail.com',
-    picPhone: (user as any)?.picPhone || '+62 812-9876-5432',
-    picRole: (user as any)?.picRole || 'Head of Talent Acquisition & HR',
-    picNotes: (user as any)?.picNotes || 'Otorisasi rekrutmen & seleksi kandidat vokasi EV.'
+  const [editingPicId, setEditingPicId] = useState<string | null>(null);
+  const [picFormData, setPicFormData] = useState<IndustryPIC>({
+    id: '',
+    name: '',
+    role: '',
+    email: '',
+    phone: '',
+    notes: ''
   });
 
   // Dynamic database statistics
@@ -43,18 +74,71 @@ export const IndustryDashboard: React.FC = () => {
     });
   }, [applications, students, jobs]);
 
-  const handleSavePic = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateUser({
-      directorName: picFormData.directorName,
-      picName: picFormData.picName,
-      picPhone: picFormData.picPhone,
-      picRole: picFormData.picRole,
-      picNotes: picFormData.picNotes
-    } as any);
+  // Handle Add / Edit PIC Item
+  const handleOpenAddPic = () => {
+    setEditingPicId(null);
+    setPicFormData({
+      id: `pic-${Date.now()}`,
+      name: '',
+      role: 'Talent Acquisition Manager',
+      email: user?.email || '',
+      phone: '',
+      notes: ''
+    });
+    setIsPicModalOpen(true);
+  };
 
-    showToast('Data PIC Rekrutmen & Direktur Perusahaan berhasil disimpan!', 'success');
+  const handleOpenEditPic = (pic: IndustryPIC) => {
+    setEditingPicId(pic.id);
+    setPicFormData({ ...pic });
+    setIsPicModalOpen(true);
+  };
+
+  const handleSavePicItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    let nextPics = [...picsList];
+
+    if (editingPicId) {
+      nextPics = nextPics.map(p => p.id === editingPicId ? { ...picFormData } : p);
+      showToast(`PIC "${picFormData.name}" diperbarui.`, 'success');
+    } else {
+      nextPics.push({ ...picFormData, id: `pic-${Date.now()}` });
+      showToast(`PIC baru "${picFormData.name}" ditambahkan.`, 'success');
+    }
+
+    setPicsList(nextPics);
+    savePicsToAuth(nextPics, directorName);
     setIsPicModalOpen(false);
+  };
+
+  const handleDeletePicItem = (picId: string, name: string) => {
+    if (picsList.length <= 1) {
+      showToast('Minimal harus ada 1 PIC rekrutmen terdaftar.', 'warning');
+      return;
+    }
+    if (!window.confirm(`Hapus PIC "${name}" dari daftar kontak perusahaan?`)) return;
+
+    const filtered = picsList.filter(p => p.id !== picId);
+    setPicsList(filtered);
+    savePicsToAuth(filtered, directorName);
+    showToast(`PIC "${name}" dihapus.`, 'warning');
+  };
+
+  const handleSaveDirector = (e: React.FormEvent) => {
+    e.preventDefault();
+    savePicsToAuth(picsList, directorName);
+    setIsEditingDirector(false);
+    showToast('Nama Direktur Perusahaan berhasil diperbarui!', 'success');
+  };
+
+  const savePicsToAuth = (updatedPics: IndustryPIC[], dirName: string) => {
+    updateUser({
+      directorName: dirName,
+      pics: updatedPics,
+      picName: updatedPics[0]?.name,
+      picRole: updatedPics[0]?.role,
+      picPhone: updatedPics[0]?.phone
+    } as any);
   };
 
   return (
@@ -118,47 +202,92 @@ export const IndustryDashboard: React.FC = () => {
         })}
       </div>
 
-      {/* Corporate PIC & Executive Info Card */}
-      <Card className="p-5 bg-gradient-to-r from-violet-50 via-white to-slate-50 border-violet-200">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-violet-100 pb-4">
-          <div className="space-y-1">
-            <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-              <UserCheck size={18} className="text-violet-600" /> Corporate Executive & PIC Rekrutmen Perusahaan
-            </h3>
-            <p className="text-xs text-slate-500">Informasi Direktur Utama & Penanggung Jawab Rekrutmen (PIC) terdaftar.</p>
+      {/* Corporate Executive & Multi-PIC Info Card */}
+      <Card className="p-6 bg-gradient-to-r from-violet-50 via-white to-slate-50 border-violet-200 space-y-4">
+        {/* Direktur Utama Header Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-violet-100 text-violet-700 font-bold">
+              <UserCheck size={22} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Direktur Utama / Executive Director</p>
+              {!isEditingDirector ? (
+                <h4 className="text-base font-extrabold text-slate-900">{directorName}</h4>
+              ) : (
+                <form onSubmit={handleSaveDirector} className="flex items-center gap-2 mt-1">
+                  <input 
+                    type="text" 
+                    className="p-1.5 px-3 border border-violet-300 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-violet-600"
+                    value={directorName}
+                    onChange={(e) => setDirectorName(e.target.value)}
+                  />
+                  <Button type="submit" size="sm" className="bg-violet-600 text-white text-xs px-3 py-1">Simpan</Button>
+                </form>
+              )}
+            </div>
           </div>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="text-xs font-bold text-violet-700 border-violet-300 bg-white hover:bg-violet-100 flex items-center gap-1.5"
-            onClick={() => setIsPicModalOpen(true)}
-          >
-            <Edit2 size={14} /> Edit Data PIC & Direktur
+          
+          {!isEditingDirector && (
+            <Button size="sm" variant="outline" className="text-xs font-bold text-violet-700 border-violet-300 hover:bg-violet-50" onClick={() => setIsEditingDirector(true)}>
+              <Edit2 size={13} className="mr-1" /> Edit Nama Direktur
+            </Button>
+          )}
+        </div>
+
+        {/* Section Header Multi PIC & Add PIC Button */}
+        <div className="flex justify-between items-center border-b border-violet-100 pb-3">
+          <div>
+            <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+              <Briefcase size={18} className="text-violet-600" /> Penanggung Jawab Rekrutmen ({picsList.length} PIC Active)
+            </h3>
+            <p className="text-xs text-slate-500">Kelola kontak PIC rekrutmen & hubungan institusi vokasi.</p>
+          </div>
+          <Button size="sm" className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold flex items-center gap-1.5" onClick={handleOpenAddPic}>
+            <UserPlus size={14} /> + Tambah PIC Baru
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 text-xs">
-          <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-1 shadow-2xs">
-            <p className="text-slate-400 font-bold uppercase text-[10px]">Managing Director / Direktur Utama</p>
-            <p className="font-extrabold text-slate-900 text-sm">{picFormData.directorName}</p>
-            <span className="inline-block px-2 py-0.5 bg-violet-100 text-violet-800 text-[10px] font-bold rounded-full">Executive Lead</span>
-          </div>
+        {/* PIC Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {picsList.map((pic, idx) => (
+            <div key={pic.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs hover:border-violet-300 transition-all space-y-3 relative">
+              <div className="flex justify-between items-start border-b border-slate-100 pb-2">
+                <div>
+                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-violet-100 text-violet-800">
+                    {idx === 0 ? '⭐ PIC Utama' : `PIC #${idx + 1}`}
+                  </span>
+                  <h5 className="font-extrabold text-slate-900 text-sm mt-1">{pic.name}</h5>
+                  <p className="text-[#0099B8] font-bold text-xs">{pic.role}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button size="sm" variant="outline" className="p-1 text-xs hover:border-violet-400" onClick={() => handleOpenEditPic(pic)}>
+                    <Edit2 size={13} />
+                  </Button>
+                  {picsList.length > 1 && (
+                    <Button size="sm" variant="ghost" className="p-1 text-red-600 hover:bg-red-50" onClick={() => handleDeletePicItem(pic.id, pic.name)}>
+                      <Trash2 size={13} />
+                    </Button>
+                  )}
+                </div>
+              </div>
 
-          <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-1 shadow-2xs">
-            <p className="text-slate-400 font-bold uppercase text-[10px]">Nama PIC Rekrutmen</p>
-            <p className="font-extrabold text-slate-900 text-sm">{picFormData.picName}</p>
-            <p className="text-[#0099B8] font-bold text-[11px]">{picFormData.picRole}</p>
-          </div>
+              <div className="space-y-1 text-xs">
+                <p className="font-semibold text-slate-800 flex items-center gap-1.5">
+                  <Mail size={13} className="text-violet-600 shrink-0" /> {pic.email}
+                </p>
+                <p className="font-semibold text-emerald-700 flex items-center gap-1.5">
+                  <Phone size={13} className="text-emerald-600 shrink-0" /> {pic.phone}
+                </p>
+              </div>
 
-          <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-1 shadow-2xs">
-            <p className="text-slate-400 font-bold uppercase text-[10px]">Kontak Email & WhatsApp PIC</p>
-            <p className="font-semibold text-slate-800 flex items-center gap-1">
-              <Mail size={13} className="text-violet-600" /> {picFormData.picEmail}
-            </p>
-            <p className="font-semibold text-emerald-700 flex items-center gap-1">
-              <Phone size={13} className="text-emerald-600" /> {picFormData.picPhone}
-            </p>
-          </div>
+              {pic.notes && (
+                <p className="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg leading-relaxed border border-slate-100">
+                  📝 {pic.notes}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
       </Card>
 
@@ -247,61 +376,56 @@ export const IndustryDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Modal Edit PIC Info for Industry Dashboard */}
-      <Modal isOpen={isPicModalOpen} onClose={() => setIsPicModalOpen(false)} title="Edit Data PIC & Direktur Perusahaan">
-        <form onSubmit={handleSavePic} className="space-y-4 pt-2">
+      {/* Modal Add/Edit PIC Form */}
+      <Modal isOpen={isPicModalOpen} onClose={() => setIsPicModalOpen(false)} title={editingPicId ? "Edit Data PIC" : "Tambah PIC Rekrutmen Baru"}>
+        <form onSubmit={handleSavePicItem} className="space-y-4 pt-2 font-sans">
           <Input 
-            label="Nama Direktur Perusahaan / Managing Director" 
-            value={picFormData.directorName} 
-            onChange={(e) => setPicFormData({ ...picFormData, directorName: e.target.value })} 
+            label="Nama Lengkap PIC" 
+            value={picFormData.name} 
+            onChange={(e) => setPicFormData({ ...picFormData, name: e.target.value })} 
             required 
+            placeholder="e.g. Hendra Pratama, S.Psi"
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input 
-              label="Nama PIC Rekrutmen" 
-              value={picFormData.picName} 
-              onChange={(e) => setPicFormData({ ...picFormData, picName: e.target.value })} 
-              required 
-            />
-            <Input 
-              label="Jabatan / Role PIC" 
-              value={picFormData.picRole} 
-              onChange={(e) => setPicFormData({ ...picFormData, picRole: e.target.value })} 
-              required 
-            />
-          </div>
+          <Input 
+            label="Jabatan / Title PIC" 
+            value={picFormData.role} 
+            onChange={(e) => setPicFormData({ ...picFormData, role: e.target.value })} 
+            required 
+            placeholder="e.g. Senior Talent Acquisition Lead"
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input 
               label="Email Kontak PIC" 
               type="email" 
-              value={picFormData.picEmail} 
-              onChange={(e) => setPicFormData({ ...picFormData, picEmail: e.target.value })} 
+              value={picFormData.email} 
+              onChange={(e) => setPicFormData({ ...picFormData, email: e.target.value })} 
               required 
-              disabled
             />
             <Input 
-              label="No. Telepon / WhatsApp PIC" 
-              value={picFormData.picPhone} 
-              onChange={(e) => setPicFormData({ ...picFormData, picPhone: e.target.value })} 
+              label="No. WhatsApp / Telepon PIC" 
+              value={picFormData.phone} 
+              onChange={(e) => setPicFormData({ ...picFormData, phone: e.target.value })} 
               required 
+              placeholder="e.g. 0812-3456-7890"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-bold text-slate-700">Catatan Kontak Rekrutmen</label>
+            <label className="block text-xs font-bold text-slate-700">Catatan & Keterangan Tugas PIC</label>
             <textarea 
               rows={3} 
               className="w-full p-2.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-violet-600 focus:outline-none"
-              value={picFormData.picNotes} 
-              onChange={(e) => setPicFormData({ ...picFormData, picNotes: e.target.value })}
+              value={picFormData.notes || ''} 
+              onChange={(e) => setPicFormData({ ...picFormData, notes: e.target.value })}
+              placeholder="Detail tugas atau area rekrutmen PIC ini..."
             />
           </div>
 
           <div className="flex justify-end gap-2 pt-3 border-t">
             <Button type="button" variant="outline" size="sm" onClick={() => setIsPicModalOpen(false)}>Batal</Button>
-            <Button type="submit" size="sm" className="bg-violet-600 hover:bg-violet-700 text-white flex items-center gap-1">
+            <Button type="submit" size="sm" className="bg-violet-600 hover:bg-violet-700 text-white flex items-center gap-1 font-bold">
               <Save size={14} /> Simpan Data PIC
             </Button>
           </div>
