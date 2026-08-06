@@ -50,6 +50,12 @@ export const RegisterPage: React.FC = () => {
     city: 'Kabupaten Bekasi',
     // Industry specific
     companyName: '',
+    directorName: '',
+    picName: '',
+    picEmail: '',
+    picPhone: '',
+    picRole: '',
+    picNotes: '',
     sector: 'EV Battery Assembly',
     officeCity: 'Cikarang, Jawa Barat',
     hiringTarget: '10-50 Graduates / Year',
@@ -123,7 +129,7 @@ export const RegisterPage: React.FC = () => {
           {[
             { id: 'student', label: 'Talent Candidate', icon: GraduationCap },
             { id: 'industry', label: 'Industry Partner', icon: Factory },
-            { id: 'school', label: 'Vocational School', icon: School }
+            { id: 'school', label: 'Education Institution', icon: School }
           ].map(item => {
             const Icon = item.icon;
             const isSelected = formData.role === item.id;
@@ -346,7 +352,7 @@ export const RegisterPage: React.FC = () => {
               {formData.role === 'industry' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Company Name (Nama Perusahaan Industri)</label>
                     <input 
                       type="text" 
                       name="companyName" 
@@ -356,6 +362,43 @@ export const RegisterPage: React.FC = () => {
                       value={formData.companyName} 
                       onChange={handleChange} 
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Nama Direktur Perusahaan / Managing Director Name</label>
+                    <input 
+                      type="text" 
+                      name="directorName" 
+                      placeholder="e.g. Bpk. Ir. H. Bambang Soesilo, M.T."
+                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
+                      value={formData.directorName} 
+                      onChange={handleChange} 
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Nama PIC Rekrutmen / Contact Person</label>
+                      <input 
+                        type="text" 
+                        name="picName" 
+                        placeholder="e.g. Hendra Pratama, S.Psi"
+                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
+                        value={formData.picName} 
+                        onChange={handleChange} 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Jabatan PIC (Role / Title)</label>
+                      <input 
+                        type="text" 
+                        name="picRole" 
+                        placeholder="e.g. Senior Talent Acquisition Manager"
+                        className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
+                        value={formData.picRole} 
+                        onChange={handleChange} 
+                      />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

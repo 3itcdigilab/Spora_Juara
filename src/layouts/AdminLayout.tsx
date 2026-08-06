@@ -9,7 +9,7 @@ const sidebarItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
   { icon: Users, label: 'Users', path: '/admin/users' },
   { icon: GraduationCap, label: 'Students', path: '/admin/students' },
-  { icon: School, label: 'Schools', path: '/admin/schools' },
+  { icon: School, label: 'Education Institution', path: '/admin/schools' },
   { icon: Building, label: 'Industries', path: '/admin/industries' },
   { icon: ClipboardList, label: 'Assessments', path: '/admin/assessments' },
   { icon: Sparkles, label: 'AI Rules', path: '/admin/ai-rules' },
