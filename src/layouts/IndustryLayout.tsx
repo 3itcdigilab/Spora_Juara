@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, Navigate } from 'react-router';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Topbar } from '../components/layout/Topbar';
@@ -19,6 +19,8 @@ const sidebarItems = [
 
 export const IndustryLayout: React.FC = () => {
   const { role } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   if (role === 'student') return <Navigate to="/student/dashboard" replace />;
   if (role === 'school') return <Navigate to="/school/dashboard" replace />;
@@ -26,10 +28,17 @@ export const IndustryLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <Sidebar items={sidebarItems} />
+      <Sidebar 
+        items={sidebarItems} 
+        collapsed={collapsed}
+        onToggle={() => setCollapsed(!collapsed)}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
+
       <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
-        <Topbar />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <Topbar onMenuToggle={() => setMobileOpen(prev => !prev)} />
+        <main className="flex-1 overflow-y-auto p-3 sm:p-5 md:p-6 lg:p-8 max-w-full">
           <Outlet />
         </main>
       </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Topbar } from '../components/layout/Topbar';
@@ -18,12 +18,21 @@ const sidebarItems = [
 ];
 
 export const AdminLayout: React.FC = () => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <Sidebar items={sidebarItems} />
+      <Sidebar 
+        items={sidebarItems} 
+        collapsed={collapsed}
+        onToggle={() => setCollapsed(!collapsed)}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
-        <Topbar title="National Command Center" />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <Topbar title="National Command Center" onMenuToggle={() => setMobileOpen(prev => !prev)} />
+        <main className="flex-1 overflow-y-auto p-3 sm:p-5 md:p-6 lg:p-8 max-w-full">
           <Outlet />
         </main>
       </div>
