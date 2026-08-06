@@ -19,21 +19,21 @@ export const StudentJobBoard: React.FC = () => {
   // Load jobs and applications dynamically from database
   const allJobs = useMemo(() => localDB.getJobs(), []);
   const myApplications = useMemo(() => localDB.getApplications(studentId), [studentId]);
-  const appliedJobIds = useMemo(() => new Set(myApplications.map(a => a.jobId)), [myApplications]);
+  const appliedJobIds = useMemo(() => new Set(myApplications.map((a: any) => a.jobId)), [myApplications]);
 
   // Dynamic filter options
   const locations = useMemo(() => {
-    const locs = Array.from(new Set(allJobs.map(j => j.location.split(',')[0].trim())));
+    const locs = Array.from(new Set(allJobs.map((j: any) => j.location.split(',')[0].trim())));
     return ['All', ...locs];
   }, [allJobs]);
 
   // Filtered jobs list
   const filteredJobs = useMemo(() => {
-    return allJobs.filter(job => {
+    return allJobs.filter((job: any) => {
       const matchSearch = search.trim() === '' || 
         job.title.toLowerCase().includes(search.toLowerCase()) ||
         job.department.toLowerCase().includes(search.toLowerCase()) ||
-        job.requiredSkills.some(s => s.toLowerCase().includes(search.toLowerCase()));
+        job.requiredSkills.some((s: any) => s.toLowerCase().includes(search.toLowerCase()));
 
       const matchLocation = filterLocation === 'All' || job.location.includes(filterLocation);
       const matchType = filterType === 'All' || job.employmentType.toLowerCase() === filterType.toLowerCase();
@@ -67,7 +67,7 @@ export const StudentJobBoard: React.FC = () => {
             onChange={(e) => setFilterLocation(e.target.value)}
           >
             <option value="All">All Locations</option>
-            {locations.filter(l => l !== 'All').map(loc => (
+            {locations.filter((l: any) => l !== 'All').map((loc: any) => (
               <option key={loc} value={loc}>{loc}</option>
             ))}
           </select>
@@ -87,7 +87,7 @@ export const StudentJobBoard: React.FC = () => {
 
       {/* Jobs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredJobs.map(job => {
+        {filteredJobs.map((job: any) => {
           const isApplied = appliedJobIds.has(job.id);
           const aiMatchScore = 85 + (job.title.length % 11);
 
@@ -104,7 +104,7 @@ export const StudentJobBoard: React.FC = () => {
                     </Badge>
                   ) : (
                     <Badge variant="info" className="bg-cyan-50 text-[#0099B8] border-cyan-200 font-bold">
-                      {aiMatchScore}% AI Match
+                      {aiMatchScore}% Score Match
                     </Badge>
                   )}
                 </div>
@@ -121,7 +121,7 @@ export const StudentJobBoard: React.FC = () => {
 
                 {/* Skill Chips */}
                 <div className="flex flex-wrap gap-1.5 mb-6">
-                  {job.requiredSkills.slice(0, 3).map(skill => (
+                  {job.requiredSkills.slice(0, 3).map((skill: any) => (
                     <span key={skill} className="text-[11px] font-medium bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-md">
                       {skill}
                     </span>

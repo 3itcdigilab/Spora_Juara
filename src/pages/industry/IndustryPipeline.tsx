@@ -111,7 +111,7 @@ export const IndustryPipeline: React.FC = () => {
             className="px-3.5 py-2 border border-slate-300 rounded-xl bg-white text-xs font-bold text-slate-700 focus:outline-none focus:border-[#0099B8] w-full md:w-64"
           >
             <option value="All">All Active Vacancies ({jobs.length})</option>
-            {jobs.map(job => (
+            {jobs.map((job: any) => (
               <option key={job.id} value={job.id}>{job.title}</option>
             ))}
           </select>
@@ -121,7 +121,7 @@ export const IndustryPipeline: React.FC = () => {
       {/* Kanban Board Container */}
       <div className="flex overflow-x-auto gap-4 pb-6 min-h-[580px] scrollbar-thin">
         {pipelineStages.map((stage) => {
-          const stageApps = filteredApps.filter(a => a.status === stage.key);
+          const stageApps = filteredApps.filter((a: any) => a.status === stage.key);
 
           return (
             <div 

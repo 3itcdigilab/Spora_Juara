@@ -25,7 +25,7 @@ export const IndustryVacancies: React.FC = () => {
   }, [refreshKey]);
 
   const filteredJobs = useMemo(() => {
-    return rawJobs.filter(job => {
+    return rawJobs.filter((job: any) => {
       const matchTab = activeTab === 'All' || job.status.toLowerCase() === activeTab.toLowerCase();
       const matchSearch = search.trim() === '' || 
         job.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -89,8 +89,8 @@ export const IndustryVacancies: React.FC = () => {
 
       {/* Vacancies Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredJobs.map((job) => {
-          const appCount = allApplications.filter(a => a.jobId === job.id).length;
+        {filteredJobs.map((job: any) => {
+          const appCount = allApplications.filter((a: any) => a.jobId === job.id).length;
 
           return (
             <Card key={job.id} className="p-6 flex flex-col justify-between border-slate-200 hover:shadow-md transition-all">

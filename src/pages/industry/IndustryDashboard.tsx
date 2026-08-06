@@ -178,10 +178,10 @@ export const IndustryDashboard: React.FC = () => {
       {/* KPI Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { title: "Active Vacancies", value: jobs.filter(j => j.status === 'active').length, label: "Live EV Roles", icon: Briefcase, color: "text-[#0099B8]", bg: "bg-cyan-50" },
+          { title: "Active Vacancies", value: jobs.filter((j: any) => j.status === 'active').length, label: "Live EV Roles", icon: Briefcase, color: "text-[#0099B8]", bg: "bg-cyan-50" },
           { title: "Total Applications", value: applications.length, label: "In Pipeline", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-          { title: "In Interview Stage", value: applications.filter(a => a.status === 'interview').length, label: "Scheduled Candidate Meetings", icon: Calendar, color: "text-amber-600", bg: "bg-amber-50" },
-          { title: "Hired Candidates", value: applications.filter(a => a.status === 'hired').length, label: "Hired & Placed", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+          { title: "In Interview Stage", value: applications.filter((a: any) => a.status === 'interview').length, label: "Scheduled Candidate Meetings", icon: Calendar, color: "text-amber-600", bg: "bg-amber-50" },
+          { title: "Hired Candidates", value: applications.filter((a: any) => a.status === 'hired').length, label: "Hired & Placed", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
           { title: "Assessed Talent Pool", value: students.length, label: "National SMK Pool", icon: Sparkles, color: "text-violet-600", bg: "bg-violet-50" }
         ].map((kpi, idx) => {
           const Icon = kpi.icon;
@@ -315,7 +315,7 @@ export const IndustryDashboard: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {recentApplications.map((app) => (
+              {recentApplications.map((app: any) => (
                 <div key={app.id} className="p-4 rounded-xl border border-slate-200 hover:border-cyan-300 transition-colors flex items-center justify-between gap-4 bg-white">
                   <div className="space-y-1">
                     <span className="font-extrabold text-sm text-slate-900">{app.studentName}</span>

@@ -27,7 +27,7 @@ export const StudentApplications: React.FC = () => {
     const jobs = localDB.getJobs();
 
     return rawApps.map((app: Application) => {
-      const job = jobs.find(j => j.id === app.jobId) || {
+      const job = jobs.find((j: any) => j.id === app.jobId) || {
         title: 'EV Position',
         department: 'EV Partner',
         location: 'Indonesia'
@@ -55,7 +55,7 @@ export const StudentApplications: React.FC = () => {
 
   const filteredApps = useMemo(() => {
     if (activeTab === 'All') return formattedApps;
-    return formattedApps.filter(app => app.displayCategory === activeTab);
+    return formattedApps.filter((app: any) => app.displayCategory === activeTab);
   }, [formattedApps, activeTab]);
 
   const handleWithdraw = (appId: string, title: string) => {
@@ -85,7 +85,7 @@ export const StudentApplications: React.FC = () => {
       />
 
       <div className="space-y-4">
-        {filteredApps.map((app) => (
+        {filteredApps.map((app: any) => (
           <Card key={app.id} className="p-6 hover:shadow-md transition-all border-slate-200">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
               <div>
