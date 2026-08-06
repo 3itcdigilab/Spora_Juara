@@ -68,7 +68,7 @@ export const StudentJobDetail: React.FC = () => {
       certificates: localDB.getCertificates(studentId)
     };
 
-    localDB.applyForJob(studentId, job.id, applicantDetails);
+    localDB.applyForJob({ studentId, jobId: job.id, ...applicantDetails });
     setHasApplied(true);
     showToast(`Lamaran berhasil dikirim untuk posisi ${job.title}!`, 'success');
   };

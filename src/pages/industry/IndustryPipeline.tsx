@@ -55,8 +55,8 @@ export const IndustryPipeline: React.FC = () => {
       const matchJob = selectedJobId === 'All' || app.jobId === selectedJobId;
       
       const studentObj = localDB.getStudentById(app.studentId || app.studentEmail);
-      const appName = app.studentName && app.studentName !== '3ITC' ? app.studentName : studentObj.name;
-      const appMajor = app.major || studentObj.major || '';
+      const appName = app.studentName && app.studentName !== '3ITC' ? app.studentName : (studentObj?.name || app.studentEmail || '');
+      const appMajor = app.major || studentObj?.major || '';
 
       const matchSearch = search.trim() === '' || 
         appName.toLowerCase().includes(search.toLowerCase()) ||
@@ -152,11 +152,11 @@ export const IndustryPipeline: React.FC = () => {
                   const isFinalStage = app.status === 'hired';
 
                   // Real candidate name & attributes resolved directly from registered candidate account
-                  const candidateName = app.studentName && app.studentName !== '3ITC' && app.studentName !== 'Pelamar Vokasi EV' ? app.studentName : studentObj.name;
-                  const candidateEmail = app.studentEmail || studentObj.email;
-                  const candidateSchool = app.school || studentObj.schoolName;
-                  const candidateMajor = app.major || studentObj.major;
-                  const candidateSkills = app.skills || studentObj.skills;
+                  const candidateName = app.studentName && app.studentName !== '3ITC' && app.studentName !== 'Pelamar Vokasi EV' ? app.studentName : (studentObj?.name || app.studentEmail || '');
+                  const candidateEmail = app.studentEmail || studentObj?.email || '';
+                  const candidateSchool = app.school || studentObj?.schoolName || '';
+                  const candidateMajor = app.major || studentObj?.major || '';
+                  const candidateSkills = app.skills || studentObj?.skills || [];
 
                   return (
                     <Card key={app.id} className="p-4 bg-white hover:shadow-md transition-all border-slate-200 space-y-3 font-sans">
@@ -179,15 +179,22 @@ export const IndustryPipeline: React.FC = () => {
                         size="sm" 
                         variant="outline" 
                         className="w-full text-xs font-bold text-[#0099B8] border-cyan-200 bg-cyan-50 hover:bg-cyan-100 flex items-center justify-center gap-1.5 py-1.5"
-                        onClick={() => setViewingApplicant({ 
-                          ...app, 
-                          candidateName, 
-                          candidateEmail, 
-                          candidateSchool, 
-                          candidateMajor, 
-                          candidateSkills, 
-                          jobTitle: job?.title 
-                        })}
+                        onClick={() => {
+                          const candidateProfile = localDB.getProfile(candidateEmail) || localDB.getProfile(app.studentId);
+                          setViewingApplicant({ 
+                            ...app, 
+                            candidateName, 
+                            candidateEmail, 
+                            candidateSchool, 
+                            candidateMajor, 
+                            candidateSkills, 
+                            phone: candidateProfile?.phone || studentObj?.phone || app.phone,
+                            bio: candidateProfile?.bio || studentObj?.bio || app.bio,
+                            linkedinUrl: candidateProfile?.linkedinUrl || studentObj?.linkedinUrl,
+                            resumeName: candidateProfile?.resumeName || studentObj?.resumeName,
+                            jobTitle: job?.title 
+                          });
+                        }}
                       >
                         <Eye size={14} /> View Profile & Detail Pelamar ↗
                       </Button>
@@ -293,13 +300,13 @@ export const IndustryPipeline: React.FC = () => {
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
                 <span className="text-slate-400 font-bold uppercase text-[10px]">Email Kontak Pelamar</span>
                 <p className="font-extrabold text-slate-900 font-mono flex items-center gap-1.5">
-                  <Mail size={14} className="text-[#0099B8]" /> {viewingApplicant.candidateEmail || 'tubagus@spora.id'}
+                  <Mail size={14} className="text-[#0099B8]" /> {viewingApplicant.candidateEmail || viewingApplicant.studentEmail}
                 </p>
               </div>
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
                 <span className="text-slate-400 font-bold uppercase text-[10px]">No. Telepon / WhatsApp</span>
                 <p className="font-extrabold text-slate-900 font-mono flex items-center gap-1.5">
-                  <Phone size={14} className="text-[#0099B8]" /> {viewingApplicant.phone || '0812-3456-7890'}
+                  <Phone size={14} className="text-[#0099B8]" /> {viewingApplicant.phone || 'Belum mencantumkan nomor telepon'}
                 </p>
               </div>
             </div>
@@ -309,7 +316,7 @@ export const IndustryPipeline: React.FC = () => {
               <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
                 <h4 className="font-bold text-slate-900 mb-1">Bio / Ringkasan Diri</h4>
                 <p className="text-slate-600 leading-relaxed">
-                  {viewingApplicant.bio || 'Kandidat siswa vokasi berdedikasi tinggi dengan spesialisasi perakitan modul baterai EV dan standar keselamatan High Voltage.'}
+                  {viewingApplicant.bio || 'Belum mengisi deskripsi bio/ringkasan diri.'}
                 </p>
               </div>
 

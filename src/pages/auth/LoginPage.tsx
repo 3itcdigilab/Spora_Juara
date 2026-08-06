@@ -54,7 +54,7 @@ export const LoginPage: React.FC = () => {
               <Logo size="lg" />
             </Link>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">Welcome Back</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">Welcome Juara</h1>
           <p className="text-slate-500 text-sm">Sign in to your Spora Juara account</p>
         </div>
 

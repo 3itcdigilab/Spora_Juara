@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router';
-import { ArrowLeft, MapPin, Mail, Download, GraduationCap, Award } from 'lucide-react';
+import { ArrowLeft, MapPin, Mail, Phone, Download, GraduationCap, Award } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -34,11 +34,18 @@ export const CandidateDetail: React.FC = () => {
     );
   }
 
-  const candidateName = candidate.name || candidate.fullName || candidate.userId || 'Kandidat Vokasi EV';
-  const schoolName = candidate.school || candidate.schoolName || 'SMK Negeri 1 Cikarang';
-  const major = candidate.major || 'Teknik Kendaraan Ringan (Otomotif EV)';
-  const province = candidate.province || 'Jawa Barat';
-  const skills = candidate.skills || ['EV Battery Assembly', 'High Voltage Safety', 'Quality Control'];
+  const prof = useMemo(() => {
+    if (!candidate) return null;
+    return localDB.getProfile(candidate.id) || localDB.getProfile(candidate.email);
+  }, [candidate]);
+
+  const candidateName = prof?.fullName || candidate.name || (candidate as any).fullName || candidate.userId || 'Kandidat Vokasi EV';
+  const schoolName = prof?.school || candidate.school || candidate.schoolName || 'SMK Negeri 1 Cikarang';
+  const major = prof?.major || candidate.major || 'Teknik Kendaraan Ringan (Otomotif EV)';
+  const province = prof?.province || candidate.province || 'Jawa Barat';
+  const phone = prof?.phone || candidate.phone || '';
+  const bio = prof?.bio || candidate.bio || 'Belum mengisi deskripsi bio/ringkasan diri.';
+  const skills = (prof?.skills && prof.skills.length > 0) ? prof.skills : (candidate.skills || ['EV Battery Assembly', 'High Voltage Safety', 'Quality Control']);
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto font-sans pb-10">
@@ -58,6 +65,7 @@ export const CandidateDetail: React.FC = () => {
               <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-slate-500 font-semibold">
                 <span className="flex items-center"><MapPin className="w-3.5 h-3.5 mr-1 text-slate-400"/> {province}, Indonesia</span>
                 <span className="flex items-center"><Mail className="w-3.5 h-3.5 mr-1 text-slate-400"/> {candidate.email || 'candidate@vokasi.id'}</span>
+                {phone && <span className="flex items-center font-mono"><Phone className="w-3.5 h-3.5 mr-1 text-slate-400"/> {phone}</span>}
               </div>
             </div>
           </div>
@@ -71,9 +79,9 @@ export const CandidateDetail: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           <Card className="p-6 border-slate-200 space-y-4">
-            <h2 className="text-base font-bold text-slate-900 border-b pb-2">Profile Overview</h2>
+            <h2 className="text-base font-bold text-slate-900 border-b pb-2">Profile Overview / Bio</h2>
             <p className="text-slate-600 text-xs leading-relaxed">
-              Kandidat lulusan vokasi berkualitas tinggi dengan keahlian praktis dalam sistem otomotif kendaraan listrik (EV), perakitan baterai modul, dan verifikasi keselamatan kerja High Voltage.
+              {bio}
             </p>
             
             <div>

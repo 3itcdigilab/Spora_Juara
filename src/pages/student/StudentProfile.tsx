@@ -79,6 +79,7 @@ export const StudentProfile: React.FC = () => {
   const handleSave = () => {
     const updated = localDB.saveProfile({
       studentId,
+      email: user?.email || studentId,
       fullName,
       avatarUrl,
       dateOfBirth: dob,
