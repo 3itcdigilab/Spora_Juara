@@ -14,7 +14,7 @@ export const StudentJobDetail: React.FC = () => {
   const { showToast } = useToast();
   const { user } = useAuth();
 
-  const studentId = 'student-1'; // Primary active candidate ID
+  const studentId = user?.email || (user as any)?.id || 'student-1';
 
   // Fetch target job dynamically with safe fallback
   const job = useMemo(() => {
@@ -25,15 +25,21 @@ export const StudentJobDetail: React.FC = () => {
   // Fetch candidate profile & talent score with safe fallback
   const student = useMemo(() => {
     const s = localDB.getStudentById(studentId);
-    if (s && Array.isArray(s.skills)) return s;
+    const prof = localDB.getProfile(studentId);
+
     return {
       id: studentId,
-      skills: ['EV Battery Assembly', 'High Voltage Safety', 'Electric Motor Winding', 'Quality Control'],
-      major: 'Teknik Kendaraan Ringan (Otomotif EV)',
-      city: 'Bekasi',
-      province: 'Jawa Barat'
+      name: user?.name || prof?.fullName || s?.name || 'Siswa Vokasi EV',
+      email: user?.email || 'siswa@vokasi.id',
+      phone: prof?.phone || '0812-3456-7890',
+      school: prof?.schoolName || s?.schoolName || 'SMK Negeri 1 Cikarang',
+      major: prof?.major || s?.major || 'Teknik Kendaraan Ringan (Otomotif EV)',
+      skills: prof?.skills || s?.skills || ['EV Battery Assembly', 'High Voltage Safety', 'Electric Motor Winding', 'Quality Control'],
+      bio: prof?.bio || 'Kandidat siswa vokasi berdedikasi tinggi.',
+      province: prof?.province || s?.province || 'Jawa Barat',
+      city: prof?.city || s?.city || 'Bekasi'
     };
-  }, [studentId]);
+  }, [studentId, user]);
 
   const talentScore = useMemo(() => localDB.getTalentScore(studentId), [studentId]);
 
@@ -46,9 +52,25 @@ export const StudentJobDetail: React.FC = () => {
 
   const handleApply = () => {
     if (hasApplied || !job) return;
-    localDB.applyForJob(studentId, job.id);
+
+    // Rich applicant details package
+    const applicantDetails = {
+      studentName: student.name,
+      studentEmail: student.email,
+      phone: student.phone,
+      school: student.school,
+      major: student.major,
+      province: student.province,
+      city: student.city,
+      skills: student.skills,
+      bio: student.bio,
+      portfolio: localDB.getPortfolio(studentId),
+      certificates: localDB.getCertificates(studentId)
+    };
+
+    localDB.applyForJob(studentId, job.id, applicantDetails);
     setHasApplied(true);
-    showToast(`Application submitted for ${job.title}!`, 'success');
+    showToast(`Lamaran berhasil dikirim untuk posisi ${job.title}!`, 'success');
   };
 
   // Safe skill match logic comparing required skills vs candidate skills
@@ -160,6 +182,12 @@ export const StudentJobDetail: React.FC = () => {
             </div>
 
             <div className="space-y-4 mb-6 text-xs">
+              <div className="p-3 bg-white rounded-xl border border-slate-200">
+                <p className="font-semibold text-slate-500 mb-1">Applying As</p>
+                <p className="font-extrabold text-slate-900 text-sm">{student.name}</p>
+                <p className="text-[11px] text-slate-500 font-mono">{student.email}</p>
+              </div>
+
               <div className="p-3 bg-white rounded-xl border border-slate-200">
                 <p className="font-semibold text-slate-500 mb-1">Talent Score Requirement</p>
                 <div className="flex items-center justify-between font-bold">

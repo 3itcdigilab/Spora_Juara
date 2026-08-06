@@ -8,7 +8,8 @@ import { useToast } from '../../components/ui/Toast';
 import { localDB } from '../../services/db';
 import { Application } from '../../data/types';
 import { 
-  ChevronRight, XCircle, CheckCircle2, Calendar, User, Zap, Filter, Award, Search 
+  ChevronRight, XCircle, CheckCircle2, Calendar, User, Zap, Filter, Award, Search,
+  Eye, Mail, Phone, MapPin, GraduationCap, FileText, Download, Briefcase, ExternalLink
 } from 'lucide-react';
 
 const pipelineStages: { key: Application['status']; label: string; color: string; border: string }[] = [
@@ -35,6 +36,8 @@ export const IndustryPipeline: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState<number>(0);
 
   // Modals state
+  const [viewingApplicant, setViewingApplicant] = useState<any | null>(null);
+
   const [rejectingAppId, setRejectingAppId] = useState<string | null>(null);
   const [rejectionReasonInput, setRejectionReasonInput] = useState<string>('');
 
@@ -51,17 +54,20 @@ export const IndustryPipeline: React.FC = () => {
   const filteredApps = useMemo(() => {
     return allApplications.filter((app: any) => {
       const matchJob = selectedJobId === 'All' || app.jobId === selectedJobId;
-      const student = students.find((s: any) => s.id === app.studentId);
+      const student = students.find((s: any) => s.id === app.studentId || s.email === app.studentEmail);
+      const appName = app.studentName || student?.name || student?.fullName || '';
+      const appMajor = app.major || student?.major || '';
+
       const matchSearch = search.trim() === '' || 
-        (student && student.major && student.major.toLowerCase().includes(search.toLowerCase())) ||
-        (student && student.city && student.city.toLowerCase().includes(search.toLowerCase()));
+        appName.toLowerCase().includes(search.toLowerCase()) ||
+        appMajor.toLowerCase().includes(search.toLowerCase());
 
       return matchJob && matchSearch;
     });
   }, [allApplications, selectedJobId, search, students]);
 
   // Advance stage action
-  const handleAdvance = (app: Application) => {
+  const handleAdvance = (app: any) => {
     const nextStage = nextStageMap[app.status];
     if (!nextStage) return;
 
@@ -99,7 +105,7 @@ export const IndustryPipeline: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Industry Recruitment Pipeline</h1>
-          <p className="text-xs sm:text-sm text-slate-500">Review candidate applications, trigger AI evaluations, and advance talent to hire.</p>
+          <p className="text-xs sm:text-sm text-slate-500">Kelola lamaran pelamar real, lihat profil & proyek, dan majukan tahap seleksi.</p>
         </div>
 
         {/* Vacancy Filter Dropdown */}
@@ -141,33 +147,45 @@ export const IndustryPipeline: React.FC = () => {
               {/* Candidate Cards List */}
               <div className="p-3 flex-1 overflow-y-auto space-y-3">
                 {stageApps.map((app: any) => {
-                  const student = students.find((s: any) => s.id === app.studentId);
+                  const student = students.find((s: any) => s.id === app.studentId || s.email === app.studentEmail);
                   const job = jobs.find((j: any) => j.id === app.jobId);
                   const isFinalStage = app.status === 'hired';
 
+                  // Real candidate name & attributes
+                  const candidateName = app.studentName || student?.name || student?.fullName || 'Pelamar Vokasi EV';
+                  const candidateSchool = app.school || student?.school || student?.schoolName || 'SMK Negeri 1 Cikarang';
+                  const candidateMajor = app.major || student?.major || 'Teknik Kendaraan Ringan (Otomotif EV)';
+                  const candidateSkills = app.skills || student?.skills || ['EV Battery Assembly', 'High Voltage Safety'];
+
                   return (
-                    <Card key={app.id} className="p-4 bg-white hover:shadow-md transition-all border-slate-200 space-y-3">
+                    <Card key={app.id} className="p-4 bg-white hover:shadow-md transition-all border-slate-200 space-y-3 font-sans">
                       {/* Top Meta */}
                       <div className="flex justify-between items-start gap-2">
                         <div>
                           <h4 className="font-extrabold text-sm text-slate-900 leading-snug">
-                            {student?.major || 'Kandidat Vokasi EV'}
+                            {candidateName}
                           </h4>
-                          <p className="text-[11px] text-slate-500 font-semibold">{student?.city || 'Jawa Barat'}, {student?.province || 'Indonesia'}</p>
+                          <p className="text-[11px] text-slate-500 font-semibold">{candidateSchool}</p>
+                          <p className="text-[10px] text-[#0099B8] font-bold mt-0.5">{candidateMajor}</p>
                         </div>
                         <Badge variant="info" className="bg-cyan-50 text-[#0099B8] border-cyan-200 text-[10px] font-bold shrink-0">
                           {app.aiMatchScore}% Score Match
                         </Badge>
                       </div>
 
-                      {/* Job Role Tag */}
-                      <p className="text-[11px] font-bold text-[#0099B8] bg-cyan-50 px-2.5 py-1 rounded-md inline-block">
-                        🎯 {job?.title || 'EV Position'}
-                      </p>
+                      {/* View Profile Button */}
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="w-full text-xs font-bold text-[#0099B8] border-cyan-200 bg-cyan-50 hover:bg-cyan-100 flex items-center justify-center gap-1.5 py-1.5"
+                        onClick={() => setViewingApplicant({ ...app, candidateName, candidateSchool, candidateMajor, candidateSkills, jobTitle: job?.title })}
+                      >
+                        <Eye size={14} /> View Profile & Detail Pelamar ↗
+                      </Button>
 
                       {/* Key Skills */}
                       <div className="flex flex-wrap gap-1">
-                        {student?.skills?.slice(0, 2).map((skill: string) => (
+                        {candidateSkills.slice(0, 2).map((skill: string) => (
                           <span key={skill} className="text-[10px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
                             {skill}
                           </span>
@@ -175,7 +193,7 @@ export const IndustryPipeline: React.FC = () => {
                       </div>
 
                       {/* Candidate Score & Date */}
-                      <div className="flex justify-between items-center pt-2 border-t border-slate-100 text-[11px] text-slate-500">
+                      <div className="flex justify-between items-center pt-2 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
                         <span>Applied: {app.appliedAt}</span>
                         <span className="font-bold text-emerald-600">Score: 88/100</span>
                       </div>
@@ -230,6 +248,110 @@ export const IndustryPipeline: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Candidate Profile Detail Modal */}
+      <Modal 
+        isOpen={!!viewingApplicant} 
+        onClose={() => setViewingApplicant(null)} 
+        title={`Detail Profil & Portofolio Pelamar: ${viewingApplicant?.candidateName || ''}`}
+        size="lg"
+      >
+        {viewingApplicant && (
+          <div className="space-y-5 pt-2 font-sans text-slate-800">
+            {/* Header Identity Card */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-200">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-2xs shrink-0">
+                  {viewingApplicant.candidateName?.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-slate-900">{viewingApplicant.candidateName}</h3>
+                  <p className="text-xs font-bold text-[#0099B8]">{viewingApplicant.candidateMajor}</p>
+                  <p className="text-xs text-slate-500 font-semibold flex items-center gap-1 mt-0.5">
+                    <GraduationCap size={14} className="text-[#0099B8]" /> {viewingApplicant.candidateSchool}
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-right bg-white p-3 rounded-xl border border-cyan-100 shadow-2xs">
+                <p className="text-[10px] font-bold text-slate-400 uppercase">National Talent Score</p>
+                <p className="text-2xl font-black text-emerald-600">88/100</p>
+              </div>
+            </div>
+
+            {/* Contact Details Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                <span className="text-slate-400 font-bold uppercase text-[10px]">Email Kontak Pelamar</span>
+                <p className="font-extrabold text-slate-900 font-mono flex items-center gap-1.5">
+                  <Mail size={14} className="text-[#0099B8]" /> {viewingApplicant.studentEmail || viewingApplicant.studentId || 'siswa@vokasi.id'}
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                <span className="text-slate-400 font-bold uppercase text-[10px]">No. Telepon / WhatsApp</span>
+                <p className="font-extrabold text-slate-900 font-mono flex items-center gap-1.5">
+                  <Phone size={14} className="text-[#0099B8]" /> {viewingApplicant.phone || '0812-3456-7890'}
+                </p>
+              </div>
+            </div>
+
+            {/* Bio & Skills */}
+            <div className="space-y-3 text-xs">
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                <h4 className="font-bold text-slate-900 mb-1">Bio / Ringkasan Diri</h4>
+                <p className="text-slate-600 leading-relaxed">
+                  {viewingApplicant.bio || 'Kandidat siswa vokasi berdedikasi tinggi dengan spesialisasi perakitan modul baterai EV dan standar keselamatan High Voltage.'}
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-slate-900 mb-2">Terverifikasi Competencies & Skills</h4>
+                <div className="flex flex-wrap gap-2">
+                  {(viewingApplicant.candidateSkills || ['EV Battery Assembly', 'High Voltage Safety', 'Quality Control']).map((sk: string) => (
+                    <Badge key={sk} variant="info" className="bg-cyan-50 text-[#0099B8] border-cyan-200 font-semibold px-2.5 py-1 text-xs">
+                      {sk}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Certificates & Portfolio Section */}
+            <div className="space-y-3 pt-2 border-t text-xs">
+              <h4 className="font-bold text-slate-900 flex items-center gap-1.5">
+                <Award size={16} className="text-[#0099B8]" /> Sertifikat Competency & Portofolio Projek
+              </h4>
+
+              <div className="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between">
+                <div className="flex items-center gap-2 font-bold text-emerald-900">
+                  <FileText size={16} className="text-emerald-600" />
+                  <span>CV_Lengkap_{viewingApplicant.candidateName.replace(/\s+/g, '_')}.pdf</span>
+                </div>
+                <Button size="sm" variant="outline" className="text-xs bg-white font-bold flex items-center gap-1">
+                  <Download size={13} /> Download CV
+                </Button>
+              </div>
+            </div>
+
+            {/* Footer Modal Actions */}
+            <div className="flex justify-between items-center pt-4 border-t">
+              <Button variant="outline" size="sm" onClick={() => setViewingApplicant(null)}>Tutup</Button>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  className="bg-[#0099B8] hover:bg-[#007A93] text-white font-bold flex items-center gap-1 text-xs"
+                  onClick={() => {
+                    handleAdvance(viewingApplicant);
+                    setViewingApplicant(null);
+                  }}
+                >
+                  Advance Stage <ChevronRight size={14} />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {/* Reject Reason Modal */}
       <Modal isOpen={!!rejectingAppId} onClose={() => setRejectingAppId(null)} title="Reject Application">

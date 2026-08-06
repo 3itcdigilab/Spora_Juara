@@ -52,13 +52,14 @@ export const localDB = {
   },
   getStudentById: (studentId: string) => {
     const students = JSON.parse(localStorage.getItem('spora_students') || '[]');
-    const found = students.find((s: any) => s.id === studentId);
+    const found = students.find((s: any) => s.id === studentId || s.email === studentId);
     if (found) return found;
 
     // Safe fallback candidate object to prevent null pointer exceptions
     return {
       id: studentId || 'student-1',
       userId: 'u-1',
+      name: 'Pelamar Vokasi EV',
       schoolId: 'sch-1',
       schoolName: 'SMK Negeri 1 Cikarang',
       major: 'Teknik Kendaraan Ringan (Otomotif EV)',
@@ -119,17 +120,17 @@ export const localDB = {
     const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
     const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
 
-    // Only return applications for jobs that actually exist in spora_jobs
+    // Only return applications for jobs that currently exist
     const validApps = apps.filter((a: any) => jobs.some((j: any) => j.id === a.jobId));
-    if (studentId) return validApps.filter((a: any) => a.studentId === studentId);
+    if (studentId) return validApps.filter((a: any) => a.studentId === studentId || a.studentEmail === studentId);
     return validApps;
   },
-  applyForJob: (studentId: string, jobId: string) => {
+  applyForJob: (studentId: string, jobId: string, applicantDetails?: any) => {
     const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
-    const existing = apps.find((a: any) => a.studentId === studentId && a.jobId === jobId);
+    const existing = apps.find((a: any) => (a.studentId === studentId || a.studentEmail === studentId) && a.jobId === jobId);
     if (existing) return existing;
 
-    const newApp: Application = {
+    const newApp: Application & Record<string, any> = {
       id: `app-${Date.now()}`,
       studentId,
       jobId,
@@ -138,7 +139,8 @@ export const localDB = {
       aiMatchReasons: ['Met all required EV Assembly skills'],
       appliedAt: new Date().toISOString().split('T')[0],
       statusUpdatedAt: new Date().toISOString().split('T')[0],
-      rejectionReason: ''
+      rejectionReason: '',
+      ...applicantDetails
     };
     apps.unshift(newApp);
     localStorage.setItem('spora_applications', JSON.stringify(apps));
@@ -178,7 +180,7 @@ export const localDB = {
     };
   },
 
-  // Jobs - Pure LocalStorage CRUD with cascade application delete
+  // Jobs
   getJobs: () => {
     const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
     return jobs;
