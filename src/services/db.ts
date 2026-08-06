@@ -117,8 +117,12 @@ export const localDB = {
   // Applications
   getApplications: (studentId?: string) => {
     const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
-    if (studentId) return apps.filter((a: any) => a.studentId === studentId);
-    return apps;
+    const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
+
+    // Only return applications for jobs that actually exist in spora_jobs
+    const validApps = apps.filter((a: any) => jobs.some((j: any) => j.id === a.jobId));
+    if (studentId) return validApps.filter((a: any) => a.studentId === studentId);
+    return validApps;
   },
   applyForJob: (studentId: string, jobId: string) => {
     const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
@@ -174,7 +178,7 @@ export const localDB = {
     };
   },
 
-  // Jobs - Pure LocalStorage CRUD without restoring deleted fallback
+  // Jobs - Pure LocalStorage CRUD with cascade application delete
   getJobs: () => {
     const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
     return jobs;
@@ -208,5 +212,10 @@ export const localDB = {
     const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
     const filtered = jobs.filter((j: any) => j.id !== jobId);
     localStorage.setItem('spora_jobs', JSON.stringify(filtered));
+
+    // Cascade delete applications for this deleted job
+    const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
+    const filteredApps = apps.filter((a: any) => a.jobId !== jobId);
+    localStorage.setItem('spora_applications', JSON.stringify(filteredApps));
   }
 };

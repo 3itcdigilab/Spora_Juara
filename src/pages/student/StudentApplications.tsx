@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { useToast } from '../../components/ui/Toast';
 import { localDB } from '../../services/db';
 import { Application } from '../../data/types';
-import { CheckCircle2, Clock, XCircle, ChevronRight, AlertCircle, Sparkles } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, ChevronRight, AlertCircle, Briefcase } from 'lucide-react';
 
 export const StudentApplications: React.FC = () => {
   const studentId = 'student-1';
@@ -26,12 +26,10 @@ export const StudentApplications: React.FC = () => {
   const formattedApps = useMemo(() => {
     const jobs = localDB.getJobs();
 
+    // Only include applications for jobs that currently exist
     return rawApps.map((app: Application) => {
-      const job = jobs.find((j: any) => j.id === app.jobId) || {
-        title: 'EV Position',
-        department: 'EV Partner',
-        location: 'Indonesia'
-      };
+      const job = jobs.find((j: any) => j.id === app.jobId);
+      if (!job) return null;
 
       let stageIdx = 0;
       if (app.status === 'ai_screening') stageIdx = 1;
@@ -50,7 +48,7 @@ export const StudentApplications: React.FC = () => {
         currentStage: stageIdx,
         displayCategory
       };
-    });
+    }).filter(Boolean);
   }, [rawApps]);
 
   const filteredApps = useMemo(() => {
@@ -75,7 +73,7 @@ export const StudentApplications: React.FC = () => {
       
       <Tabs 
         tabs={[
-          { id: 'All', label: 'All Applications' },
+          { id: 'All', label: `All Applications (${formattedApps.length})` },
           { id: 'Active', label: 'In Progress' },
           { id: 'Hired', label: 'Hired / Offered' },
           { id: 'Closed', label: 'Closed / Rejected' },
@@ -171,8 +169,9 @@ export const StudentApplications: React.FC = () => {
 
         {filteredApps.length === 0 && (
           <div className="text-center py-14 text-slate-500 bg-white rounded-2xl border border-slate-200">
-            <p className="text-base font-bold text-slate-800 mb-1">No Applications Found</p>
-            <p className="text-xs text-slate-500 mb-4">You haven't submitted applications in this category yet.</p>
+            <Briefcase size={40} className="mx-auto text-slate-300 mb-3" />
+            <h3 className="text-base font-bold text-slate-800 mb-1">Belum Ada Lamaran Pekerjaan</h3>
+            <p className="text-xs text-slate-500 mb-4">Anda belum memiliki lamaran aktif di kategori ini.</p>
             <Link to="/student/jobs">
               <Button variant="primary" className="bg-[#0099B8] hover:bg-[#007A93] text-white text-xs font-bold px-4 py-2">
                 Browse EV Job Opportunities
