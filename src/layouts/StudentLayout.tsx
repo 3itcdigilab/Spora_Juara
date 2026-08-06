@@ -16,7 +16,6 @@ const sidebarItems = [
   { icon: Award, label: 'Certificates', path: '/student/certificates' },
   { icon: Folder, label: 'Portfolio', path: '/student/portfolio' },
   { icon: Target, label: 'Talent Score', path: '/student/talent-score' },
-  { icon: Sparkles, label: 'AI Recommendation', path: '/student/ai-recommendation' },
   { icon: Briefcase, label: 'Job Board', path: '/student/jobs' },
   { icon: FileCheck, label: 'Applications', path: '/student/applications' },
   { icon: Bell, label: 'Notifications', path: '/student/notifications' },
@@ -24,8 +23,6 @@ const sidebarItems = [
 ];
 
 import { localDB } from '../services/db';
-
-import { AIChatbotWidget } from '../components/ai/AIChatbotWidget';
 
 export const StudentLayout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -188,7 +185,6 @@ export const StudentLayout: React.FC = () => {
         <div className="flex-1 overflow-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
           <Outlet />
         </div>
-        <AIChatbotWidget />
       </main>
     </div>
   );

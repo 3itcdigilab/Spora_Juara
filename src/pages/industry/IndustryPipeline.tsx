@@ -13,7 +13,7 @@ import {
 
 const pipelineStages: { key: Application['status']; label: string; color: string; border: string }[] = [
   { key: 'applied', label: 'Applied', color: 'bg-blue-50 text-blue-700', border: 'border-t-blue-500' },
-  { key: 'ai_screening', label: 'AI Screening', color: 'bg-violet-50 text-violet-700', border: 'border-t-violet-500' },
+  { key: 'ai_screening', label: 'Document Screening', color: 'bg-violet-50 text-violet-700', border: 'border-t-violet-500' },
   { key: 'shortlisted', label: 'Shortlisted', color: 'bg-amber-50 text-amber-700', border: 'border-t-amber-500' },
   { key: 'interview', label: 'Interview', color: 'bg-cyan-50 text-[#0099B8]', border: 'border-t-[#0099B8]' },
   { key: 'offered', label: 'Offered', color: 'bg-emerald-50 text-emerald-700', border: 'border-t-emerald-500' },
@@ -156,7 +156,7 @@ export const IndustryPipeline: React.FC = () => {
                           <p className="text-[11px] text-slate-500 font-semibold">{student?.city || 'Jawa Barat'}, {student?.province || 'Indonesia'}</p>
                         </div>
                         <Badge variant="info" className="bg-cyan-50 text-[#0099B8] border-cyan-200 text-[10px] font-bold shrink-0">
-                          {app.aiMatchScore}% AI Match
+                          {app.aiMatchScore}% Score Match
                         </Badge>
                       </div>
 

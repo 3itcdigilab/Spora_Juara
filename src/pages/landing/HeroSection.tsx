@@ -36,7 +36,7 @@ export const HeroSection: React.FC = () => {
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-            AI-powered assessment, talent pooling, and intelligent recruitment connecting vocational schools, certified graduates, and top EV industries across Indonesia.
+            Standardized competency assessment, talent pooling, and intelligent recruitment connecting vocational schools, certified graduates, and top EV industries across Indonesia.
           </p>
           
           {/* Action CTAs */}

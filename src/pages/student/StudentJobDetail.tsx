@@ -113,11 +113,11 @@ export const StudentJobDetail: React.FC = () => {
           </Card>
         </div>
 
-        {/* AI Analysis Sidebar & Action */}
+        {/* Talent Match Analysis Sidebar & Action */}
         <div className="space-y-6">
           <Card className="p-6 border-cyan-100 bg-cyan-50/20 shadow-sm">
             <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-              <Zap size={20} className="text-[#0099B8]" /> AI Talent Match Analysis
+              <Zap size={20} className="text-[#0099B8]" /> Competency Match Analysis
             </h3>
             
             <div className="flex items-center gap-4 mb-6">
@@ -126,7 +126,7 @@ export const StudentJobDetail: React.FC = () => {
               </div>
               <div>
                 <p className="text-2xl font-black text-emerald-600">{aiMatchPercent}%</p>
-                <p className="text-xs text-slate-600 font-bold">Strong AI Fit</p>
+                <p className="text-xs text-slate-600 font-bold">Strong Qualification Fit</p>
               </div>
             </div>
 

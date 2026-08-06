@@ -2,7 +2,6 @@ import React from 'react';
 import { Outlet } from 'react-router';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Topbar } from '../components/layout/Topbar';
-import { AIChatbotWidget } from '../components/ai/AIChatbotWidget';
 import { LayoutDashboard, Users, GraduationCap, BarChart3, AlertTriangle, MessageSquare, BookOpen, MapPin, Trophy, Settings } from 'lucide-react';
 
 const sidebarItems = [
@@ -23,11 +22,10 @@ export const SchoolLayout: React.FC = () => {
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       <Sidebar items={sidebarItems} />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
-        <Topbar title="School Portal" />
+        <Topbar title="Education Institution Portal" />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
           <Outlet />
         </main>
-        <AIChatbotWidget />
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Brain, Code, Sparkles, Users, BarChart3, GraduationCap, Award } from 'lucide-react';
+import { Brain, Code, Zap, Users, BarChart3, GraduationCap, Award } from 'lucide-react';
 
 const features = [
   { icon: Brain, title: "Psychometric Assessment", description: "Comprehensive personality and cognitive assessment to understand each candidate's potential" },
   { icon: Code, title: "Technical Assessment", description: "Domain-specific technical evaluations for EV industry competencies" },
-  { icon: Sparkles, title: "AI Matchmaking", description: "Intelligent matching algorithm connecting the right talent with the right opportunity" },
+  { icon: Zap, title: "Talent Matchmaking", description: "Standardized scoring algorithm connecting qualified talent with the right opportunity" },
   { icon: Users, title: "Digital Talent Pool", description: "National database of assessed and scored vocational graduates" },
   { icon: BarChart3, title: "Industry Dashboard", description: "Real-time recruitment analytics and candidate pipeline management" },
   { icon: GraduationCap, title: "School Analytics", description: "Performance tracking and curriculum feedback for vocational schools" },

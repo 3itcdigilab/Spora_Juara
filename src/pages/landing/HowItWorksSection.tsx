@@ -1,11 +1,11 @@
 import React from 'react';
-import { UserPlus, FileText, ClipboardCheck, Sparkles, Users, Briefcase } from 'lucide-react';
+import { UserPlus, FileText, ClipboardCheck, Award, Users, Briefcase } from 'lucide-react';
 
 const steps = [
   { icon: UserPlus, title: "Register", description: "Create your account and select your role" },
   { icon: FileText, title: "Complete Profile", description: "Fill in your education, skills, and upload your CV" },
   { icon: ClipboardCheck, title: "Take Assessments", description: "Complete psychometric and technical assessments" },
-  { icon: Sparkles, title: "AI Evaluation", description: "Our AI engine analyzes your profile and generates your Talent Score" },
+  { icon: Award, title: "Competency Evaluation", description: "Our assessment system evaluates your skills and generates your Talent Score" },
   { icon: Users, title: "Join Talent Pool", description: "Enter the national talent pool visible to industry partners" },
   { icon: Briefcase, title: "Get Hired", description: "Get discovered, interviewed, and hired by leading EV companies" }
 ];

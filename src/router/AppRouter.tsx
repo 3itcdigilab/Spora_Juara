@@ -106,7 +106,6 @@ export const AppRouter: React.FC = () => (
         <Route path="certificates" element={<StudentCertificates />} />
         <Route path="portfolio" element={<StudentPortfolio />} />
         <Route path="talent-score" element={<StudentTalentScore />} />
-        <Route path="ai-recommendation" element={<StudentAIRecommendation />} />
         <Route path="jobs" element={<StudentJobBoard />} />
         <Route path="jobs/:id" element={<StudentJobDetail />} />
         <Route path="applications" element={<StudentApplications />} />
@@ -136,7 +135,6 @@ export const AppRouter: React.FC = () => (
         <Route path="candidates" element={<IndustryCandidates />} />
         <Route path="interviews" element={<IndustryInterviews />} />
         <Route path="reports" element={<IndustryReports />} />
-        <Route path="ai-recommendations" element={<IndustryAIRecommendations />} />
         <Route path="settings" element={<StudentSettings />} />
       </Route>
 
@@ -164,7 +162,6 @@ export const AppRouter: React.FC = () => (
         <Route path="schools" element={<AdminSchools />} />
         <Route path="industries" element={<AdminIndustries />} />
         <Route path="assessments" element={<AdminAssessments />} />
-        <Route path="ai-rules" element={<AdminAIRules />} />
         <Route path="reports" element={<AdminReports />} />
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="system" element={<AdminSystem />} />

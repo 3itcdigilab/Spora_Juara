@@ -324,7 +324,7 @@ export const IndustryDashboard: React.FC = () => {
 
                   <div className="flex items-center gap-3">
                     <Badge variant="info" className="bg-cyan-50 text-[#0099B8] font-bold text-xs">
-                      {app.aiMatchScore}% AI Match
+                      {app.aiMatchScore}% Score Match
                     </Badge>
                     <Link to="/industry/pipeline">
                       <Button size="sm" variant="outline" className="text-xs font-bold">Review</Button>
@@ -336,17 +336,17 @@ export const IndustryDashboard: React.FC = () => {
           )}
         </Card>
 
-        {/* Right Column: AI Top Recommended Candidates */}
+        {/* Right Column: Top Recommended Candidates */}
         <Card className="p-6 space-y-4">
           <div className="flex justify-between items-center border-b pb-3">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Sparkles className="text-violet-600" size={18} /> Top AI Recommended
+              <UserCheck className="text-violet-600" size={18} /> Top Recommended Candidates
             </h2>
           </div>
 
           {students.length === 0 ? (
             <div className="text-center py-10 border border-dashed rounded-xl bg-slate-50">
-              <Sparkles size={32} className="mx-auto text-violet-400 mb-2" />
+              <Users size={32} className="mx-auto text-violet-400 mb-2" />
               <p className="text-xs font-bold text-slate-700">Database Siswa Kosong</p>
               <p className="text-[11px] text-slate-500 mt-1">Kandidat baru akan muncul di sini secara otomatis.</p>
             </div>
@@ -360,7 +360,7 @@ export const IndustryDashboard: React.FC = () => {
                       <p className="text-xs text-slate-500">{student.city}, {student.province}</p>
                     </div>
                     <span className="px-2 py-0.5 bg-violet-100 text-violet-800 font-bold text-xs rounded-full">
-                      {95 - i * 3}% Match
+                      {95 - i * 3}% Score Match
                     </span>
                   </div>
 

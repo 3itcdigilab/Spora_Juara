@@ -8,7 +8,7 @@ import { ProgressRing } from '../../components/ui/ProgressRing';
 import { Timeline } from '../../components/ui/Timeline';
 import { ProgressGauge } from '../../components/charts/ProgressGauge';
 import { RadarChart } from '../../components/charts/RadarChart';
-import { Sparkles, ArrowRight, Briefcase, FileCheck, Clock, Award, UserCheck, ShieldCheck, Zap } from 'lucide-react';
+import { Sparkles, ArrowRight, Briefcase, FileCheck, Clock, Award, UserCheck, ShieldCheck, Zap, Target } from 'lucide-react';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { localDB } from '../../services/db';
@@ -108,17 +108,17 @@ export const StudentDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* AI Recommendations */}
+      {/* Career & Skill Insights */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-violet-100 text-violet-700 rounded-lg">
-              <Sparkles size={18} />
+            <div className="p-1.5 bg-cyan-100 text-[#0099B8] rounded-lg">
+              <Target size={18} />
             </div>
-            <h2 className="text-lg font-bold text-slate-900">AI Recommendations</h2>
+            <h2 className="text-lg font-bold text-slate-900">Career & Skill Insights</h2>
           </div>
-          <Link to="/student/ai-recommendation" className="text-xs text-[#0099B8] font-bold hover:underline">
-            View All AI Insights →
+          <Link to="/student/talent-score" className="text-xs text-[#0099B8] font-bold hover:underline">
+            View Skill Growth →
           </Link>
         </div>
 
@@ -127,9 +127,9 @@ export const StudentDashboard: React.FC = () => {
             <Badge className="bg-violet-100 text-violet-700 mb-3 text-xs">Career Path</Badge>
             <h3 className="font-bold text-slate-900 text-base">EV Battery Technician</h3>
             <p className="text-xs text-slate-500 mt-1 mb-4 line-clamp-2 leading-relaxed">
-              Based on your high mechanical aptitude and attention to detail, this is a 92% match.
+              Based on your mechanical aptitude and competency scores, this path aligns with your specialization.
             </p>
-            <Link to="/student/ai-recommendation" className="text-xs font-bold text-violet-600 flex items-center gap-1 hover:text-violet-700">
+            <Link to="/student/talent-score" className="text-xs font-bold text-violet-600 flex items-center gap-1 hover:text-violet-700">
               View Path <ArrowRight size={14} />
             </Link>
           </Card>
@@ -140,7 +140,7 @@ export const StudentDashboard: React.FC = () => {
             <p className="text-xs text-slate-500 mt-1 mb-4 line-clamp-2 leading-relaxed">
               Complete this module to boost your High Voltage Safety score by up to 15 points.
             </p>
-            <Link to="/student/ai-recommendation" className="text-xs font-bold text-[#0099B8] flex items-center gap-1 hover:text-[#007A93]">
+            <Link to="/student/talent-score" className="text-xs font-bold text-[#0099B8] flex items-center gap-1 hover:text-[#007A93]">
               Start Course <ArrowRight size={14} />
             </Link>
           </Card>
@@ -149,9 +149,9 @@ export const StudentDashboard: React.FC = () => {
             <Badge className="bg-emerald-100 text-emerald-700 mb-3 text-xs">Recommended Job</Badge>
             <h3 className="font-bold text-slate-900 text-base">Hyundai - Jr. Assembler</h3>
             <p className="text-xs text-slate-500 mt-1 mb-4 line-clamp-2 leading-relaxed">
-              88% Match score. Requires EV Assembly familiarity in Cikarang, Jawa Barat.
+              High alignment with your EV Assembly specialization in Cikarang, Jawa Barat.
             </p>
-            <Link to="/student/jobs/1" className="text-xs font-bold text-emerald-600 flex items-center gap-1 hover:text-emerald-700">
+            <Link to="/student/jobs" className="text-xs font-bold text-emerald-600 flex items-center gap-1 hover:text-emerald-700">
               View Job Detail <ArrowRight size={14} />
             </Link>
           </Card>

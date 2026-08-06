@@ -21,7 +21,7 @@ export const StudentApplications: React.FC = () => {
     return localDB.getApplications(studentId);
   }, [studentId, refreshKey]);
 
-  const stages = ['Applied', 'AI Screening', 'Shortlisted', 'Interview', 'Offered'];
+  const stages = ['Applied', 'Document Screening', 'Shortlisted', 'Interview', 'Offered'];
 
   const formattedApps = useMemo(() => {
     const jobs = localDB.getJobs();
@@ -107,7 +107,7 @@ export const StudentApplications: React.FC = () => {
 
               <div className="flex items-center gap-3">
                 <Badge variant="info" className="bg-cyan-50 text-[#0099B8] border-cyan-200 font-bold">
-                  {app.aiMatchScore}% AI Match
+                  {app.aiMatchScore}% Score Match
                 </Badge>
                 <Link to={`/student/jobs/${app.jobId}`} className="text-xs font-bold text-[#0099B8] hover:underline flex items-center gap-1">
                   View Job <ChevronRight size={14} />

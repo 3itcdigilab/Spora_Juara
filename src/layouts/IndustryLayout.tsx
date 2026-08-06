@@ -2,8 +2,7 @@ import React from 'react';
 import { Outlet, Navigate } from 'react-router';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Topbar } from '../components/layout/Topbar';
-import { AIChatbotWidget } from '../components/ai/AIChatbotWidget';
-import { LayoutDashboard, Briefcase, PlusCircle, Users, GitBranch, UserCheck, Calendar, BarChart3, Sparkles, Settings } from 'lucide-react';
+import { LayoutDashboard, Briefcase, PlusCircle, Users, GitBranch, UserCheck, Calendar, BarChart3, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const sidebarItems = [
@@ -15,7 +14,6 @@ const sidebarItems = [
   { icon: UserCheck, label: 'Candidates', path: '/industry/candidates' },
   { icon: Calendar, label: 'Interviews', path: '/industry/interviews' },
   { icon: BarChart3, label: 'Reports', path: '/industry/reports' },
-  { icon: Sparkles, label: 'AI Recommendations', path: '/industry/ai-recommendations' },
   { icon: Settings, label: 'Settings', path: '/industry/settings' },
 ];
 
@@ -34,7 +32,6 @@ export const IndustryLayout: React.FC = () => {
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
           <Outlet />
         </main>
-        <AIChatbotWidget />
       </div>
     </div>
   );

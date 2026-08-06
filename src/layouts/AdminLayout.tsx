@@ -2,8 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Topbar } from '../components/layout/Topbar';
-import { AIChatbotWidget } from '../components/ai/AIChatbotWidget';
-import { LayoutDashboard, Users, GraduationCap, School, Building, ClipboardList, Sparkles, FileBarChart, Map, Monitor, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, GraduationCap, School, Building, ClipboardList, FileBarChart, Map, Monitor, Settings } from 'lucide-react';
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
@@ -12,7 +11,6 @@ const sidebarItems = [
   { icon: School, label: 'Education Institution', path: '/admin/schools' },
   { icon: Building, label: 'Industries', path: '/admin/industries' },
   { icon: ClipboardList, label: 'Assessments', path: '/admin/assessments' },
-  { icon: Sparkles, label: 'AI Rules', path: '/admin/ai-rules' },
   { icon: FileBarChart, label: 'Reports', path: '/admin/reports' },
   { icon: Map, label: 'Analytics', path: '/admin/analytics' },
   { icon: Monitor, label: 'System', path: '/admin/system' },
@@ -28,7 +26,6 @@ export const AdminLayout: React.FC = () => {
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
           <Outlet />
         </main>
-        <AIChatbotWidget />
       </div>
     </div>
   );
