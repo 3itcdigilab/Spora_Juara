@@ -391,7 +391,13 @@ export const localDB = {
   // Jobs
   getJobs: () => {
     const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
-    return jobs;
+    const uniqueMap = new Map();
+    jobs.forEach((j: any) => {
+      if (j && j.id && !uniqueMap.has(j.id)) {
+        uniqueMap.set(j.id, j);
+      }
+    });
+    return Array.from(uniqueMap.values());
   },
   getJobById: (id: string) => {
     const jobs = localDB.getJobs();
@@ -406,8 +412,9 @@ export const localDB = {
       deadline: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
       ...jobData
     };
-    jobs.unshift(newJob);
-    localStorage.setItem('spora_jobs', JSON.stringify(jobs));
+    const filtered = jobs.filter((j: any) => j.id !== newJob.id);
+    filtered.unshift(newJob);
+    localStorage.setItem('spora_jobs', JSON.stringify(filtered));
     return newJob;
   },
   updateJob: (jobId: string, updatedData: any) => {
@@ -420,7 +427,12 @@ export const localDB = {
   },
   deleteJob: (jobId: string) => {
     const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
-    const filtered = jobs.filter((j: any) => j.id !== jobId);
+    const target = jobs.find((j: any) => j.id === jobId);
+    const filtered = jobs.filter((j: any) => {
+      if (j.id === jobId) return false;
+      if (target && j.title === target.title && j.industryId === target.industryId) return false;
+      return true;
+    });
     localStorage.setItem('spora_jobs', JSON.stringify(filtered));
 
     // Cascade delete applications for this deleted job

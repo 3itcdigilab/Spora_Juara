@@ -7,7 +7,6 @@ import { TagInput } from '../../components/ui/TagInput';
 import { useToast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { localDB } from '../../services/db';
-import { mockJobs } from '../../data/jobs';
 
 export const IndustryJobPosting: React.FC = () => {
   const navigate = useNavigate();
@@ -31,8 +30,7 @@ export const IndustryJobPosting: React.FC = () => {
       return;
     }
 
-    const newJob = {
-      id: `job-${Date.now()}`,
+    localDB.postJob({
       industryId: user?.email || (user as any)?.id || 'ind-1',
       title,
       department,
@@ -44,20 +42,8 @@ export const IndustryJobPosting: React.FC = () => {
       requiredSkills: skills,
       requiredCertifications: ['High Voltage Safety Level 1'],
       description,
-      status: 'active' as const,
-      postedAt: new Date().toISOString().split('T')[0],
-      deadline: '2026-08-30'
-    };
-
-    mockJobs.unshift(newJob);
-
-    // Save to LocalStorage using localDB to ensure consistency
-    localDB.postJob(newJob);
-    
-    // Kept for backward compatibility if needed
-    const savedJobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
-    savedJobs.unshift(newJob);
-    localStorage.setItem('spora_jobs', JSON.stringify(savedJobs));
+      status: 'active'
+    });
 
     showToast(`Vacancy "${title}" published live!`, 'success');
     navigate('/industry/vacancies');
@@ -76,9 +62,9 @@ export const IndustryJobPosting: React.FC = () => {
             <div className="md:col-span-2">
               <Input 
                 label="Job Title" 
+                placeholder="e.g. EV Battery Assembly Technician" 
                 value={title} 
                 onChange={(e) => setTitle(e.target.value)} 
-                placeholder="e.g. EV Battery Pack Assembly Specialist" 
                 required 
               />
             </div>
@@ -86,45 +72,48 @@ export const IndustryJobPosting: React.FC = () => {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Department</label>
               <select 
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
               >
-                <option value="Engineering">Engineering</option>
-                <option value="Battery Operations">Battery Operations</option>
-                <option value="Quality Assurance">Quality Assurance</option>
-                <option value="Maintenance">Maintenance</option>
+                <option value="Engineering">Engineering & Production</option>
+                <option value="Assembly">Assembly Line</option>
+                <option value="Quality Control">Quality Assurance & Safety</option>
+                <option value="Maintenance">Infrastructure & Charging</option>
               </select>
+            </div>
+
+            <div>
+              <Input 
+                label="Location" 
+                placeholder="e.g. Cikarang, Jawa Barat" 
+                value={location} 
+                onChange={(e) => setLocation(e.target.value)} 
+                required 
+              />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Employment Type</label>
               <select 
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 value={type}
-                onChange={(e) => setType(e.target.value as any)}
+                onChange={(e: any) => setType(e.target.value)}
               >
                 <option value="full-time">Full-Time</option>
                 <option value="contract">Contract</option>
-                <option value="internship">Internship</option>
+                <option value="internship">Internship (Magang Vokasi)</option>
               </select>
             </div>
 
-            <Input 
-              label="Location" 
-              value={location} 
-              onChange={(e) => setLocation(e.target.value)} 
-              placeholder="e.g. Cikarang, Jawa Barat" 
-              required 
-            />
-
-            <Input 
-              label="Required Talent Score (Min 0-100)" 
-              type="number" 
-              value={scoreReq} 
-              onChange={(e) => setScoreReq(parseInt(e.target.value))} 
-              required 
-            />
+            <div>
+              <Input 
+                label="Minimum Talent Score Required (0-100)" 
+                type="number" 
+                value={scoreReq} 
+                onChange={(e) => setScoreReq(parseInt(e.target.value))} 
+              />
+            </div>
 
             <div>
               <Input 
