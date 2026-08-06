@@ -47,24 +47,16 @@ export const IndustryPipeline: React.FC = () => {
 
   // Load data
   const jobs = useMemo(() => localDB.getJobs(), []);
-  const students = useMemo(() => localDB.getStudents(), []);
   const allApplications = useMemo(() => localDB.getApplications(), [refreshKey]);
-
-  const registeredUsers = useMemo(() => {
-    const raw = localStorage.getItem('spora_users');
-    return raw ? JSON.parse(raw) : [];
-  }, []);
 
   // Filtered applications
   const filteredApps = useMemo(() => {
     return allApplications.filter((app: any) => {
       const matchJob = selectedJobId === 'All' || app.jobId === selectedJobId;
       
-      const student = students.find((s: any) => s.id === app.studentId || s.email === app.studentEmail);
-      const userObj = registeredUsers.find((u: any) => u.email === app.studentId || u.email === app.studentEmail);
-
-      const appName = app.studentName || userObj?.name || student?.name || student?.fullName || '';
-      const appMajor = app.major || student?.major || '';
+      const studentObj = localDB.getStudentById(app.studentId || app.studentEmail);
+      const appName = app.studentName && app.studentName !== '3ITC' ? app.studentName : studentObj.name;
+      const appMajor = app.major || studentObj.major || '';
 
       const matchSearch = search.trim() === '' || 
         appName.toLowerCase().includes(search.toLowerCase()) ||
@@ -72,7 +64,7 @@ export const IndustryPipeline: React.FC = () => {
 
       return matchJob && matchSearch;
     });
-  }, [allApplications, selectedJobId, search, students, registeredUsers]);
+  }, [allApplications, selectedJobId, search]);
 
   // Advance stage action
   const handleAdvance = (app: any) => {
@@ -155,17 +147,16 @@ export const IndustryPipeline: React.FC = () => {
               {/* Candidate Cards List */}
               <div className="p-3 flex-1 overflow-y-auto space-y-3">
                 {stageApps.map((app: any) => {
-                  const student = students.find((s: any) => s.id === app.studentId || s.email === app.studentEmail);
-                  const userObj = registeredUsers.find((u: any) => u.email === app.studentId || u.email === app.studentEmail);
+                  const studentObj = localDB.getStudentById(app.studentId || app.studentEmail);
                   const job = jobs.find((j: any) => j.id === app.jobId);
                   const isFinalStage = app.status === 'hired';
 
-                  // Real candidate name & attributes resolved directly from registered user account
-                  const candidateName = app.studentName || userObj?.name || student?.name || student?.fullName || '3ITC';
-                  const candidateEmail = app.studentEmail || userObj?.email || app.studentId || '3itcdigilab@gmail.com';
-                  const candidateSchool = app.school || userObj?.school || student?.school || 'SMK Negeri 1 Cikarang';
-                  const candidateMajor = app.major || userObj?.major || student?.major || 'Teknik Kendaraan Ringan (Otomotif EV)';
-                  const candidateSkills = app.skills || student?.skills || ['EV Battery Assembly', 'High Voltage Safety'];
+                  // Real candidate name & attributes resolved directly from registered candidate account
+                  const candidateName = app.studentName && app.studentName !== '3ITC' && app.studentName !== 'Pelamar Vokasi EV' ? app.studentName : studentObj.name;
+                  const candidateEmail = app.studentEmail || studentObj.email;
+                  const candidateSchool = app.school || studentObj.schoolName;
+                  const candidateMajor = app.major || studentObj.major;
+                  const candidateSkills = app.skills || studentObj.skills;
 
                   return (
                     <Card key={app.id} className="p-4 bg-white hover:shadow-md transition-all border-slate-200 space-y-3 font-sans">
@@ -302,7 +293,7 @@ export const IndustryPipeline: React.FC = () => {
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
                 <span className="text-slate-400 font-bold uppercase text-[10px]">Email Kontak Pelamar</span>
                 <p className="font-extrabold text-slate-900 font-mono flex items-center gap-1.5">
-                  <Mail size={14} className="text-[#0099B8]" /> {viewingApplicant.candidateEmail || viewingApplicant.studentEmail || '3itcdigilab@gmail.com'}
+                  <Mail size={14} className="text-[#0099B8]" /> {viewingApplicant.candidateEmail || 'tubagus@spora.id'}
                 </p>
               </div>
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">

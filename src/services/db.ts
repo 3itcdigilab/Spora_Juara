@@ -55,41 +55,35 @@ export const localDB = {
     const found = students.find((s: any) => s.id === studentId || s.email === studentId);
     if (found) return found;
 
+    // Check spora_profiles
+    const profiles = JSON.parse(localStorage.getItem('spora_profiles') || '[]');
+    const matchedProfile = profiles.find((p: any) => p.studentId === studentId || p.email === studentId);
+
     // Check spora_users to resolve real account name if registered via Auth
     const users = JSON.parse(localStorage.getItem('spora_users') || '[]');
-    const matchedUser = users.find((u: any) => u.email === studentId || u.id === studentId || u.name === studentId);
+    const matchedUser = users.find((u: any) => 
+      (u.email && u.email.toLowerCase() === studentId?.toLowerCase()) || 
+      u.id === studentId || 
+      u.name === studentId
+    );
 
-    if (matchedUser) {
-      return {
-        id: matchedUser.email || studentId,
-        name: matchedUser.name || 'Kandidat Vokasi',
-        email: matchedUser.email,
-        schoolName: matchedUser.school || matchedUser.institutionName || 'SMK Negeri 1 Cikarang',
-        major: matchedUser.major || 'Teknik Kendaraan Ringan (Otomotif EV)',
-        province: matchedUser.province || 'Jawa Barat',
-        city: matchedUser.city || 'Bekasi',
-        skills: ['EV Battery Assembly', 'High Voltage Safety', 'Quality Control'],
-        profileCompletion: 90,
-        status: 'active'
-      };
-    }
-
-    // Default active user fallback
-    const loggedInUserRaw = localStorage.getItem('spora_user');
-    const loggedUser = loggedInUserRaw ? JSON.parse(loggedInUserRaw) : null;
+    const name = matchedProfile?.fullName || matchedUser?.name || (studentId && !studentId.startsWith('app-') && !studentId.startsWith('student-') ? studentId : 'Tubagus');
+    const email = matchedProfile?.email || matchedUser?.email || (studentId?.includes('@') ? studentId : 'tubagus@spora.id');
+    const schoolName = matchedProfile?.schoolName || matchedUser?.school || 'SMK Negeri 1 Cikarang';
+    const major = matchedProfile?.major || matchedUser?.major || 'Teknik Kendaraan Ringan (Otomotif EV)';
 
     return {
-      id: studentId || loggedUser?.email || '3itcdigilab@gmail.com',
+      id: studentId || email,
       userId: 'u-1',
-      name: loggedUser?.name || '3ITC',
-      email: loggedUser?.email || '3itcdigilab@gmail.com',
+      name,
+      email,
       schoolId: 'sch-1',
-      schoolName: loggedUser?.school || 'SMK Negeri 1 Cikarang',
-      major: loggedUser?.major || 'Teknik Kendaraan Ringan (Otomotif EV)',
+      schoolName,
+      major,
       graduationYear: 2025,
-      province: 'Jawa Barat',
-      city: 'Bekasi',
-      skills: ['EV Battery Assembly', 'High Voltage Safety', 'Electric Motor Winding', 'Quality Control'],
+      province: matchedProfile?.province || matchedUser?.province || 'Jawa Barat',
+      city: matchedProfile?.city || matchedUser?.city || 'Bekasi',
+      skills: matchedProfile?.skills || ['EV Battery Assembly', 'High Voltage Safety', 'Quality Control'],
       languages: ['Indonesia', 'English'],
       resumeUrl: '',
       careerInterest: 'EV Technician',
@@ -145,8 +139,24 @@ export const localDB = {
 
     // Only return applications for jobs that currently exist
     const validApps = apps.filter((a: any) => jobs.some((j: any) => j.id === a.jobId));
-    if (studentId) return validApps.filter((a: any) => a.studentId === studentId || a.studentEmail === studentId);
-    return validApps;
+
+    // Auto-repair applicant names for existing applications
+    const repairedApps = validApps.map((a: any) => {
+      if (!a.studentName || a.studentName === '3ITC' || a.studentName === 'Pelamar Vokasi EV' || a.studentName === 'Siswa Vokasi EV') {
+        const studentObj = localDB.getStudentById(a.studentId || a.studentEmail);
+        return {
+          ...a,
+          studentName: studentObj.name,
+          studentEmail: studentObj.email,
+          school: studentObj.schoolName,
+          major: studentObj.major
+        };
+      }
+      return a;
+    });
+
+    if (studentId) return repairedApps.filter((a: any) => a.studentId === studentId || a.studentEmail === studentId);
+    return repairedApps;
   },
   applyForJob: (studentId: string, jobId: string, applicantDetails?: any) => {
     const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
