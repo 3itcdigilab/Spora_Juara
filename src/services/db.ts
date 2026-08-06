@@ -155,13 +155,46 @@ export const localDB = {
       return a;
     });
 
-    if (studentId) return repairedApps.filter((a: any) => a.studentId === studentId || a.studentEmail === studentId);
-    return repairedApps;
+    // Deduplicate applications by (jobId + studentEmail/studentName) so only 1 unique application per candidate per job is returned
+    const uniqueApps: any[] = [];
+    const seenKeys = new Set<string>();
+
+    repairedApps.forEach((a: any) => {
+      const candidateKey = `${a.jobId}_${(a.studentName || a.studentEmail || a.studentId || 'default').toLowerCase()}`;
+      if (!seenKeys.has(candidateKey)) {
+        seenKeys.add(candidateKey);
+        uniqueApps.push(a);
+      }
+    });
+
+    if (studentId) return uniqueApps.filter((a: any) => a.studentId === studentId || a.studentEmail === studentId);
+    return uniqueApps;
   },
   applyForJob: (studentId: string, jobId: string, applicantDetails?: any) => {
     const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
-    const existing = apps.find((a: any) => (a.studentId === studentId || a.studentEmail === studentId) && a.jobId === jobId);
-    if (existing) return existing;
+    const targetEmail = applicantDetails?.studentEmail || studentId;
+    const targetName = applicantDetails?.studentName;
+
+    // Check if application already exists for this job & candidate
+    const existingIdx = apps.findIndex((a: any) => 
+      a.jobId === jobId && 
+      (a.studentId === studentId || 
+       a.studentEmail === targetEmail || 
+       (targetName && a.studentName === targetName) || 
+       a.studentId === 'student-1')
+    );
+
+    if (existingIdx >= 0) {
+      // Update existing application with fresh applicant details instead of creating a duplicate
+      apps[existingIdx] = {
+        ...apps[existingIdx],
+        studentId,
+        jobId,
+        ...applicantDetails
+      };
+      localStorage.setItem('spora_applications', JSON.stringify(apps));
+      return apps[existingIdx];
+    }
 
     const newApp: Application & Record<string, any> = {
       id: `app-${Date.now()}`,
