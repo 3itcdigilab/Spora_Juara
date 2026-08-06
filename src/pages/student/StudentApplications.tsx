@@ -8,7 +8,7 @@ import { useToast } from '../../components/ui/Toast';
 import { localDB } from '../../services/db';
 import { Application } from '../../data/types';
 import { useAuth } from '../../contexts/AuthContext';
-import { CheckCircle2, Clock, XCircle, ChevronRight, AlertCircle, Briefcase } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, ChevronRight, AlertCircle, Briefcase, Trash2 } from 'lucide-react';
 
 export const StudentApplications: React.FC = () => {
   const { user } = useAuth();
@@ -17,11 +17,11 @@ export const StudentApplications: React.FC = () => {
   
   const studentId = user?.email || (user as any)?.id || 'student-1';
 
-  // Trigger state update when withdrawing
+  // Trigger state update when withdrawing or deleting
   const [refreshKey, setRefreshKey] = useState(0);
 
   const rawApps = useMemo(() => {
-    // Fetch applications for logged-in user or all applications
+    // Fetch applications for logged-in user
     const apps = localDB.getApplications();
     const userEmail = (user?.email || '').toLowerCase();
     const userName = (user?.name || '').toLowerCase();
@@ -72,10 +72,18 @@ export const StudentApplications: React.FC = () => {
   }, [formattedApps, activeTab]);
 
   const handleWithdraw = (appId: string, title: string) => {
-    if (window.confirm(`Are you sure you want to withdraw your application for ${title}?`)) {
+    if (window.confirm(`Yakin ingin menarik lamaran posisi ${title}?`)) {
       localDB.withdrawApplication(appId);
       setRefreshKey(prev => prev + 1);
-      showToast('Application withdrawn.', 'info');
+      showToast('Lamaran berhasil ditarik.', 'info');
+    }
+  };
+
+  const handleDeleteRejected = (appId: string, title: string) => {
+    if (window.confirm(`Yakin ingin menghapus riwayat lamaran posisi "${title}" yang ditolak ini dari daftar Anda?`)) {
+      localDB.withdrawApplication(appId);
+      setRefreshKey(prev => prev + 1);
+      showToast(`Riwayat lamaran ${title} berhasil dihapus dari daftar Anda.`, 'warning');
     }
   };
 
@@ -103,7 +111,7 @@ export const StudentApplications: React.FC = () => {
 
       <div className="space-y-4">
         {filteredApps.map((app: any) => (
-          <Card key={app.id} className="p-6 hover:shadow-md transition-all border-slate-200">
+          <Card key={app.id} className="p-6 hover:shadow-md transition-all border-slate-200 font-sans">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -173,6 +181,20 @@ export const StudentApplications: React.FC = () => {
               </div>
             )}
 
+            {/* Hapus opsi hanya jika status REJECTED */}
+            {app.status === 'rejected' && (
+              <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
+                <span className="text-[11px] text-slate-400 font-medium">Proses seleksi telah selesai</span>
+                <button 
+                  onClick={() => handleDeleteRejected(app.id, app.jobTitle)}
+                  className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg border border-red-200 transition-colors flex items-center gap-1.5"
+                >
+                  <Trash2 size={14} /> Hapus Riwayat Lamaran Ditolak
+                </button>
+              </div>
+            )}
+
+            {/* Hanya tampilkan opsi Withdraw untuk status Applied yang masih awal */}
             {app.status === 'applied' && (
               <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end">
                 <button 
