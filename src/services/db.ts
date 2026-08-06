@@ -174,34 +174,14 @@ export const localDB = {
     };
   },
 
-  // Jobs
+  // Jobs - Pure LocalStorage CRUD without restoring deleted fallback
   getJobs: () => {
     const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
-    if (jobs.length > 0) return jobs;
-
-    // Default EV Vacancy fallback if clean database has 0 jobs
-    const defaultJob: Job = {
-      id: 'job-1',
-      industryId: 'ind-1',
-      title: 'EV Battery Assembly Technician',
-      description: 'Penanggung jawab utama perakitan modul baterai kendaraan listrik (EV) dan verifikasi standar keselamatan High Voltage.',
-      department: 'Hyundai Motor Manufacturing Indonesia',
-      location: 'Cikarang, Jawa Barat',
-      employmentType: 'full-time',
-      salaryMin: 5500000,
-      salaryMax: 8500000,
-      requiredTalentScore: 75,
-      requiredSkills: ['EV Battery Assembly', 'High Voltage Safety', 'Quality Control', 'Soldering'],
-      requiredCertifications: ['Sertifikasi Konversi EV BNSP'],
-      status: 'active',
-      postedAt: '2026-08-01',
-      deadline: '2026-09-01'
-    };
-    return [defaultJob];
+    return jobs;
   },
   getJobById: (id: string) => {
     const jobs = localDB.getJobs();
-    return jobs.find((j: any) => j.id === id) || jobs[0];
+    return jobs.find((j: any) => j.id === id) || null;
   },
   postJob: (jobData: any) => {
     const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
