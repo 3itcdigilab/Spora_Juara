@@ -51,7 +51,7 @@ export const Topbar = ({ onMenuToggle }: any) => {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-slate-100 transition-colors text-left"
           >
-            <Avatar fallback={userInitials} size="sm" className="bg-[#0099B8] text-white font-bold" />
+            <Avatar src={user?.avatarUrl} fallback={userInitials} size="sm" className="bg-[#0099B8] text-white font-bold" />
             <div className="hidden md:flex flex-col">
               <span className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-1">
                 {userName}

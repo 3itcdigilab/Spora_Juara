@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Avatar } from '../../components/ui/Avatar';
 import { Input } from '../../components/ui/Input';
@@ -10,12 +10,13 @@ import { FileUpload } from '../../components/ui/FileUpload';
 import { useToast } from '../../components/ui/Toast';
 import { localDB } from '../../services/db';
 import { useAuth } from '../../contexts/AuthContext';
-import { UserCheck, ShieldCheck, Mail, Phone, MapPin, Award, CheckCircle2 } from 'lucide-react';
+import { UserCheck, ShieldCheck, Mail, Phone, MapPin, Award, CheckCircle2, Camera } from 'lucide-react';
 
 export const StudentProfile: React.FC = () => {
   const { showToast } = useToast();
   const { user, updateUser } = useAuth();
   const studentId = 'stu-1';
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const [savedProfile, setSavedProfile] = useState(() => localDB.getProfile(studentId));
   const [activeTab, setActiveTab] = useState('Personal Info');
@@ -24,6 +25,7 @@ export const StudentProfile: React.FC = () => {
   const initialName = defaultName.includes('@') ? (savedProfile?.fullName || 'Usman Domiri') : defaultName;
 
   const [fullName, setFullName] = useState(initialName);
+  const [avatarUrl, setAvatarUrl] = useState(() => savedProfile?.avatarUrl || user?.avatarUrl || '');
   const [dob, setDob] = useState(savedProfile?.dateOfBirth || '2005-08-17');
   const [gender, setGender] = useState(savedProfile?.gender || 'Male');
   const [phone, setPhone] = useState(savedProfile?.phone || '+62 812-3456-7890');
@@ -41,10 +43,36 @@ export const StudentProfile: React.FC = () => {
 
   const completion = 90;
 
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Ukuran foto maksimal 5MB.', 'warning');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      if (base64) {
+        setAvatarUrl(base64);
+        localDB.saveProfile({
+          studentId,
+          avatarUrl: base64
+        });
+        updateUser({ avatarUrl: base64 });
+        showToast('Foto profil berhasil diunggah dari galeri!', 'success');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = () => {
     const updated = localDB.saveProfile({
       studentId,
       fullName,
+      avatarUrl,
       dateOfBirth: dob,
       gender,
       phone,
@@ -52,7 +80,7 @@ export const StudentProfile: React.FC = () => {
       linkedinUrl
     });
     setSavedProfile(updated);
-    updateUser({ name: fullName });
+    updateUser({ name: fullName, avatarUrl });
     showToast('Profil kandidat berhasil disimpan & diperbarui!', 'success');
   };
 
@@ -60,6 +88,15 @@ export const StudentProfile: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto pb-10 space-y-6 font-sans">
+      {/* Hidden File Input for Avatar Photo */}
+      <input 
+        type="file" 
+        ref={photoInputRef} 
+        accept="image/*" 
+        className="hidden" 
+        onChange={handlePhotoUpload} 
+      />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-4">
         <div>
@@ -80,7 +117,18 @@ export const StudentProfile: React.FC = () => {
       <Card className="p-6 sm:p-8">
         {/* User Avatar Card Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-8 border-b pb-6">
-          <Avatar fallback={userInitials} size="xl" className="bg-[#0099B8] text-white font-bold text-xl shadow-md" />
+          <div className="relative group cursor-pointer" onClick={() => photoInputRef.current?.click()}>
+            <Avatar 
+              src={avatarUrl} 
+              fallback={userInitials} 
+              size="xl" 
+              className="bg-[#0099B8] text-white font-bold text-xl shadow-md border-2 border-white ring-2 ring-cyan-100" 
+            />
+            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera size={20} className="text-white" />
+            </div>
+          </div>
+
           <div className="space-y-1.5 flex-1">
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-extrabold text-slate-900">{fullName}</h2>
@@ -94,8 +142,14 @@ export const StudentProfile: React.FC = () => {
               <span className="flex items-center gap-1"><MapPin size={14} className="text-amber-600" /> {city}, {province}</span>
             </p>
           </div>
-          <Button size="sm" variant="outline" className="text-xs font-bold" onClick={() => showToast('Avatar updated', 'info')}>
-            Change Photo
+
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="text-xs font-bold flex items-center gap-1.5 border-slate-300 hover:border-[#0099B8] hover:text-[#0099B8]" 
+            onClick={() => photoInputRef.current?.click()}
+          >
+            <Camera size={14} /> Change Photo
           </Button>
         </div>
 
@@ -188,7 +242,7 @@ export const StudentProfile: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'Resume & Documents' && (
+          {activeTab === 'Experience' && (
             <div className="space-y-4 animate-fadeIn">
               <div className="p-4 border border-dashed border-slate-300 rounded-xl bg-slate-50 text-center space-y-2">
                 <p className="text-xs font-bold text-slate-800">Current Resume: {resumeName}</p>
