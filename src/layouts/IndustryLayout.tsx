@@ -1,9 +1,10 @@
 import React from 'react';
-import { Outlet } from 'react-router';
+import { Outlet, Navigate } from 'react-router';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Topbar } from '../components/layout/Topbar';
 import { AIChatbotWidget } from '../components/ai/AIChatbotWidget';
 import { LayoutDashboard, Briefcase, PlusCircle, Users, GitBranch, UserCheck, Calendar, BarChart3, Sparkles, Settings } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/industry/dashboard' },
@@ -19,6 +20,12 @@ const sidebarItems = [
 ];
 
 export const IndustryLayout: React.FC = () => {
+  const { role } = useAuth();
+
+  if (role === 'student') return <Navigate to="/student/dashboard" replace />;
+  if (role === 'school') return <Navigate to="/school/dashboard" replace />;
+  if (role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       <Sidebar items={sidebarItems} />

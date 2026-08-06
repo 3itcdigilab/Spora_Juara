@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router';
+import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router';
 import { 
   LayoutDashboard, User, ClipboardList, Award, Folder, Target, 
   Sparkles, Briefcase, FileCheck, Bell, Settings, Menu, X, LogOut 
@@ -32,9 +32,13 @@ export const StudentLayout: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   
-  const { user, logout } = useAuth();
+  const { user, role, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  if (role === 'industry') return <Navigate to="/industry/dashboard" replace />;
+  if (role === 'school') return <Navigate to="/school/dashboard" replace />;
+  if (role === 'admin') return <Navigate to="/admin/dashboard" replace />;
 
   const savedProfile = localDB.getProfile('stu-1');
   const rawName = user?.name || savedProfile?.fullName || 'Tubagus';

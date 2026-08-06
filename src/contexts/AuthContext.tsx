@@ -6,6 +6,12 @@ export interface User {
   email: string;
   avatarUrl?: string;
   status?: 'active' | 'pending' | 'rejected';
+  directorName?: string;
+  picName?: string;
+  picPhone?: string;
+  picRole?: string;
+  picNotes?: string;
+  pics?: any[];
 }
 
 interface AuthState {
@@ -32,7 +38,25 @@ export const initUsersDB = () => {
   const defaultUsers = [
     { email: 'sporaadmin@spora.id', password: 'sporaev', name: 'Spora Admin Master', role: 'admin', status: 'active', avatarUrl: '' },
     { email: 'tubagus@spora.id', password: 'demo123', name: 'Tubagus', role: 'student', status: 'active', avatarUrl: '' },
-    { email: '3itcdigilab@gmail.com', password: 'demo123', name: '3ITC', role: 'industry', status: 'active', avatarUrl: '' },
+    { 
+      email: '3itcdigilab@gmail.com', 
+      password: 'demo123', 
+      name: '3ITC', 
+      role: 'industry', 
+      status: 'active', 
+      avatarUrl: '',
+      directorName: 'Tubagus Aria',
+      pics: [
+        {
+          id: 'pic-1',
+          name: 'Tubagus Aria',
+          role: 'Direktur Utama',
+          email: 'tubagusaria31@gmail.com',
+          phone: '087780092090',
+          notes: 'Penanggung jawab utama rekrutmen lulusan SMK Vokasi & program magang industri.'
+        }
+      ]
+    },
     { email: 'school@spora.id', password: 'demo123', name: 'SMKN 1 Cikarang', role: 'school', status: 'active', avatarUrl: '' },
     { email: 'industry@spora.id', password: 'demo123', name: 'Hyundai Motor Indonesia', role: 'industry', status: 'active', avatarUrl: '' }
   ];
@@ -41,16 +65,35 @@ export const initUsersDB = () => {
   if (!rawUsers) {
     localStorage.setItem('spora_users', JSON.stringify(defaultUsers));
   } else {
-    // Sync 3ITC account role to industry
-    const users = JSON.parse(rawUsers);
-    const idx = users.findIndex((u: any) => u.email.toLowerCase() === '3itcdigilab@gmail.com');
-    if (idx >= 0) {
-      users[idx].role = 'industry';
-      localStorage.setItem('spora_users', JSON.stringify(users));
-    } else {
+    // Always force 3ITC account role to 'industry'
+    let users = JSON.parse(rawUsers);
+    let found3ITC = false;
+    users = users.map((u: any) => {
+      if (u.email.toLowerCase() === '3itcdigilab@gmail.com' || u.name === '3ITC') {
+        found3ITC = true;
+        return { 
+          ...u, 
+          role: 'industry',
+          directorName: u.directorName || 'Tubagus Aria',
+          pics: u.pics && u.pics.length > 0 ? u.pics : [
+            {
+              id: 'pic-1',
+              name: 'Tubagus Aria',
+              role: 'Direktur Utama',
+              email: 'tubagusaria31@gmail.com',
+              phone: '087780092090',
+              notes: 'Penanggung jawab utama rekrutmen lulusan SMK Vokasi & program magang industri.'
+            }
+          ]
+        };
+      }
+      return u;
+    });
+
+    if (!found3ITC) {
       users.push(defaultUsers[2]);
-      localStorage.setItem('spora_users', JSON.stringify(users));
     }
+    localStorage.setItem('spora_users', JSON.stringify(users));
   }
 };
 
@@ -64,8 +107,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.user && parsed.user.name) {
-          // Force correct role for 3ITC
-          const resolvedRole = parsed.user.email?.toLowerCase() === '3itcdigilab@gmail.com' ? 'industry' : parsed.role;
+          const is3ITC = parsed.user.email?.toLowerCase() === '3itcdigilab@gmail.com' || parsed.user.name === '3ITC';
+          const resolvedRole = is3ITC ? 'industry' : parsed.role;
           return {
             ...parsed,
             role: resolvedRole,
@@ -85,7 +128,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         name: '3ITC', 
         email: '3itcdigilab@gmail.com', 
         avatarUrl: '',
-        status: 'active' 
+        status: 'active',
+        directorName: 'Tubagus Aria',
+        pics: [
+          {
+            id: 'pic-1',
+            name: 'Tubagus Aria',
+            role: 'Direktur Utama',
+            email: 'tubagusaria31@gmail.com',
+            phone: '087780092090',
+            notes: 'Penanggung jawab utama rekrutmen lulusan SMK Vokasi & program magang industri.'
+          }
+        ]
       },
       role: 'industry',
       tenantId: 't1',
@@ -109,22 +163,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const resolvedName = foundUser.name || 'User';
-    const roleName = foundUser.email.toLowerCase() === '3itcdigilab@gmail.com' ? 'industry' : (foundUser.role || 'student');
+    const is3ITC = foundUser.email.toLowerCase() === '3itcdigilab@gmail.com' || resolvedName === '3ITC';
+    const roleName = is3ITC ? 'industry' : (foundUser.role || 'student');
     const userStatus = foundUser.status || 'active';
     let userAvatar = foundUser.avatarUrl || '';
 
     if (roleName === 'student') {
       const studentProfile = localDB.getProfile('stu-1');
       if (studentProfile?.avatarUrl) userAvatar = studentProfile.avatarUrl;
-      localDB.saveProfile({
-        studentId: 'stu-1',
-        fullName: resolvedName,
-        ...(userAvatar && { avatarUrl: userAvatar })
-      });
     }
 
     const newState: AuthState = {
       user: {
+        ...foundUser,
         name: resolvedName,
         email: foundUser.email,
         avatarUrl: userAvatar,
@@ -145,9 +196,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const isObj = typeof dataOrEmail === 'object';
     const email = isObj ? dataOrEmail.email : dataOrEmail;
     const pwd = isObj ? dataOrEmail.password : password;
-    const roleName = role || (isObj ? dataOrEmail.role : 'student');
+    const is3ITC = email.toLowerCase() === '3itcdigilab@gmail.com';
+    const roleName = is3ITC ? 'industry' : (role || (isObj ? dataOrEmail.role : 'student'));
     const name = isObj && dataOrEmail.name ? dataOrEmail.name : 'Candidate';
-    const phone = isObj && dataOrEmail.phone ? dataOrEmail.phone : '';
 
     const status = (roleName === 'industry' || roleName === 'school') ? 'pending' : 'active';
 
@@ -155,7 +206,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const users = rawUsers ? JSON.parse(rawUsers) : [];
 
     const existingIdx = users.findIndex((u: any) => u.email.toLowerCase() === email.toLowerCase());
-    const newUserEntry = { email, password: pwd, name, role: roleName, status, avatarUrl: '' };
+    const newUserEntry = { ...dataOrEmail, email, password: pwd, name, role: roleName, status, avatarUrl: '' };
 
     if (existingIdx >= 0) {
       users[existingIdx] = newUserEntry;
@@ -164,16 +215,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     localStorage.setItem('spora_users', JSON.stringify(users));
 
-    if (roleName === 'student') {
-      localDB.saveProfile({
-        studentId: 'stu-1',
-        fullName: name,
-        ...(phone && { phone })
-      });
-    }
-
     const newState: AuthState = {
       user: {
+        ...newUserEntry,
         name,
         email,
         avatarUrl: '',
@@ -199,20 +243,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const users = rawUsers ? JSON.parse(rawUsers) : [];
         const idx = users.findIndex((u: any) => u.email.toLowerCase() === current.email.toLowerCase());
         if (idx >= 0) {
-          users[idx].name = nextUser.name;
-          if (nextUser.status) users[idx].status = nextUser.status;
-          if (nextUser.avatarUrl !== undefined) users[idx].avatarUrl = nextUser.avatarUrl;
+          users[idx] = { ...users[idx], ...nextUser };
           localStorage.setItem('spora_users', JSON.stringify(users));
         }
       } catch (err) {}
-
-      if (prev.role === 'student') {
-        localDB.saveProfile({
-          studentId: 'stu-1',
-          ...(nextUser.name && { fullName: nextUser.name }),
-          ...(nextUser.avatarUrl !== undefined && { avatarUrl: nextUser.avatarUrl })
-        });
-      }
 
       localStorage.setItem('auth', JSON.stringify(nextState));
       return nextState;
