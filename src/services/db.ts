@@ -1,44 +1,40 @@
-import { mockStudents } from '../data/students';
-import { mockProfiles } from '../data/profiles';
-import { mockCertificates } from '../data/certificates';
-import { mockPortfolioProjects } from '../data/portfolioProjects';
-import { mockApplications } from '../data/applications';
-import { mockTalentScores } from '../data/talentScores';
-import { mockJobs } from '../data/jobs';
 import { Application, Job } from '../data/types';
 
-// Initialize LocalStorage with mock data if not already present
+// Reset & Clear database of all dummy data
+export const clearAllDummyData = () => {
+  localStorage.setItem('spora_students', JSON.stringify([]));
+  localStorage.setItem('spora_profiles', JSON.stringify([]));
+  localStorage.setItem('spora_certificates', JSON.stringify([]));
+  localStorage.setItem('spora_portfolio', JSON.stringify([]));
+  localStorage.setItem('spora_applications', JSON.stringify([]));
+  localStorage.setItem('spora_talent_scores', JSON.stringify([]));
+  localStorage.setItem('spora_jobs', JSON.stringify([]));
+  localStorage.setItem('spora_schools', JSON.stringify([]));
+  localStorage.setItem('spora_industries', JSON.stringify([]));
+  localStorage.setItem('spora_notifications', JSON.stringify([]));
+  localStorage.setItem('spora_interviews', JSON.stringify([]));
+  localStorage.setItem('spora_clean_db_initialized', 'true');
+};
+
 export const initDB = () => {
-  if (!localStorage.getItem('spora_students')) {
-    localStorage.setItem('spora_students', JSON.stringify(mockStudents));
-  }
-  if (!localStorage.getItem('spora_profiles')) {
-    localStorage.setItem('spora_profiles', JSON.stringify(mockProfiles));
-  }
-  if (!localStorage.getItem('spora_certificates')) {
-    localStorage.setItem('spora_certificates', JSON.stringify(mockCertificates));
-  }
-  if (!localStorage.getItem('spora_portfolio')) {
-    localStorage.setItem('spora_portfolio', JSON.stringify(mockPortfolioProjects));
-  }
-  if (!localStorage.getItem('spora_applications')) {
-    localStorage.setItem('spora_applications', JSON.stringify(mockApplications));
-  }
-  if (!localStorage.getItem('spora_talent_scores')) {
-    localStorage.setItem('spora_talent_scores', JSON.stringify(mockTalentScores));
-  }
-  if (!localStorage.getItem('spora_jobs')) {
-    localStorage.setItem('spora_jobs', JSON.stringify(mockJobs));
+  // Clear dummy data on first load to provide a completely blank environment for user testing
+  if (!localStorage.getItem('spora_clean_db_initialized')) {
+    clearAllDummyData();
   }
 };
 
 initDB();
 
 export const localDB = {
+  // Clear all data on demand
+  resetDB: () => {
+    clearAllDummyData();
+  },
+
   // Profiles
   getProfile: (studentId: string) => {
     const profiles = JSON.parse(localStorage.getItem('spora_profiles') || '[]');
-    return profiles.find((p: any) => p.studentId === studentId) || mockProfiles[0];
+    return profiles.find((p: any) => p.studentId === studentId) || null;
   },
   saveProfile: (profileData: any) => {
     const profiles = JSON.parse(localStorage.getItem('spora_profiles') || '[]');
@@ -54,11 +50,11 @@ export const localDB = {
 
   // Students
   getStudents: () => {
-    return JSON.parse(localStorage.getItem('spora_students') || '[]') as typeof mockStudents;
+    return JSON.parse(localStorage.getItem('spora_students') || '[]');
   },
   getStudentById: (studentId: string) => {
     const students = JSON.parse(localStorage.getItem('spora_students') || '[]');
-    return students.find((s: any) => s.id === studentId) || mockStudents[0];
+    return students.find((s: any) => s.id === studentId) || null;
   },
 
   // Certificates
@@ -98,8 +94,7 @@ export const localDB = {
 
   // Jobs CRUD
   getJobs: (): Job[] => {
-    const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
-    return jobs.length > 0 ? jobs : mockJobs;
+    return JSON.parse(localStorage.getItem('spora_jobs') || '[]');
   },
   getJobById: (jobId: string): Job | undefined => {
     const jobs = localDB.getJobs();
@@ -187,7 +182,7 @@ export const localDB = {
   // Talent Scores
   getTalentScore: (studentId: string) => {
     const scores = JSON.parse(localStorage.getItem('spora_talent_scores') || '[]');
-    return scores.find((s: any) => s.studentId === studentId) || mockTalentScores[0];
+    return scores.find((s: any) => s.studentId === studentId) || null;
   },
   updateTalentScore: (studentId: string, scoreData: any) => {
     const scores = JSON.parse(localStorage.getItem('spora_talent_scores') || '[]');

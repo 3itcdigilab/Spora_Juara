@@ -17,14 +17,14 @@ export const IndustryDashboard: React.FC = () => {
   const students = useMemo(() => localDB.getStudents(), []);
 
   const recentApplications = useMemo(() => {
-    return applications.slice(0, 5).map(app => {
-      const student = students.find(s => s.id === app.studentId) || students[0];
-      const job = jobs.find(j => j.id === app.jobId) || jobs[0];
+    return applications.slice(0, 5).map((app: any) => {
+      const student = students.find((s: any) => s.id === app.studentId);
+      const job = jobs.find((j: any) => j.id === app.jobId);
       return {
         ...app,
-        studentName: student.major,
-        studentCity: student.city,
-        jobTitle: job.title
+        studentName: student?.major || 'Kandidat Vokasi EV',
+        studentCity: student?.city || 'Indonesia',
+        jobTitle: job?.title || 'EV Position'
       };
     });
   }, [applications, students, jobs]);
@@ -144,7 +144,7 @@ export const IndustryDashboard: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {students.slice(0, 3).map((student, i) => (
+            {students.slice(0, 3).map((student: any, i: number) => (
               <div key={student.id} className="bg-white p-4 rounded-xl border border-violet-100 shadow-xs space-y-3">
                 <div className="flex justify-between items-start">
                   <div>

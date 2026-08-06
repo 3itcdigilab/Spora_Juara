@@ -49,12 +49,12 @@ export const IndustryPipeline: React.FC = () => {
 
   // Filtered applications
   const filteredApps = useMemo(() => {
-    return allApplications.filter(app => {
+    return allApplications.filter((app: any) => {
       const matchJob = selectedJobId === 'All' || app.jobId === selectedJobId;
-      const student = students.find(s => s.id === app.studentId) || students[0];
+      const student = students.find((s: any) => s.id === app.studentId);
       const matchSearch = search.trim() === '' || 
-        student.major.toLowerCase().includes(search.toLowerCase()) ||
-        student.city.toLowerCase().includes(search.toLowerCase());
+        (student && student.major && student.major.toLowerCase().includes(search.toLowerCase())) ||
+        (student && student.city && student.city.toLowerCase().includes(search.toLowerCase()));
 
       return matchJob && matchSearch;
     });
@@ -140,9 +140,9 @@ export const IndustryPipeline: React.FC = () => {
 
               {/* Candidate Cards List */}
               <div className="p-3 flex-1 overflow-y-auto space-y-3">
-                {stageApps.map((app) => {
-                  const student = students.find(s => s.id === app.studentId) || students[0];
-                  const job = jobs.find(j => j.id === app.jobId);
+                {stageApps.map((app: any) => {
+                  const student = students.find((s: any) => s.id === app.studentId);
+                  const job = jobs.find((j: any) => j.id === app.jobId);
                   const isFinalStage = app.status === 'hired';
 
                   return (
@@ -151,9 +151,9 @@ export const IndustryPipeline: React.FC = () => {
                       <div className="flex justify-between items-start gap-2">
                         <div>
                           <h4 className="font-extrabold text-sm text-slate-900 leading-snug">
-                            {student.major}
+                            {student?.major || 'Kandidat Vokasi EV'}
                           </h4>
-                          <p className="text-[11px] text-slate-500 font-semibold">{student.city}, {student.province}</p>
+                          <p className="text-[11px] text-slate-500 font-semibold">{student?.city || 'Jawa Barat'}, {student?.province || 'Indonesia'}</p>
                         </div>
                         <Badge variant="info" className="bg-cyan-50 text-[#0099B8] border-cyan-200 text-[10px] font-bold shrink-0">
                           {app.aiMatchScore}% AI Match
@@ -167,7 +167,7 @@ export const IndustryPipeline: React.FC = () => {
 
                       {/* Key Skills */}
                       <div className="flex flex-wrap gap-1">
-                        {student.skills.slice(0, 2).map(skill => (
+                        {student?.skills?.slice(0, 2).map((skill: string) => (
                           <span key={skill} className="text-[10px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
                             {skill}
                           </span>
