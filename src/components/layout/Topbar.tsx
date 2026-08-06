@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { SearchBar } from '../ui/SearchBar';
 import { Avatar } from '../ui/Avatar';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { localDB } from '../../services/db';
 import { Bell, LogOut, User, Settings, ShieldCheck, ChevronDown } from 'lucide-react';
 
 export const Topbar = ({ onMenuToggle }: any) => {
@@ -14,6 +15,13 @@ export const Topbar = ({ onMenuToggle }: any) => {
 
   const userName = user?.name || user?.email || 'Administrator';
   const userInitials = userName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || 'AD';
+
+  // Dynamic avatar detection from AuthContext & LocalStorage Profile
+  const avatarUrl = useMemo(() => {
+    if (user?.avatarUrl) return user.avatarUrl;
+    const profile = localDB.getProfile('stu-1');
+    return profile?.avatarUrl || '';
+  }, [user]);
 
   const handleLogout = () => {
     setIsDropdownOpen(false);
@@ -51,7 +59,12 @@ export const Topbar = ({ onMenuToggle }: any) => {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-slate-100 transition-colors text-left"
           >
-            <Avatar src={user?.avatarUrl} fallback={userInitials} size="sm" className="bg-[#0099B8] text-white font-bold" />
+            <Avatar 
+              src={avatarUrl} 
+              fallback={userInitials} 
+              size="sm" 
+              className="bg-[#0099B8] text-white font-bold ring-2 ring-cyan-100" 
+            />
             <div className="hidden md:flex flex-col">
               <span className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-1">
                 {userName}
