@@ -63,6 +63,26 @@ export const localDB = {
       localStorage.setItem('spora_notifications', JSON.stringify(notifs));
     }
   },
+  deleteNotification: (notifId: string) => {
+    const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
+    const filtered = notifs.filter((n: any) => n.id !== notifId);
+    localStorage.setItem('spora_notifications', JSON.stringify(filtered));
+  },
+  deleteMultipleNotifications: (notifIds: string[]) => {
+    const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
+    const filtered = notifs.filter((n: any) => !notifIds.includes(n.id));
+    localStorage.setItem('spora_notifications', JSON.stringify(filtered));
+  },
+  clearAllNotifications: (userId?: string) => {
+    if (!userId) {
+      localStorage.setItem('spora_notifications', JSON.stringify([]));
+      return;
+    }
+    const cleanId = userId.toLowerCase();
+    const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
+    const remaining = notifs.filter((n: any) => n.userId !== cleanId && n.userId !== 'student-1');
+    localStorage.setItem('spora_notifications', JSON.stringify(remaining));
+  },
 
   // Profiles
   getProfile: (studentId: string) => {
