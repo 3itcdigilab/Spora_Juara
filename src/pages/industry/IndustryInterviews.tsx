@@ -15,10 +15,10 @@ export const IndustryInterviews: React.FC = () => {
 
   // Form state
   const [formData, setFormData] = useState({
-    candidateName: 'Usman Domiri',
-    interviewerName: 'Hendra Pratama (HR Manager)',
-    scheduledAt: '2026-08-15T10:00',
-    meetingUrl: 'https://meet.jit.si/spora-ev-interview',
+    candidateName: '',
+    interviewerName: '',
+    scheduledAt: '',
+    meetingUrl: '',
     location: 'online'
   });
 
@@ -40,35 +40,17 @@ export const IndustryInterviews: React.FC = () => {
         list.push({
           id: `iv-${app.id}`,
           applicationId: app.id,
-          candidateName: student?.name || student?.fullName || student?.major || 'Usman Domiri (Kandidat EV)',
-          jobTitle: job?.title || 'EV Technician',
-          scheduledAt: '2026-08-15 10:00 AM',
+          candidateName: student?.name || student?.fullName || student?.major || 'Unknown Candidate',
+          jobTitle: job?.title || 'Unknown Position',
+          scheduledAt: 'Not Scheduled',
           durationMinutes: 45,
-          interviewerName: 'Hendra Pratama (HR Manager)',
+          interviewerName: 'Unassigned',
           location: 'online',
           meetingUrl: 'https://meet.jit.si/spora-ev-interview',
           status: 'scheduled'
         });
       }
     });
-
-    if (list.length === 0) {
-      // Default initial interview item
-      list = [
-        {
-          id: 'iv-1',
-          applicationId: 'app-1',
-          candidateName: 'Usman Domiri',
-          jobTitle: 'EV Battery Assembly Technician',
-          scheduledAt: '2026-08-15 10:00 AM',
-          durationMinutes: 45,
-          interviewerName: 'Hendra Pratama (HR Lead)',
-          location: 'online',
-          meetingUrl: 'https://meet.jit.si/spora-ev-interview',
-          status: 'scheduled'
-        }
-      ];
-    }
 
     return list;
   }, [refreshKey]);
@@ -109,9 +91,15 @@ export const IndustryInterviews: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {interviews.map((iv: any, idx: number) => {
-          const candidateName = iv.candidateName || iv.name || 'Usman Domiri';
-          const jobTitle = iv.jobTitle || 'EV Position';
+        {interviews.length === 0 ? (
+          <div className="col-span-full py-12 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            <User className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <h3 className="text-sm font-bold text-slate-700">No Interviews Scheduled</h3>
+            <p className="text-xs text-slate-500 mt-1">When candidates are invited for interviews, they will appear here.</p>
+          </div>
+        ) : interviews.map((iv: any, idx: number) => {
+          const candidateName = iv.candidateName || iv.name || 'Unknown Candidate';
+          const jobTitle = iv.jobTitle || 'Unknown Position';
 
           return (
             <Card key={iv.id || idx} className="p-6 space-y-4 border-slate-200 hover:shadow-md transition-all">

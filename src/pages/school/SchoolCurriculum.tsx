@@ -4,12 +4,19 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { useToast } from '../../components/ui/Toast';
 
 export const SchoolCurriculum: React.FC = () => {
+  const { showToast } = useToast();
+
+  const handleExport = () => {
+    showToast('Exporting recommendations to PDF...', 'success');
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader title="AI Curriculum Recommendations" description="Based on skill gap analysis and industry feedback">
-         <Button><Sparkles className="w-4 h-4 mr-2" /> Export Recommendations</Button>
+         <Button onClick={handleExport}><Sparkles className="w-4 h-4 mr-2" /> Export Recommendations</Button>
       </PageHeader>
       
       <div className="space-y-4">

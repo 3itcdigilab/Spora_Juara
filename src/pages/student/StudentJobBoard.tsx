@@ -10,7 +10,7 @@ import { CheckCircle2, Zap, MapPin, Briefcase, DollarSign, Target } from 'lucide
 
 export const StudentJobBoard: React.FC = () => {
   const { user } = useAuth();
-  const studentId = 'student-1'; // Default student ID
+  const studentId = user?.email || (user as any)?.id || ''; // Dynamic student ID
 
   const [search, setSearch] = useState('');
   const [filterLocation, setFilterLocation] = useState('All');
@@ -55,7 +55,7 @@ export const StudentJobBoard: React.FC = () => {
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4">
         <div className="flex-1">
           <SearchBar 
-            placeholder="Search EV roles, skills, or companies (e.g. Battery, Hyundai)..." 
+            placeholder="Search EV roles, skills, or companies..." 
             value={search} 
             onChange={setSearch} 
           />

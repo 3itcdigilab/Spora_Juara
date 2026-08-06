@@ -15,31 +15,32 @@ import { UserCheck, ShieldCheck, Mail, Phone, MapPin, Award, CheckCircle2, Camer
 export const StudentProfile: React.FC = () => {
   const { showToast } = useToast();
   const { user, updateUser } = useAuth();
-  const studentId = 'stu-1';
+  const studentId = user?.email || (user as any)?.id || '';
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const [savedProfile, setSavedProfile] = useState(() => localDB.getProfile(studentId));
   const [activeTab, setActiveTab] = useState('Personal Info');
 
-  const defaultName = user?.name || savedProfile?.fullName || 'Usman Domiri';
-  const initialName = defaultName.includes('@') ? (savedProfile?.fullName || 'Usman Domiri') : defaultName;
+  const defaultName = user?.name || savedProfile?.fullName || '';
+  const initialName = defaultName.includes('@') ? (savedProfile?.fullName || '') : defaultName;
 
   const [fullName, setFullName] = useState(initialName);
   const [avatarUrl, setAvatarUrl] = useState(() => savedProfile?.avatarUrl || user?.avatarUrl || '');
-  const [dob, setDob] = useState(savedProfile?.dateOfBirth || '2005-08-17');
+  const [dob, setDob] = useState(savedProfile?.dateOfBirth || '');
   const [gender, setGender] = useState(savedProfile?.gender || 'Male');
-  const [phone, setPhone] = useState(savedProfile?.phone || '+62 812-3456-7890');
-  const [bio, setBio] = useState(savedProfile?.bio || 'Passionate EV technology candidate specializing in electrical systems & battery maintenance from SMKN 1 Cikarang.');
-  const [linkedinUrl, setLinkedinUrl] = useState(savedProfile?.linkedinUrl || 'https://linkedin.com/in/usman-domiri');
+  const [phone, setPhone] = useState(savedProfile?.phone || '');
+  const [bio, setBio] = useState(savedProfile?.bio || '');
+  const [linkedinUrl, setLinkedinUrl] = useState(savedProfile?.linkedinUrl || '');
 
-  const [major, setMajor] = useState('Teknik Kendaraan Ringan (Otomotif EV)');
-  const [gradYear, setGradYear] = useState('2025');
-  const [province, setProvince] = useState('Jawa Barat');
-  const [city, setCity] = useState('Kabupaten Bekasi');
+  const [school, setSchool] = useState(savedProfile?.school || '');
+  const [major, setMajor] = useState(savedProfile?.major || '');
+  const [gradYear, setGradYear] = useState(savedProfile?.gradYear || '');
+  const [province, setProvince] = useState(savedProfile?.province || '');
+  const [city, setCity] = useState(savedProfile?.city || '');
 
-  const [skills, setSkills] = useState<string[]>(['EV Battery Assembly', 'Electric Motor Winding', 'Safety Protocols', 'Wiring Harness']);
-  const [languages, setLanguages] = useState<string[]>(['Indonesian', 'English']);
-  const [resumeName, setResumeName] = useState('usman_domiri_resume_2026.pdf');
+  const [skills, setSkills] = useState<string[]>(savedProfile?.skills || []);
+  const [languages, setLanguages] = useState<string[]>(savedProfile?.languages || []);
+  const [resumeName, setResumeName] = useState(savedProfile?.resumeName || '');
 
   const completion = 90;
 
@@ -84,7 +85,15 @@ export const StudentProfile: React.FC = () => {
       gender,
       phone,
       bio,
-      linkedinUrl
+      linkedinUrl,
+      school,
+      major,
+      gradYear,
+      province,
+      city,
+      skills,
+      languages,
+      resumeName
     });
     setSavedProfile(updated);
     updateUser({ name: fullName, avatarUrl });
@@ -145,7 +154,7 @@ export const StudentProfile: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-slate-500 flex items-center gap-4 flex-wrap">
-              <span className="flex items-center gap-1"><Mail size={14} className="text-[#0099B8]" /> {user?.email || 'usman@spora.id'}</span>
+              <span className="flex items-center gap-1"><Mail size={14} className="text-[#0099B8]" /> {user?.email || ''}</span>
               <span className="flex items-center gap-1"><Phone size={14} className="text-emerald-600" /> {phone}</span>
               <span className="flex items-center gap-1"><MapPin size={14} className="text-amber-600" /> {city}, {province}</span>
             </p>
@@ -216,7 +225,7 @@ export const StudentProfile: React.FC = () => {
           {activeTab === 'Education' && (
             <div className="space-y-4 animate-fadeIn">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Vocational School Name" value="SMK Negeri 1 Cikarang" disabled />
+                <Input label="Vocational School Name" value={school} onChange={(e) => setSchool(e.target.value)} />
                 <Input label="Vocational Major / Stream" value={major} onChange={(e) => setMajor(e.target.value)} />
                 <Input label="Graduation Cohort Year" value={gradYear} onChange={(e) => setGradYear(e.target.value)} />
                 <Input label="Province" value={province} onChange={(e) => setProvince(e.target.value)} />

@@ -35,65 +35,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Initial default user accounts in LocalStorage
 export const initUsersDB = () => {
-  const defaultUsers = [
-    { email: 'sporaadmin@spora.id', password: 'sporaev', name: 'Spora Admin Master', role: 'admin', status: 'active', avatarUrl: '' },
-    { email: 'tubagus@spora.id', password: 'demo123', name: 'Tubagus', role: 'student', status: 'active', avatarUrl: '' },
-    { 
-      email: '3itcdigilab@gmail.com', 
-      password: 'demo123', 
-      name: '3ITC', 
-      role: 'industry', 
-      status: 'active', 
-      avatarUrl: '',
-      directorName: 'Tubagus Aria',
-      pics: [
-        {
-          id: 'pic-1',
-          name: 'Tubagus Aria',
-          role: 'Direktur Utama',
-          email: 'tubagusaria31@gmail.com',
-          phone: '087780092090',
-          notes: 'Penanggung jawab utama rekrutmen lulusan SMK Vokasi & program magang industri.'
-        }
-      ]
-    },
-    { email: 'school@spora.id', password: 'demo123', name: 'SMKN 1 Cikarang', role: 'school', status: 'active', avatarUrl: '' },
-    { email: 'industry@spora.id', password: 'demo123', name: 'Hyundai Motor Indonesia', role: 'industry', status: 'active', avatarUrl: '' }
-  ];
-
   const rawUsers = localStorage.getItem('spora_users');
   if (!rawUsers) {
-    localStorage.setItem('spora_users', JSON.stringify(defaultUsers));
-  } else {
-    // Always force 3ITC account role to 'industry'
-    let users = JSON.parse(rawUsers);
-    let found3ITC = false;
-    users = users.map((u: any) => {
-      if (u.email.toLowerCase() === '3itcdigilab@gmail.com' || u.name === '3ITC') {
-        found3ITC = true;
-        return { 
-          ...u, 
-          role: 'industry',
-          directorName: u.directorName || 'Tubagus Aria',
-          pics: u.pics && u.pics.length > 0 ? u.pics : [
-            {
-              id: 'pic-1',
-              name: 'Tubagus Aria',
-              role: 'Direktur Utama',
-              email: 'tubagusaria31@gmail.com',
-              phone: '087780092090',
-              notes: 'Penanggung jawab utama rekrutmen lulusan SMK Vokasi & program magang industri.'
-            }
-          ]
-        };
-      }
-      return u;
-    });
-
-    if (!found3ITC) {
-      users.push(defaultUsers[2]);
-    }
-    localStorage.setItem('spora_users', JSON.stringify(users));
+    localStorage.setItem('spora_users', JSON.stringify([]));
   }
 };
 
@@ -107,16 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.user && parsed.user.name) {
-          const is3ITC = parsed.user.email?.toLowerCase() === '3itcdigilab@gmail.com' || parsed.user.name === '3ITC';
-          const resolvedRole = is3ITC ? 'industry' : parsed.role;
-          return {
-            ...parsed,
-            role: resolvedRole,
-            user: {
-              ...parsed.user,
-              avatarUrl: parsed.user.avatarUrl || ''
-            }
-          };
+          return parsed;
         }
       } catch (err) {
         console.error(err);
@@ -124,26 +59,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     return {
-      user: { 
-        name: '3ITC', 
-        email: '3itcdigilab@gmail.com', 
-        avatarUrl: '',
-        status: 'active',
-        directorName: 'Tubagus Aria',
-        pics: [
-          {
-            id: 'pic-1',
-            name: 'Tubagus Aria',
-            role: 'Direktur Utama',
-            email: 'tubagusaria31@gmail.com',
-            phone: '087780092090',
-            notes: 'Penanggung jawab utama rekrutmen lulusan SMK Vokasi & program magang industri.'
-          }
-        ]
-      },
-      role: 'industry',
-      tenantId: 't1',
-      isAuthenticated: true,
+      user: null,
+      role: 'guest',
+      tenantId: null,
+      isAuthenticated: false,
       permissions: []
     };
   });
@@ -163,8 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const resolvedName = foundUser.name || 'User';
-    const is3ITC = foundUser.email.toLowerCase() === '3itcdigilab@gmail.com' || resolvedName === '3ITC';
-    const roleName = is3ITC ? 'industry' : (foundUser.role || 'student');
+    const roleName = foundUser.role || 'student';
     const userStatus = foundUser.status || 'active';
     let userAvatar = foundUser.avatarUrl || '';
 
@@ -196,8 +114,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const isObj = typeof dataOrEmail === 'object';
     const email = isObj ? dataOrEmail.email : dataOrEmail;
     const pwd = isObj ? dataOrEmail.password : password;
-    const is3ITC = email.toLowerCase() === '3itcdigilab@gmail.com';
-    const roleName = is3ITC ? 'industry' : (role || (isObj ? dataOrEmail.role : 'student'));
+    const roleName = role || (isObj ? dataOrEmail.role : 'student');
     const name = isObj && dataOrEmail.name ? dataOrEmail.name : 'Candidate';
 
     const status = (roleName === 'industry' || roleName === 'school') ? 'pending' : 'active';
@@ -234,8 +151,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateUser = (updatedData: Partial<User>) => {
     setState(prev => {
-      const current = prev.user || { name: '3ITC', email: '3itcdigilab@gmail.com', status: 'active', avatarUrl: '' };
-      const nextUser = { ...current, ...updatedData };
+      const current = prev.user || { name: '', email: '', status: 'active', avatarUrl: '' };
+      const nextUser = { ...current, ...updatedData } as User;
       const nextState = { ...prev, user: nextUser };
 
       try {

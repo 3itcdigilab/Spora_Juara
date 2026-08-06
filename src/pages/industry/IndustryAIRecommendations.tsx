@@ -2,12 +2,14 @@ import React from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { useToast } from '../../components/ui/Toast';
 import { mockStudents } from '../../data/students';
 import { mockJobs } from '../../data/jobs';
 import { Sparkles, CheckCircle, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router';
 
 export const IndustryAIRecommendations: React.FC = () => {
+  const { showToast } = useToast();
   return (
     <div className="space-y-6 font-sans">
       <div className="flex items-center gap-3">
@@ -58,7 +60,7 @@ export const IndustryAIRecommendations: React.FC = () => {
                     <Link to={`/industry/talent-pool/${student.id}`}>
                       <Button variant="outline" className="text-xs py-1 px-3">View Profile</Button>
                     </Link>
-                    <Button variant="primary" className="text-xs py-1 px-3">Invite</Button>
+                    <Button variant="primary" className="text-xs py-1 px-3" onClick={() => showToast('Invitation sent!', 'success')}>Invite</Button>
                   </div>
                 </div>
               );

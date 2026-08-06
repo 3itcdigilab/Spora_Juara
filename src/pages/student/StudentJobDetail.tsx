@@ -14,7 +14,7 @@ export const StudentJobDetail: React.FC = () => {
   const { showToast } = useToast();
   const { user } = useAuth();
 
-  const studentId = user?.email || (user as any)?.id || 'student-1';
+  const studentId = user?.email || '';
 
   // Fetch target job dynamically with safe fallback
   const job = useMemo(() => {

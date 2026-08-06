@@ -60,22 +60,22 @@ export const AdminStudents: React.FC = () => {
 
   const [formData, setFormData] = useState({
     name: '',
-    school: schoolFilter || 'SMKN 1 Cikarang',
-    major: 'Teknik Kendaraan Ringan (Otomotif EV)',
-    gradYear: '2025',
-    province: 'Jawa Barat',
-    score: 80
+    school: schoolFilter || '',
+    major: '',
+    gradYear: '',
+    province: '',
+    score: 0
   });
 
   const handleOpenAddModal = () => {
     setEditingStudent(null);
     setFormData({ 
       name: '', 
-      school: schoolFilter || 'SMK Negeri 1 Cikarang', 
-      major: 'Teknik Kendaraan Ringan (Otomotif EV)', 
-      gradYear: '2025', 
-      province: 'Jawa Barat', 
-      score: 80 
+      school: schoolFilter || '', 
+      major: '', 
+      gradYear: '', 
+      province: '', 
+      score: 0 
     });
     setIsModalOpen(true);
   };
@@ -84,11 +84,11 @@ export const AdminStudents: React.FC = () => {
     setEditingStudent(st);
     setFormData({
       name: st.name || '',
-      school: st.school || 'SMKN 1 Cikarang',
-      major: st.major || 'Teknik Kendaraan Ringan',
-      gradYear: st.gradYear || '2025',
-      province: st.province || 'Jawa Barat',
-      score: st.score || 80
+      school: st.school || '',
+      major: st.major || '',
+      gradYear: st.gradYear || '',
+      province: st.province || '',
+      score: st.score || 0
     });
     setIsModalOpen(true);
   };
@@ -237,7 +237,7 @@ export const AdminStudents: React.FC = () => {
       {/* Modal Add/Edit */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingStudent ? "Edit Student Candidate" : "Add New Student Candidate"}>
         <form onSubmit={handleSaveStudent} className="space-y-4 pt-2 font-sans">
-          <Input label="Student Full Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required placeholder="e.g. Usman Domiri" />
+          <Input label="Student Full Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required placeholder="e.g. Student Name" />
           <Input label="Vocational School Name" value={formData.school} onChange={(e) => setFormData({ ...formData, school: e.target.value })} required />
           <Input label="Major / Vocational Stream" value={formData.major} onChange={(e) => setFormData({ ...formData, major: e.target.value })} required />
           

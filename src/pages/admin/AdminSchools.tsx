@@ -42,9 +42,9 @@ export const AdminSchools: React.FC = () => {
   const [isAddStudentForm, setIsAddStudentForm] = useState(false);
   const [studentFormData, setStudentFormData] = useState({
     name: '',
-    major: 'Teknik Kendaraan Ringan (Otomotif EV)',
-    graduationYear: '2025',
-    city: 'Jawa Barat',
+    major: '',
+    graduationYear: '',
+    city: '',
     status: 'active'
   });
 
@@ -164,9 +164,9 @@ export const AdminSchools: React.FC = () => {
     setEditingStudent(null);
     setStudentFormData({
       name: '',
-      major: 'Teknik Kendaraan Ringan (Otomotif EV)',
-      graduationYear: '2025',
-      city: selectedInstitution?.name || 'Jawa Barat',
+      major: '',
+      graduationYear: '',
+      city: selectedInstitution?.name || '',
       status: 'active'
     });
     setIsAddStudentForm(true);
@@ -175,10 +175,10 @@ export const AdminSchools: React.FC = () => {
   const handleEditStudent = (st: any) => {
     setEditingStudent(st);
     setStudentFormData({
-      name: st.name || st.fullName || 'Siswa Vokasi',
-      major: st.major || 'Teknik Kendaraan Ringan (Otomotif EV)',
-      graduationYear: st.graduationYear?.toString() || '2025',
-      city: st.school || selectedInstitution?.name || 'Jawa Barat',
+      name: st.name || st.fullName || '',
+      major: st.major || '',
+      graduationYear: st.graduationYear?.toString() || '',
+      city: st.school || selectedInstitution?.name || '',
       status: st.status || 'active'
     });
     setIsAddStudentForm(true);

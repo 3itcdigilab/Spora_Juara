@@ -34,7 +34,7 @@ export const localDB = {
     const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
     const newNotif = {
       id: `notif-${Date.now()}`,
-      userId: (notifData.userId || 'student-1').toLowerCase(),
+      userId: (notifData.userId || '').toLowerCase(),
       title: notifData.title,
       message: notifData.message,
       type: notifData.type || 'status',
@@ -51,7 +51,6 @@ export const localDB = {
     const cleanId = userId.toLowerCase();
     return notifs.filter((n: any) => 
       n.userId === cleanId || 
-      n.userId === 'student-1' || 
       cleanId.includes(n.userId)
     );
   },
@@ -80,7 +79,7 @@ export const localDB = {
     }
     const cleanId = userId.toLowerCase();
     const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
-    const remaining = notifs.filter((n: any) => n.userId !== cleanId && n.userId !== 'student-1');
+    const remaining = notifs.filter((n: any) => n.userId !== cleanId);
     localStorage.setItem('spora_notifications', JSON.stringify(remaining));
   },
 
@@ -122,27 +121,27 @@ export const localDB = {
       u.name === studentId
     );
 
-    const name = matchedProfile?.fullName || matchedUser?.name || (studentId && !studentId.startsWith('app-') && !studentId.startsWith('student-') ? studentId : 'Tubagus');
-    const email = matchedProfile?.email || matchedUser?.email || (studentId?.includes('@') ? studentId : 'tubagus@spora.id');
-    const schoolName = matchedProfile?.schoolName || matchedUser?.school || 'SMK Negeri 1 Cikarang';
-    const major = matchedProfile?.major || matchedUser?.major || 'Teknik Kendaraan Ringan (Otomotif EV)';
+    const name = matchedProfile?.fullName || matchedUser?.name || (studentId && !studentId.startsWith('app-') && !studentId.startsWith('student-') ? studentId : '');
+    const email = matchedProfile?.email || matchedUser?.email || (studentId?.includes('@') ? studentId : '');
+    const schoolName = matchedProfile?.schoolName || matchedUser?.school || '';
+    const major = matchedProfile?.major || matchedUser?.major || '';
 
     return {
       id: studentId || email,
-      userId: 'u-1',
+      userId: matchedUser?.id || '',
       name,
       email,
-      schoolId: 'sch-1',
+      schoolId: matchedProfile?.schoolId || '',
       schoolName,
       major,
-      graduationYear: 2025,
-      province: matchedProfile?.province || matchedUser?.province || 'Jawa Barat',
-      city: matchedProfile?.city || matchedUser?.city || 'Bekasi',
-      skills: matchedProfile?.skills || ['EV Battery Assembly', 'High Voltage Safety', 'Quality Control'],
-      languages: ['Indonesia', 'English'],
-      resumeUrl: '',
-      careerInterest: 'EV Technician',
-      profileCompletion: 85,
+      graduationYear: matchedProfile?.graduationYear || new Date().getFullYear(),
+      province: matchedProfile?.province || matchedUser?.province || '',
+      city: matchedProfile?.city || matchedUser?.city || '',
+      skills: matchedProfile?.skills || [],
+      languages: matchedProfile?.languages || [],
+      resumeUrl: matchedProfile?.resumeUrl || '',
+      careerInterest: matchedProfile?.careerInterest || '',
+      profileCompletion: matchedProfile?.profileCompletion || 0,
       status: 'active'
     };
   },
@@ -234,8 +233,7 @@ export const localDB = {
         (a.studentId && a.studentId.toLowerCase() === cleanSearchId) ||
         (a.studentEmail && a.studentEmail.toLowerCase() === cleanSearchId) ||
         (a.studentName && cleanSearchId.includes(a.studentName.toLowerCase())) ||
-        cleanSearchId.includes((a.studentEmail || '').toLowerCase()) ||
-        a.studentId === 'student-1'
+        cleanSearchId.includes((a.studentEmail || '').toLowerCase())
       );
     }
     return uniqueApps;
@@ -250,8 +248,7 @@ export const localDB = {
       a.jobId === jobId && 
       (a.studentId === studentId || 
        a.studentEmail === targetEmail || 
-       (targetName && a.studentName === targetName) || 
-       a.studentId === 'student-1')
+       (targetName && a.studentName === targetName))
     );
 
     if (existingIdx >= 0) {
@@ -270,8 +267,8 @@ export const localDB = {
       studentId,
       jobId,
       status: 'applied',
-      aiMatchScore: 88,
-      aiMatchReasons: ['Met all required EV Assembly skills'],
+      aiMatchScore: 0,
+      aiMatchReasons: [],
       appliedAt: new Date().toISOString().split('T')[0],
       statusUpdatedAt: new Date().toISOString().split('T')[0],
       rejectionReason: '',
@@ -304,8 +301,8 @@ export const localDB = {
 
       // Trigger automatic real-time notification for candidate!
       const job = jobs.find((j: any) => j.id === app.jobId);
-      const companyName = job?.department || 'Hyundai Motor Indonesia';
-      const jobTitle = job?.title || 'EV Position';
+      const companyName = job?.department || job?.company || 'Perusahaan';
+      const jobTitle = job?.title || 'Posisi';
       const candidateUserId = app.studentEmail || app.studentId;
 
       let title = 'Pembaruan Status Lamaran';
@@ -358,8 +355,7 @@ export const localDB = {
           if (
             (targetStudentId && sId === targetStudentId) ||
             (targetEmail && sEmail === targetEmail) ||
-            (targetName && sName === targetName) ||
-            sId === 'student-1'
+            (targetName && sName === targetName)
           ) {
             return false;
           }

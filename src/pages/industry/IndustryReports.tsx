@@ -1,8 +1,17 @@
 import React from 'react';
-import { Card, Button } from '../../components/ui/Card';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 import { Download } from 'lucide-react';
+import { useToast } from '../../components/ui/Toast';
+import { LineChart } from '../../components/charts/LineChart';
+import { DonutChart } from '../../components/charts/DonutChart';
 
 export const IndustryReports: React.FC = () => {
+  const { showToast } = useToast();
+
+  const handleExport = () => {
+    showToast('Exporting hiring analytics to CSV...', 'success');
+  };
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -12,7 +21,7 @@ export const IndustryReports: React.FC = () => {
             <option>Last 30 Days</option>
             <option>Last Quarter</option>
           </select>
-          <Button variant="outline"><Download className="w-4 h-4 mr-2"/> Export</Button>
+          <Button variant="outline" onClick={handleExport}><Download className="w-4 h-4 mr-2"/> Export</Button>
         </div>
       </div>
 
@@ -26,11 +35,15 @@ export const IndustryReports: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6">
           <h2 className="font-semibold mb-4">Time-to-Hire Trend</h2>
-          <div className="h-64 bg-gray-50 flex items-center justify-center text-gray-400">[Line Chart]</div>
+          <div className="h-64 bg-gray-50 flex items-center justify-center text-gray-400">
+            <LineChart />
+          </div>
         </Card>
         <Card className="p-6">
           <h2 className="font-semibold mb-4">Hiring by Department</h2>
-          <div className="h-64 bg-gray-50 flex items-center justify-center text-gray-400">[Donut Chart]</div>
+          <div className="h-64 bg-gray-50 flex items-center justify-center text-gray-400">
+            <DonutChart />
+          </div>
         </Card>
       </div>
     </div>

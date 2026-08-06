@@ -11,7 +11,7 @@ export const SchoolPlacement: React.FC = () => {
         <h3 className="text-lg font-semibold mb-4">Top Hiring Partners</h3>
         <DataTable 
           columns={[{ header: 'Company', accessor: 'name' }, { header: 'Hires', accessor: 'hires' }, { header: 'Avg Salary', accessor: 'salary' }]} 
-          data={[{ id: 1, name: 'Hyundai Motor', hires: 45, salary: 'Rp 5.5M' }]} 
+          data={[]} 
         />
       </Card>
     </div>

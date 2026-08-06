@@ -8,10 +8,12 @@ import { FileUpload } from '../../components/ui/FileUpload';
 import { useToast } from '../../components/ui/Toast';
 import { Upload, Award, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { localDB } from '../../services/db';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const StudentCertificates: React.FC = () => {
   const { showToast } = useToast();
-  const studentId = 'stu-1';
+  const { user } = useAuth();
+  const studentId = user?.email || '';
 
   const [certs, setCerts] = useState(() => localDB.getCertificates(studentId));
   const [isModalOpen, setModalOpen] = useState(false);

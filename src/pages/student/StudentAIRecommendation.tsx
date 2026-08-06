@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { Tabs } from '../../components/ui/Tabs';
 import { useToast } from '../../components/ui/Toast';
 import { Sparkles, ArrowRight, BookOpen, CheckCircle2 } from 'lucide-react';
+import { localDB } from '../../services/db';
 
 export const StudentAIRecommendation: React.FC = () => {
   const { showToast } = useToast();
@@ -70,7 +71,7 @@ export const StudentAIRecommendation: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { title: 'Advanced High Voltage Safety', provider: 'Spora Academy', rel: 95, gap: 'Addresses missing Six Sigma & Safety Basics' },
-              { title: 'BMS Diagnostics & Thermal Balancing', provider: 'Hyundai Training Center', rel: 85, gap: 'Improves Diagnostic Score (+10 pts)' },
+              { title: 'BMS Diagnostics & Thermal Balancing', provider: 'Spora Training Center', rel: 85, gap: 'Improves Diagnostic Score (+10 pts)' },
               { title: 'Electric Motor Winding Certification', provider: 'SMK National Competency', rel: 80, gap: 'Unlocks Motor Specialist jobs' }
             ].map((course, i) => (
               <Card key={i} className="p-5 flex flex-col hover:shadow-md transition-shadow">
@@ -96,23 +97,25 @@ export const StudentAIRecommendation: React.FC = () => {
 
         {activeTab === 'Job Matches' && (
           <div className="space-y-4">
-            <Card className="p-6 flex flex-col md:flex-row items-center gap-6 border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow">
-              <div className="w-16 h-16 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center font-bold text-2xl text-blue-600 shrink-0">H</div>
-              <div className="flex-1 text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
-                  <h3 className="text-xl font-bold text-gray-900">EV Battery Assembly Technician</h3>
-                  <Sparkles size={16} className="text-violet-500" />
+            {localDB.getJobs().slice(0, 1).map((job: any) => (
+              <Card key={job.id} className="p-6 flex flex-col md:flex-row items-center gap-6 border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow">
+                <div className="w-16 h-16 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center font-bold text-2xl text-blue-600 shrink-0">{job.company?.charAt(0) || 'C'}</div>
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
+                    <h3 className="text-xl font-bold text-gray-900">{job.title}</h3>
+                    <Sparkles size={16} className="text-violet-500" />
+                  </div>
+                  <p className="text-gray-500 text-sm font-medium mb-2">{job.company} • {job.location} • Rp {(job.salaryMin/1000000).toFixed(1)}M - Rp {(job.salaryMax/1000000).toFixed(1)}M</p>
+                  <p className="text-xs text-emerald-600 font-medium bg-emerald-50 w-fit px-2 py-1 rounded">Top Match: You exceed the required Talent Score by 10 points.</p>
                 </div>
-                <p className="text-gray-500 text-sm font-medium mb-2">Hyundai Motor Manufacturing • Cikarang • Rp 6,000,000 - Rp 8,000,000</p>
-                <p className="text-xs text-emerald-600 font-medium bg-emerald-50 w-fit px-2 py-1 rounded">Top Match: You exceed the required Talent Score by 10 points.</p>
-              </div>
-              <div className="flex flex-col items-center gap-3 w-full md:w-auto">
-                <div className="text-2xl font-bold text-emerald-600">92% Match</div>
-                <Link to="/student/jobs/job-1" className="w-full md:w-auto">
-                  <Button variant="primary" className="w-full md:w-32">View & Apply</Button>
-                </Link>
-              </div>
-            </Card>
+                <div className="flex flex-col items-center gap-3 w-full md:w-auto">
+                  <div className="text-2xl font-bold text-emerald-600">92% Match</div>
+                  <Link to={`/student/jobs/${job.id}`} className="w-full md:w-auto">
+                    <Button variant="primary" className="w-full md:w-32">View & Apply</Button>
+                  </Link>
+                </div>
+              </Card>
+            ))}
           </div>
         )}
       </div>

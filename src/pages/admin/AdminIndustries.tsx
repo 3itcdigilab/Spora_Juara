@@ -142,7 +142,7 @@ export const AdminIndustries: React.FC = () => {
   // Open Multi-PIC Details Modal
   const handleOpenPicModal = (ind: any) => {
     setSelectedPicIndustry(ind);
-    setDirectorName(ind.directorName || 'Tubagus Aria');
+    setDirectorName(ind.directorName || '');
     
     // Resolve initial multi PICs list
     let existingPics: IndustryPIC[] = ind.pics || [];
@@ -150,11 +150,11 @@ export const AdminIndustries: React.FC = () => {
       existingPics = [
         {
           id: `pic-1`,
-          name: ind.picName || ind.name || '3ITC',
-          role: ind.picRole || 'Direktur / HR Lead',
-          email: ind.picEmail || ind.email || 'tubagusaria31@gmail.com',
-          phone: ind.picPhone || ind.phone || '087780092090',
-          notes: ind.picNotes || 'Penanggung jawab utama rekrutmen lulusan SMK Vokasi & program magang industri.'
+          name: ind.picName || ind.name || 'HR Manager',
+          role: ind.picRole || 'HR Lead',
+          email: ind.picEmail || ind.email || '',
+          phone: ind.picPhone || ind.phone || '',
+          notes: ind.picNotes || ''
         }
       ];
     }
@@ -318,8 +318,8 @@ export const AdminIndustries: React.FC = () => {
       {/* Modal Add/Edit Industry Partner */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingIndustry ? "Edit Industry Partner" : "Add Industry Partner"}>
         <form onSubmit={handleSaveIndustry} className="space-y-4 pt-2">
-          <Input label="Company Name (e.g. Hyundai Motor Indonesia)" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-          <Input label="Nama Direktur Perusahaan / Managing Director" value={formData.directorName} onChange={(e) => setFormData({ ...formData, directorName: e.target.value })} placeholder="e.g. Bpk. Ir. H. Bambang Soesilo, M.T." />
+          <Input label="Company Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required placeholder="e.g. ABC Corp" />
+          <Input label="Nama Direktur Perusahaan / Managing Director" value={formData.directorName} onChange={(e) => setFormData({ ...formData, directorName: e.target.value })} placeholder="e.g. Director Name" />
           <Input label="Email Utama Perusahaan" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required disabled={!!editingIndustry} />
           <Input label="Password Akun" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required />
           

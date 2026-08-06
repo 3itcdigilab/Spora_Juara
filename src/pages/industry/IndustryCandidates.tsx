@@ -2,11 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { useToast } from '../../components/ui/Toast';
 import { localDB } from '../../services/db';
 import { Users, GraduationCap, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router';
 
 export const IndustryCandidates: React.FC = () => {
+  const { showToast } = useToast();
   const studentsPool = useMemo(() => {
     return localDB.getStudents();
   }, []);
@@ -132,7 +134,7 @@ export const IndustryCandidates: React.FC = () => {
                 </div>
 
                 <div className="border-t border-slate-100 pt-4">
-                  <Button variant="primary" className="w-full bg-[#0099B8] hover:bg-[#007A93] text-white font-bold text-xs">
+                  <Button variant="primary" className="w-full bg-[#0099B8] hover:bg-[#007A93] text-white font-bold text-xs" onClick={() => showToast('Invitation sent to candidate', 'success')}>
                     Invite Candidate to Apply
                   </Button>
                 </div>

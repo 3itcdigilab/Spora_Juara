@@ -8,10 +8,12 @@ import { TagInput } from '../../components/ui/TagInput';
 import { useToast } from '../../components/ui/Toast';
 import { Plus, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import { localDB } from '../../services/db';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const StudentPortfolio: React.FC = () => {
   const { showToast } = useToast();
-  const studentId = 'stu-1';
+  const { user } = useAuth();
+  const studentId = user?.email || '';
 
   const [projects, setProjects] = useState(() => localDB.getPortfolio(studentId));
   const [isModalOpen, setModalOpen] = useState(false);

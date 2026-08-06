@@ -4,19 +4,35 @@ import { ArrowLeft, MapPin, Mail, Download, GraduationCap, Award } from 'lucide-
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { useToast } from '../../components/ui/Toast';
 import { localDB } from '../../services/db';
 
 export const CandidateDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { showToast } = useToast();
 
   const candidate = useMemo(() => {
-    if (!id) return localDB.getStudentById('student-1');
-    return localDB.getStudentById(id) || localDB.getStudentById('student-1');
+    if (!id) return null;
+    return localDB.getStudentById(id);
   }, [id]);
 
   const score = useMemo(() => {
-    return localDB.getTalentScore(candidate.id);
+    return candidate ? localDB.getTalentScore(candidate.id) : null;
   }, [candidate]);
+
+  if (!candidate) {
+    return (
+      <div className="space-y-6 max-w-5xl mx-auto font-sans pb-10">
+        <Link to="/industry/talent-pool" className="inline-flex items-center text-xs font-bold text-slate-500 hover:text-[#0099B8] transition-colors">
+          <ArrowLeft className="w-4 h-4 mr-1" /> Back to Talent Pool
+        </Link>
+        <Card className="p-16 text-center border-slate-200">
+          <h2 className="text-xl font-bold text-slate-700">Candidate Not Found</h2>
+          <p className="text-slate-500 mt-2">The candidate you are looking for does not exist or has been removed.</p>
+        </Card>
+      </div>
+    );
+  }
 
   const candidateName = candidate.name || candidate.fullName || candidate.userId || 'Kandidat Vokasi EV';
   const schoolName = candidate.school || candidate.schoolName || 'SMK Negeri 1 Cikarang';
@@ -46,8 +62,8 @@ export const CandidateDetail: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 md:mt-0 flex space-x-3 w-full md:w-auto">
-            <Button variant="outline" className="text-xs font-bold flex-1 md:flex-initial">Add to Shortlist</Button>
-            <Button variant="primary" className="bg-[#0099B8] hover:bg-[#007A93] text-white text-xs font-bold flex-1 md:flex-initial">Invite to Apply</Button>
+            <Button variant="outline" className="text-xs font-bold flex-1 md:flex-initial" onClick={() => showToast('Candidate added to shortlist', 'success')}>Add to Shortlist</Button>
+            <Button variant="primary" className="bg-[#0099B8] hover:bg-[#007A93] text-white text-xs font-bold flex-1 md:flex-initial" onClick={() => showToast('Invitation sent to candidate', 'success')}>Invite to Apply</Button>
           </div>
         </div>
       </Card>
@@ -79,7 +95,7 @@ export const CandidateDetail: React.FC = () => {
                 <div className="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center text-red-600 font-black text-xs mr-3">PDF</div> 
                 CV_{candidateName.replace(/\s+/g, '_')}.pdf
               </div>
-              <Button variant="outline" size="sm" className="text-xs font-bold">
+              <Button variant="outline" size="sm" className="text-xs font-bold" onClick={() => showToast('Downloading CV...', 'info')}>
                 <Download className="w-3.5 h-3.5 mr-1.5"/> Download CV
               </Button>
             </div>

@@ -162,6 +162,7 @@ export const AppRouter: React.FC = () => (
         <Route path="schools" element={<AdminSchools />} />
         <Route path="industries" element={<AdminIndustries />} />
         <Route path="assessments" element={<AdminAssessments />} />
+        <Route path="ai-rules" element={<AdminAIRules />} />
         <Route path="reports" element={<AdminReports />} />
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="system" element={<AdminSystem />} />

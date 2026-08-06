@@ -110,8 +110,8 @@ export const StudentTalentScore: React.FC = () => {
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Top Industry Matches</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { ind: 'EV Battery Manufacturing', match: 92, company: 'Hyundai, CATL' },
-            { ind: 'Automotive Quality Assurance', match: 85, company: 'Toyota, Wuling' },
+            { ind: 'EV Battery Manufacturing', match: 92, company: 'Top Tier Partners' },
+            { ind: 'Automotive Quality Assurance', match: 85, company: 'Leading OEM Partners' },
             { ind: 'Electric Motor Assembly', match: 78, company: 'Various Partners' }
           ].map((item, idx) => (
             <Card key={idx} className="p-5 flex flex-col justify-between">
@@ -124,7 +124,9 @@ export const StudentTalentScore: React.FC = () => {
                   <Briefcase size={14} /> {item.company}
                 </p>
               </div>
-              <Button variant="outline" className="mt-4 w-full text-sm">View Roles</Button>
+              <Link to="/student/jobs">
+                <Button variant="outline" className="mt-4 w-full text-sm">View Roles</Button>
+              </Link>
             </Card>
           ))}
         </div>

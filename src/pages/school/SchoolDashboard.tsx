@@ -13,6 +13,8 @@ import { useAuth } from '../../contexts/AuthContext';
 export const SchoolDashboard: React.FC = () => {
   const { user } = useAuth();
   const schoolName = user?.name || 'SMK Negeri 1 Cikarang';
+  // Mock fetching feedback or just leave empty if not present.
+  const feedbacks = [];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10 font-sans">
@@ -86,11 +88,11 @@ export const SchoolDashboard: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {[
-              { company: 'Hyundai Motor', comment: 'Lulusan jurusan Otomotif EV memiliki pemahaman dasar modul baterai yang sangat baik.', rating: 4.8 },
-              { company: 'Toyota Motor', comment: 'Perlu peningkatan pada prosedur keselamatan kerja High Voltage (HV Safety Protocols).', rating: 4.2 },
-              { company: 'Wuling Motors', comment: 'Keterampilan wiring harness dan solder sangat presisi.', rating: 4.7 }
-            ].map((fb, i) => (
+            {feedbacks.length === 0 ? (
+              <div className="p-4 text-center text-slate-500 bg-slate-50 rounded-xl border border-slate-100">
+                <p className="text-xs">No industry feedback available yet.</p>
+              </div>
+            ) : feedbacks.map((fb: any, i: number) => (
               <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-xs text-slate-900">{fb.company}</span>

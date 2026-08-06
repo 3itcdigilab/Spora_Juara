@@ -5,11 +5,14 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { TagInput } from '../../components/ui/TagInput';
 import { useToast } from '../../components/ui/Toast';
+import { useAuth } from '../../contexts/AuthContext';
+import { localDB } from '../../services/db';
 import { mockJobs } from '../../data/jobs';
 
 export const IndustryJobPosting: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user } = useAuth();
 
   const [title, setTitle] = useState('');
   const [department, setDepartment] = useState('Engineering');
@@ -30,7 +33,7 @@ export const IndustryJobPosting: React.FC = () => {
 
     const newJob = {
       id: `job-${Date.now()}`,
-      industryId: 'ind-1',
+      industryId: user?.email || (user as any)?.id || 'ind-1',
       title,
       department,
       location,
@@ -48,7 +51,10 @@ export const IndustryJobPosting: React.FC = () => {
 
     mockJobs.unshift(newJob);
 
-    // Save to LocalStorage
+    // Save to LocalStorage using localDB to ensure consistency
+    localDB.postJob(newJob);
+    
+    // Kept for backward compatibility if needed
     const savedJobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
     savedJobs.unshift(newJob);
     localStorage.setItem('spora_jobs', JSON.stringify(savedJobs));

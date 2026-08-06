@@ -9,7 +9,7 @@ import { Shield, Bell, Trash2 } from 'lucide-react';
 
 export const StudentSettings: React.FC = () => {
   const { showToast } = useToast();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -74,7 +74,7 @@ export const StudentSettings: React.FC = () => {
         <Card className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Registered Email</label>
-            <p className="text-gray-900 bg-slate-50 px-3 py-2 rounded-lg border border-gray-200 text-sm font-mono">budi.santoso@spora.id</p>
+            <p className="text-gray-900 bg-slate-50 px-3 py-2 rounded-lg border border-gray-200 text-sm font-mono">{user?.email || 'student@spora.id'}</p>
           </div>
 
           <form onSubmit={handlePasswordChange} className="border-t border-gray-100 pt-4 space-y-4">
