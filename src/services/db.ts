@@ -1,37 +1,18 @@
-import { Application, Job } from '../data/types';
-
-// Reset & Clear database of all dummy data
-export const clearAllDummyData = () => {
-  localStorage.setItem('spora_students', JSON.stringify([]));
-  localStorage.setItem('spora_profiles', JSON.stringify([]));
-  localStorage.setItem('spora_certificates', JSON.stringify([]));
-  localStorage.setItem('spora_portfolio', JSON.stringify([]));
-  localStorage.setItem('spora_applications', JSON.stringify([]));
-  localStorage.setItem('spora_talent_scores', JSON.stringify([]));
-  localStorage.setItem('spora_jobs', JSON.stringify([]));
-  localStorage.setItem('spora_schools', JSON.stringify([]));
-  localStorage.setItem('spora_industries', JSON.stringify([]));
-  localStorage.setItem('spora_notifications', JSON.stringify([]));
-  localStorage.setItem('spora_interviews', JSON.stringify([]));
-  localStorage.setItem('spora_clean_db_initialized', 'true');
-};
-
-export const initDB = () => {
-  if (!localStorage.getItem('spora_clean_db_initialized')) {
-    clearAllDummyData();
-  }
-};
-
-initDB();
+import { getAll, setAll, addItem, updateItem, removeItem, removeWhere, findOne, findMany } from './firestoreSync';
 
 export const localDB = {
   resetDB: () => {
-    clearAllDummyData();
+    setAll('students', []);
+    setAll('profiles', []);
+    setAll('certificates', []);
+    setAll('portfolio', []);
+    setAll('applications', []);
+    setAll('talent_scores', []);
+    setAll('jobs', []);
   },
 
   // Notifications
   addNotification: (notifData: any) => {
-    const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
     const newNotif = {
       id: `notif-${Date.now()}`,
       userId: (notifData.userId || '').toLowerCase(),
@@ -42,86 +23,76 @@ export const localDB = {
       isRead: false,
       createdAt: new Date().toISOString()
     };
-    notifs.unshift(newNotif);
-    localStorage.setItem('spora_notifications', JSON.stringify(notifs));
+    addItem('notifications', newNotif);
     return newNotif;
   },
   getNotifications: (userId?: string) => {
-    const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
+    const notifs = getAll('notifications');
     if (!userId) return notifs;
     const cleanId = userId.toLowerCase();
     return notifs.filter((n: any) => (n.userId || '').toLowerCase() === cleanId);
   },
   markNotificationRead: (id: string) => {
-    const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
-    const idx = notifs.findIndex((n: any) => n.id === id);
-    if (idx >= 0) {
-      notifs[idx].isRead = true;
-      localStorage.setItem('spora_notifications', JSON.stringify(notifs));
-    }
+    updateItem('notifications', id, { isRead: true });
   },
   deleteNotification: (id: string) => {
-    const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
-    const remaining = notifs.filter((n: any) => n.id !== id);
-    localStorage.setItem('spora_notifications', JSON.stringify(remaining));
+    removeItem('notifications', id);
   },
   deleteMultipleNotifications: (ids: string[]) => {
-    const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
-    const remaining = notifs.filter((n: any) => !ids.includes(n.id));
-    localStorage.setItem('spora_notifications', JSON.stringify(remaining));
+    removeWhere('notifications', (n: any) => ids.includes(n.id));
   },
   clearAllNotifications: (userId: string) => {
     const cleanId = userId.toLowerCase();
-    const notifs = JSON.parse(localStorage.getItem('spora_notifications') || '[]');
-    const remaining = notifs.filter((n: any) => n.userId !== cleanId);
-    localStorage.setItem('spora_notifications', JSON.stringify(remaining));
+    removeWhere('notifications', (n: any) => n.userId === cleanId);
   },
 
   // Profiles
   getProfile: (studentId: string) => {
     if (!studentId) return null;
     const cleanId = studentId.toLowerCase().trim();
-    const profiles = JSON.parse(localStorage.getItem('spora_profiles') || '[]');
+    const profiles = getAll('profiles');
     return profiles.find((p: any) => 
       (p.studentId && p.studentId.toLowerCase().trim() === cleanId) ||
       (p.email && p.email.toLowerCase().trim() === cleanId)
     ) || null;
   },
   saveProfile: (profileData: any) => {
-    const profiles = JSON.parse(localStorage.getItem('spora_profiles') || '[]');
+    const profiles = getAll('profiles');
     const targetId = (profileData.studentId || profileData.email || '').toLowerCase().trim();
-    const idx = profiles.findIndex((p: any) => 
+    const existing = profiles.find((p: any) => 
       (p.studentId && p.studentId.toLowerCase().trim() === targetId) ||
       (p.email && p.email.toLowerCase().trim() === targetId)
     );
-    if (idx >= 0) {
-      profiles[idx] = { ...profiles[idx], ...profileData };
+    
+    if (existing && existing.id) {
+      updateItem('profiles', existing.id, profileData);
+      return { ...existing, ...profileData };
     } else {
-      profiles.push(profileData);
+      const newProfile = { id: `prof-${Date.now()}`, ...profileData };
+      addItem('profiles', newProfile);
+      return newProfile;
     }
-    localStorage.setItem('spora_profiles', JSON.stringify(profiles));
-    return profileData;
   },
 
   // Students
   getStudents: () => {
-    return JSON.parse(localStorage.getItem('spora_students') || '[]');
+    return getAll('students');
   },
   getStudentById: (studentId: string) => {
     if (!studentId) return null;
     const cleanId = studentId.toLowerCase().trim();
-    const students = JSON.parse(localStorage.getItem('spora_students') || '[]');
+    const students = getAll('students');
     const found = students.find((s: any) => s.id?.toLowerCase() === cleanId || s.email?.toLowerCase() === cleanId);
     
-    // Check spora_profiles
-    const profiles = JSON.parse(localStorage.getItem('spora_profiles') || '[]');
+    // Check profiles
+    const profiles = getAll('profiles');
     const matchedProfile = profiles.find((p: any) => 
       (p.studentId && p.studentId.toLowerCase().trim() === cleanId) || 
       (p.email && p.email.toLowerCase().trim() === cleanId)
     );
 
-    // Check spora_users to resolve real account name if registered via Auth
-    const users = JSON.parse(localStorage.getItem('spora_users') || '[]');
+    // Check users
+    const users = getAll('users');
     const matchedUser = users.find((u: any) => 
       (u.email && u.email.toLowerCase().trim() === cleanId) || 
       (u.id && u.id.toLowerCase().trim() === cleanId) || 
@@ -160,33 +131,29 @@ export const localDB = {
 
   // Certificates
   getCertificates: (studentId: string) => {
-    const certs = JSON.parse(localStorage.getItem('spora_certificates') || '[]');
+    const certs = getAll('certificates');
     return certs.filter((c: any) => c.studentId === studentId);
   },
   addCertificate: (certData: any) => {
-    const certs = JSON.parse(localStorage.getItem('spora_certificates') || '[]');
     const newCert = { id: `cert-${Date.now()}`, status: 'verified', ...certData };
-    certs.push(newCert);
-    localStorage.setItem('spora_certificates', JSON.stringify(certs));
+    addItem('certificates', newCert);
     return newCert;
   },
 
   // Portfolio
   getPortfolio: (studentId: string) => {
-    const items = JSON.parse(localStorage.getItem('spora_portfolio') || '[]');
+    const items = getAll('portfolio');
     return items.filter((p: any) => p.studentId === studentId);
   },
   addPortfolioProject: (projData: any) => {
-    const items = JSON.parse(localStorage.getItem('spora_portfolio') || '[]');
     const newProj = { id: `proj-${Date.now()}`, completedDate: new Date().toISOString().split('T')[0], ...projData };
-    items.push(newProj);
-    localStorage.setItem('spora_portfolio', JSON.stringify(items));
+    addItem('portfolio', newProj);
     return newProj;
   },
 
   // Applications
   getApplications: (studentId?: string) => {
-    const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
+    const apps = getAll('applications');
     
     // Deduplicate applications by jobId + candidate identity (email / studentId / studentName)
     const uniqueAppsMap = new Map();
@@ -229,8 +196,7 @@ export const localDB = {
     });
   },
 
-  applyForJob: (applicationData: Partial<Application> & { studentEmail?: string; studentName?: string; school?: string; major?: string; skills?: string[] }) => {
-    const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
+  applyForJob: (applicationData: any) => {
     const studentObj = localDB.getStudentById(applicationData.studentId || applicationData.studentEmail || '');
     
     const candidateEmail = applicationData.studentEmail || studentObj?.email || applicationData.studentId || '';
@@ -252,8 +218,7 @@ export const localDB = {
       ...applicationData
     };
 
-    apps.unshift(newApp);
-    localStorage.setItem('spora_applications', JSON.stringify(apps));
+    addItem('applications', newApp);
 
     // Send candidate auto notification
     const job = localDB.getJobById(newApp.jobId || '');
@@ -269,16 +234,16 @@ export const localDB = {
   },
 
   updateApplicationStatus: (appId: string, status: string, rejectionReason?: string) => {
-    const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
+    const apps = getAll('applications');
     const idx = apps.findIndex((a: any) => a.id === appId);
     if (idx >= 0) {
-      apps[idx].status = status;
-      apps[idx].statusUpdatedAt = new Date().toISOString();
-      if (rejectionReason) apps[idx].rejectionReason = rejectionReason;
-      localStorage.setItem('spora_applications', JSON.stringify(apps));
+      const updatedData: any = { status, statusUpdatedAt: new Date().toISOString() };
+      if (rejectionReason) updatedData.rejectionReason = rejectionReason;
+      
+      updateItem('applications', appId, updatedData);
 
       // Trigger automatic notification
-      const app = apps[idx];
+      const app = { ...apps[idx], ...updatedData };
       const job = localDB.getJobById(app.jobId);
       const studentEmail = app.studentEmail || app.studentId;
       const companyName = job?.company || 'Mitra Perusahaan EV';
@@ -323,26 +288,24 @@ export const localDB = {
   },
 
   withdrawApplication: (appId: string) => {
-    const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
+    const apps = getAll('applications');
     const targetApp = apps.find((a: any) => a.id === appId);
     if (!targetApp) return;
 
     const targetJobId = targetApp.jobId;
     const targetCandidateKey = (targetApp.studentEmail || targetApp.studentId || targetApp.studentName || '').toLowerCase().trim();
 
-    const remaining = apps.filter((a: any) => {
+    removeWhere('applications', (a: any) => {
       const aCandidateKey = (a.studentEmail || a.studentId || a.studentName || '').toLowerCase().trim();
       const isSameJob = a.jobId === targetJobId;
       const isSameCandidate = aCandidateKey === targetCandidateKey || (targetCandidateKey && aCandidateKey.includes(targetCandidateKey));
-      return !(isSameJob && isSameCandidate);
+      return isSameJob && isSameCandidate;
     });
-
-    localStorage.setItem('spora_applications', JSON.stringify(remaining));
   },
 
   // Talent Scores
   getTalentScore: (studentId: string) => {
-    const scores = JSON.parse(localStorage.getItem('spora_talent_scores') || '[]');
+    const scores = getAll('talent_scores');
     const found = scores.find((s: any) => s.studentId === studentId);
     if (found) return found;
 
@@ -360,7 +323,7 @@ export const localDB = {
 
   // Jobs
   getJobs: () => {
-    const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
+    const jobs = getAll('jobs');
     const uniqueMap = new Map();
     jobs.forEach((j: any) => {
       if (j && j.id && !uniqueMap.has(j.id)) {
@@ -374,40 +337,31 @@ export const localDB = {
     return jobs.find((j: any) => j.id === id) || null;
   },
   postJob: (jobData: any) => {
-    const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
-    const newJob: Job = {
+    const newJob: any = {
       id: `job-${Date.now()}`,
       status: 'active',
       postedAt: new Date().toISOString().split('T')[0],
       deadline: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
       ...jobData
     };
-    const filtered = jobs.filter((j: any) => j.id !== newJob.id);
-    filtered.unshift(newJob);
-    localStorage.setItem('spora_jobs', JSON.stringify(filtered));
+    
+    addItem('jobs', newJob);
     return newJob;
   },
   updateJob: (jobId: string, updatedData: any) => {
-    const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
-    const idx = jobs.findIndex((j: any) => j.id === jobId);
-    if (idx >= 0) {
-      jobs[idx] = { ...jobs[idx], ...updatedData };
-      localStorage.setItem('spora_jobs', JSON.stringify(jobs));
-    }
+    updateItem('jobs', jobId, updatedData);
   },
   deleteJob: (jobId: string) => {
-    const jobs = JSON.parse(localStorage.getItem('spora_jobs') || '[]');
+    const jobs = getAll('jobs');
     const target = jobs.find((j: any) => j.id === jobId);
-    const filtered = jobs.filter((j: any) => {
-      if (j.id === jobId) return false;
-      if (target && j.title === target.title && j.industryId === target.industryId) return false;
-      return true;
+
+    removeWhere('jobs', (j: any) => {
+      if (j.id === jobId) return true;
+      if (target && j.title === target.title && j.industryId === target.industryId) return true;
+      return false;
     });
-    localStorage.setItem('spora_jobs', JSON.stringify(filtered));
 
     // Cascade delete applications for this deleted job
-    const apps = JSON.parse(localStorage.getItem('spora_applications') || '[]');
-    const filteredApps = apps.filter((a: any) => a.jobId !== jobId);
-    localStorage.setItem('spora_applications', JSON.stringify(filteredApps));
+    removeWhere('applications', (a: any) => a.jobId === jobId);
   }
 };

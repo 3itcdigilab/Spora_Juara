@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { localDB } from '../services/db';
+import { getAll, addItem, updateItem, findOne } from '../services/firestoreSync';
 
 export interface User {
   name: string;
@@ -35,10 +36,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Initial default user accounts in LocalStorage
 export const initUsersDB = () => {
-  const rawUsers = localStorage.getItem('spora_users');
-  if (!rawUsers) {
-    localStorage.setItem('spora_users', JSON.stringify([]));
-  }
+  // Firestore is initialized separately, keeping this for backward compatibility
 };
 
 initUsersDB();
@@ -72,8 +70,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [state]);
 
   const login = async (e: string, p: string): Promise<{ success: boolean; status?: string; message?: string }> => {
-    const rawUsers = localStorage.getItem('spora_users');
-    const users = rawUsers ? JSON.parse(rawUsers) : [];
+    const users = getAll('users');
 
     const foundUser = users.find((u: any) => u.email.toLowerCase() === e.toLowerCase());
 
@@ -87,7 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let userAvatar = foundUser.avatarUrl || '';
 
     if (roleName === 'student') {
-      const studentProfile = localDB.getProfile('stu-1');
+      const studentProfile = localDB.getProfile(foundUser.email);
       if (studentProfile?.avatarUrl) userAvatar = studentProfile.avatarUrl;
     }
 
@@ -119,18 +116,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const status = (roleName === 'industry' || roleName === 'school') ? 'pending' : 'active';
 
-    const rawUsers = localStorage.getItem('spora_users');
-    const users = rawUsers ? JSON.parse(rawUsers) : [];
-
-    const existingIdx = users.findIndex((u: any) => u.email.toLowerCase() === email.toLowerCase());
     const newUserEntry = { ...dataOrEmail, email, password: pwd, name, role: roleName, status, avatarUrl: '' };
 
-    if (existingIdx >= 0) {
-      users[existingIdx] = newUserEntry;
+    const existingUser = findOne('users', (u: any) => u.email.toLowerCase() === email.toLowerCase());
+
+    if (existingUser) {
+      updateItem('users', existingUser.id, newUserEntry);
     } else {
-      users.push(newUserEntry);
+      addItem('users', newUserEntry);
     }
-    localStorage.setItem('spora_users', JSON.stringify(users));
 
     const newState: AuthState = {
       user: {
@@ -156,12 +150,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const nextState = { ...prev, user: nextUser };
 
       try {
-        const rawUsers = localStorage.getItem('spora_users');
-        const users = rawUsers ? JSON.parse(rawUsers) : [];
-        const idx = users.findIndex((u: any) => u.email.toLowerCase() === current.email.toLowerCase());
-        if (idx >= 0) {
-          users[idx] = { ...users[idx], ...nextUser };
-          localStorage.setItem('spora_users', JSON.stringify(users));
+        const existingUser = findOne('users', (u: any) => u.email.toLowerCase() === current.email.toLowerCase());
+        if (existingUser) {
+          updateItem('users', existingUser.id, nextUser);
         }
       } catch (err) {}
 
@@ -171,12 +162,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const approveUser = (email: string) => {
-    const rawUsers = localStorage.getItem('spora_users');
-    const users = rawUsers ? JSON.parse(rawUsers) : [];
-    const idx = users.findIndex((u: any) => u.email.toLowerCase() === email.toLowerCase());
-    if (idx >= 0) {
-      users[idx].status = 'active';
-      localStorage.setItem('spora_users', JSON.stringify(users));
+    const existingUser = findOne('users', (u: any) => u.email.toLowerCase() === email.toLowerCase());
+    if (existingUser) {
+      updateItem('users', existingUser.id, { status: 'active' });
     }
     if (state.user && state.user.email.toLowerCase() === email.toLowerCase()) {
       setState(prev => ({
@@ -187,12 +175,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const rejectUser = (email: string) => {
-    const rawUsers = localStorage.getItem('spora_users');
-    const users = rawUsers ? JSON.parse(rawUsers) : [];
-    const idx = users.findIndex((u: any) => u.email.toLowerCase() === email.toLowerCase());
-    if (idx >= 0) {
-      users[idx].status = 'rejected';
-      localStorage.setItem('spora_users', JSON.stringify(users));
+    const existingUser = findOne('users', (u: any) => u.email.toLowerCase() === email.toLowerCase());
+    if (existingUser) {
+      updateItem('users', existingUser.id, { status: 'rejected' });
     }
     if (state.user && state.user.email.toLowerCase() === email.toLowerCase()) {
       setState(prev => ({
