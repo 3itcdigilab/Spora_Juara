@@ -21,6 +21,7 @@ import { mockStudents } from '../data/students';
 import { mockSchools } from '../data/schools';
 import { mockIndustries } from '../data/industries';
 import { mockJobs } from '../data/jobs';
+import { mockAllUsers } from '../data/users';
 
 // Collection names
 const COLLECTIONS = [
@@ -154,6 +155,19 @@ export async function initFirestoreSync(): Promise<void> {
       fsBatchSet('jobs', mockJobs).catch(() => {});
     }
 
+    // Auto-seed all users (admin, 12 schools, 12 industries, 100 students) if empty or few
+    if ((memoryStore['users'] || []).length < 20) {
+      console.log(`[FirestoreSync] Seeding ${mockAllUsers.length} user accounts...`);
+      memoryStore['users'] = [...mockAllUsers];
+      fsBatchSet('users', mockAllUsers).catch(() => {});
+    }
+
+    // Keep localStorage in sync for full compatibility
+    try {
+      localStorage.setItem('spora_users', JSON.stringify(memoryStore['users']));
+      localStorage.setItem('spora_students_db', JSON.stringify(memoryStore['students']));
+    } catch (e) {}
+
     _initialized = true;
     console.log('[FirestoreSync] All collections loaded into memory.');
   })();
@@ -212,6 +226,16 @@ async function fsBatchSet(colName: string, items: any[]): Promise<void> {
   }
 }
 
+function syncLocalBackup(colName: string): void {
+  try {
+    if (colName === 'users') {
+      localStorage.setItem('spora_users', JSON.stringify(memoryStore['users'] || []));
+    } else if (colName === 'students') {
+      localStorage.setItem('spora_students_db', JSON.stringify(memoryStore['students'] || []));
+    }
+  } catch (e) {}
+}
+
 // ---- Public API: Read from memory, write to memory + Firestore ----
 
 /** Get all items in a collection (from memory). */
@@ -222,6 +246,7 @@ export function getAll(colName: string): any[] {
 /** Set the entire collection (memory + Firestore). */
 export function setAll(colName: string, items: any[]): void {
   memoryStore[colName] = items;
+  syncLocalBackup(colName);
   // Fire-and-forget Firestore sync
   fsBatchSet(colName, items).catch(() => {});
 }
@@ -230,6 +255,7 @@ export function setAll(colName: string, items: any[]): void {
 export function addItem(colName: string, item: any): void {
   if (!memoryStore[colName]) memoryStore[colName] = [];
   memoryStore[colName].unshift(item);
+  syncLocalBackup(colName);
   const docId = item.id || item._docId || `doc-${Date.now()}`;
   fsSet(colName, docId, item).catch(() => {});
 }
@@ -240,6 +266,7 @@ export function updateItem(colName: string, itemId: string, updatedData: any): v
   const idx = arr.findIndex((i: any) => i.id === itemId);
   if (idx >= 0) {
     arr[idx] = { ...arr[idx], ...updatedData };
+    syncLocalBackup(colName);
     const docId = arr[idx]._docId || arr[idx].id || itemId;
     fsSet(colName, docId, arr[idx]).catch(() => {});
   }
@@ -250,6 +277,7 @@ export function removeItem(colName: string, itemId: string): void {
   const arr = memoryStore[colName] || [];
   const item = arr.find((i: any) => i.id === itemId);
   memoryStore[colName] = arr.filter((i: any) => i.id !== itemId);
+  syncLocalBackup(colName);
   if (item) {
     const docId = item._docId || item.id || itemId;
     fsDelete(colName, docId).catch(() => {});
@@ -261,6 +289,7 @@ export function removeWhere(colName: string, predicate: (item: any) => boolean):
   const arr = memoryStore[colName] || [];
   const toRemove = arr.filter(predicate);
   memoryStore[colName] = arr.filter((i) => !predicate(i));
+  syncLocalBackup(colName);
   toRemove.forEach((item) => {
     const docId = item._docId || item.id;
     if (docId) fsDelete(colName, docId).catch(() => {});

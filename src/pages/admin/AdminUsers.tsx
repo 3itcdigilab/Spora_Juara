@@ -9,13 +9,14 @@ import { useToast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { CheckCircle2, Clock, UserCheck, Plus, Edit2, Trash2, Key } from 'lucide-react';
 
+import { getAll, addItem, updateItem, removeWhere, findOne } from '../../services/firestoreSync';
+
 export const AdminUsers: React.FC = () => {
   const { showToast } = useToast();
   const { approveUser, rejectUser } = useAuth();
   
   const [users, setUsers] = useState<any[]>(() => {
-    const raw = localStorage.getItem('spora_users');
-    return raw ? JSON.parse(raw) : [];
+    return getAll('users');
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,8 +31,7 @@ export const AdminUsers: React.FC = () => {
   });
 
   const refreshUsers = () => {
-    const raw = localStorage.getItem('spora_users');
-    setUsers(raw ? JSON.parse(raw) : []);
+    setUsers([...getAll('users')]);
   };
 
   const handleOpenAddModal = () => {
@@ -54,30 +54,25 @@ export const AdminUsers: React.FC = () => {
 
   const handleSaveUser = (e: React.FormEvent) => {
     e.preventDefault();
-    const raw = localStorage.getItem('spora_users');
-    let currentUsers = raw ? JSON.parse(raw) : [];
+    const currentUsers = getAll('users');
 
     if (editingUser) {
-      // Update existing user
-      currentUsers = currentUsers.map((u: any) => {
-        if (u.email.toLowerCase() === editingUser.email.toLowerCase()) {
-          return { ...u, ...formData };
-        }
-        return u;
-      });
+      const target = currentUsers.find((u: any) => u.email.toLowerCase() === editingUser.email.toLowerCase());
+      if (target) {
+        const docId = target._docId || target.id || `user-${Date.now()}`;
+        updateItem('users', docId, { ...formData, name: formData.name });
+      }
       showToast(`User "${formData.name}" berhasil diperbarui.`, 'success');
     } else {
-      // Add new user
       const exists = currentUsers.find((u: any) => u.email.toLowerCase() === formData.email.toLowerCase());
       if (exists) {
         showToast(`Email ${formData.email} sudah terdaftar!`, 'error');
         return;
       }
-      currentUsers.push(formData);
+      addItem('users', { id: `user-${Date.now()}`, ...formData });
       showToast(`User baru "${formData.name}" berhasil dibuat!`, 'success');
     }
 
-    localStorage.setItem('spora_users', JSON.stringify(currentUsers));
     refreshUsers();
     setIsModalOpen(false);
   };
@@ -85,11 +80,7 @@ export const AdminUsers: React.FC = () => {
   const handleDeleteUser = (email: string, name: string) => {
     if (!window.confirm(`Apakah Anda yakin ingin menghapus akun "${name}" (${email})?`)) return;
 
-    const raw = localStorage.getItem('spora_users');
-    const currentUsers = raw ? JSON.parse(raw) : [];
-    const filtered = currentUsers.filter((u: any) => u.email.toLowerCase() !== email.toLowerCase());
-
-    localStorage.setItem('spora_users', JSON.stringify(filtered));
+    removeWhere('users', (u: any) => u.email.toLowerCase() === email.toLowerCase());
     refreshUsers();
     showToast(`Akun "${name}" telah dihapus dari sistem.`, 'warning');
   };

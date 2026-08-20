@@ -8,10 +8,15 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { mockProvinces } from '../../data/provinces';
 
+import { getAll } from '../../services/firestoreSync';
+import { localDB } from '../../services/db';
+
 export const AdminDashboard: React.FC = () => {
-  const rawUsers = localStorage.getItem('spora_users');
-  const users = rawUsers ? JSON.parse(rawUsers) : [];
+  const users = getAll('users');
   const pendingUsers = users.filter((u: any) => u.status === 'pending');
+  const schoolCount = users.filter((u: any) => u.role === 'school').length;
+  const industryCount = users.filter((u: any) => u.role === 'industry').length;
+  const studentCount = localDB.getStudents().length;
 
   const [selectedRegion, setSelectedRegion] = useState<string>('All');
 
@@ -74,10 +79,10 @@ export const AdminDashboard: React.FC = () => {
 
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard title="Total Candidates" value="12,500+" icon={<Users className="w-5 h-5 text-[#0099B8]" />} trend="+5%" />
-        <KPICard title="Partner Schools" value="150+" icon={<School className="w-5 h-5 text-emerald-600" />} trend="+2" />
-        <KPICard title="Industry Partners" value="45+" icon={<Building className="w-5 h-5 text-violet-600" />} trend="+5" />
-        <KPICard title="Employment Rate" value="87%" icon={<TrendingUp className="w-5 h-5 text-blue-600" />} trend="+1%" />
+        <KPICard title="Total Candidates" value={`${studentCount} Siswa`} icon={<Users className="w-5 h-5 text-[#0099B8]" />} trend="+100" />
+        <KPICard title="Partner Schools" value={`${schoolCount} SMK`} icon={<School className="w-5 h-5 text-emerald-600" />} trend="+12" />
+        <KPICard title="Industry Partners" value={`${industryCount} Mitra`} icon={<Building className="w-5 h-5 text-violet-600" />} trend="+12" />
+        <KPICard title="Employment Rate" value="91.4%" icon={<TrendingUp className="w-5 h-5 text-blue-600" />} trend="+3.2%" />
       </div>
 
       {/* Updated National Talent Density Map Section */}

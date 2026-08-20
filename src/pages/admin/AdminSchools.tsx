@@ -11,15 +11,15 @@ import { useAuth } from '../../contexts/AuthContext';
 import { localDB } from '../../services/db';
 import { School, Plus, Edit2, Trash2, GraduationCap, Users, UserPlus, Save, ExternalLink, LayoutDashboard } from 'lucide-react';
 
+import { getAll, addItem, updateItem, removeWhere } from '../../services/firestoreSync';
+
 export const AdminSchools: React.FC = () => {
   const { showToast } = useToast();
   const { approveUser } = useAuth();
   const navigate = useNavigate();
   
   const [users, setUsers] = useState<any[]>(() => {
-    const raw = localStorage.getItem('spora_users');
-    const all = raw ? JSON.parse(raw) : [];
-    return all.filter((u: any) => u.role === 'school');
+    return getAll('users').filter((u: any) => u.role === 'school');
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,9 +49,7 @@ export const AdminSchools: React.FC = () => {
   });
 
   const refreshSchools = () => {
-    const raw = localStorage.getItem('spora_users');
-    const all = raw ? JSON.parse(raw) : [];
-    setUsers(all.filter((u: any) => u.role === 'school'));
+    setUsers([...getAll('users').filter((u: any) => u.role === 'school')]);
   };
 
   const handleOpenAddModal = () => {
@@ -73,16 +71,20 @@ export const AdminSchools: React.FC = () => {
 
   const handleSaveSchool = (e: React.FormEvent) => {
     e.preventDefault();
-    const raw = localStorage.getItem('spora_users');
-    let allUsers = raw ? JSON.parse(raw) : [];
+    const allUsers = getAll('users');
 
     if (editingSchool) {
-      allUsers = allUsers.map((u: any) => {
-        if (u.email.toLowerCase() === editingSchool.email.toLowerCase()) {
-          return { ...u, name: formData.name, password: formData.password, status: formData.status };
-        }
-        return u;
-      });
+      const target = allUsers.find((u: any) => u.email.toLowerCase() === editingSchool.email.toLowerCase());
+      if (target) {
+        const docId = target._docId || target.id || `user-${Date.now()}`;
+        updateItem('users', docId, {
+          name: formData.name,
+          schoolName: formData.name,
+          school: formData.name,
+          password: formData.password,
+          status: formData.status
+        });
+      }
       showToast(`Institusi "${formData.name}" diperbarui.`, 'success');
     } else {
       const exists = allUsers.find((u: any) => u.email.toLowerCase() === formData.email.toLowerCase());
@@ -90,11 +92,19 @@ export const AdminSchools: React.FC = () => {
         showToast(`Email ${formData.email} sudah terdaftar!`, 'error');
         return;
       }
-      allUsers.push({ ...formData, role: 'school' });
+      addItem('users', {
+        id: `user-${Date.now()}`,
+        name: formData.name,
+        schoolName: formData.name,
+        school: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: 'school',
+        status: formData.status
+      });
       showToast(`Institusi pendidikan baru "${formData.name}" berhasil dibuat!`, 'success');
     }
 
-    localStorage.setItem('spora_users', JSON.stringify(allUsers));
     refreshSchools();
     setIsModalOpen(false);
   };
@@ -102,11 +112,7 @@ export const AdminSchools: React.FC = () => {
   const handleDeleteSchool = (email: string, name: string) => {
     if (!window.confirm(`Hapus institusi pendidikan "${name}" dari sistem SporaOS?`)) return;
 
-    const raw = localStorage.getItem('spora_users');
-    const allUsers = raw ? JSON.parse(raw) : [];
-    const filtered = allUsers.filter((u: any) => u.email.toLowerCase() !== email.toLowerCase());
-
-    localStorage.setItem('spora_users', JSON.stringify(filtered));
+    removeWhere('users', (u: any) => u.email.toLowerCase() === email.toLowerCase());
     refreshSchools();
     showToast(`Institusi "${name}" dihapus.`, 'warning');
   };

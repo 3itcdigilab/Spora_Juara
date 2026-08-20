@@ -9,6 +9,8 @@ import { useToast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { Factory, Plus, Edit2, Trash2, Eye, UserCheck, Phone, Mail, Briefcase, FileText, Save, UserPlus, ShieldCheck } from 'lucide-react';
 
+import { getAll, addItem, updateItem, removeWhere } from '../../services/firestoreSync';
+
 export interface IndustryPIC {
   id: string;
   name: string;
@@ -23,9 +25,7 @@ export const AdminIndustries: React.FC = () => {
   const { approveUser } = useAuth();
   
   const [users, setUsers] = useState<any[]>(() => {
-    const raw = localStorage.getItem('spora_users');
-    const all = raw ? JSON.parse(raw) : [];
-    return all.filter((u: any) => u.role === 'industry');
+    return getAll('users').filter((u: any) => u.role === 'industry');
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,9 +58,7 @@ export const AdminIndustries: React.FC = () => {
   });
 
   const refreshIndustries = () => {
-    const raw = localStorage.getItem('spora_users');
-    const all = raw ? JSON.parse(raw) : [];
-    setUsers(all.filter((u: any) => u.role === 'industry'));
+    setUsers([...getAll('users').filter((u: any) => u.role === 'industry')]);
   };
 
   const handleOpenAddModal = () => {
@@ -78,7 +76,7 @@ export const AdminIndustries: React.FC = () => {
   const handleOpenEditModal = (ind: any) => {
     setEditingIndustry(ind);
     setFormData({
-      name: ind.name || '',
+      name: ind.name || ind.companyName || '',
       email: ind.email || '',
       directorName: ind.directorName || '',
       password: ind.password || '123',
@@ -89,22 +87,20 @@ export const AdminIndustries: React.FC = () => {
 
   const handleSaveIndustry = (e: React.FormEvent) => {
     e.preventDefault();
-    const raw = localStorage.getItem('spora_users');
-    let allUsers = raw ? JSON.parse(raw) : [];
+    const allUsers = getAll('users');
 
     if (editingIndustry) {
-      allUsers = allUsers.map((u: any) => {
-        if (u.email.toLowerCase() === editingIndustry.email.toLowerCase()) {
-          return { 
-            ...u, 
-            name: formData.name, 
-            directorName: formData.directorName,
-            password: formData.password, 
-            status: formData.status 
-          };
-        }
-        return u;
-      });
+      const target = allUsers.find((u: any) => u.email.toLowerCase() === editingIndustry.email.toLowerCase());
+      if (target) {
+        const docId = target._docId || target.id || `user-${Date.now()}`;
+        updateItem('users', docId, {
+          name: formData.name,
+          companyName: formData.name,
+          directorName: formData.directorName,
+          password: formData.password,
+          status: formData.status
+        });
+      }
       showToast(`Data industri "${formData.name}" diperbarui.`, 'success');
     } else {
       const exists = allUsers.find((u: any) => u.email.toLowerCase() === formData.email.toLowerCase());
@@ -112,11 +108,20 @@ export const AdminIndustries: React.FC = () => {
         showToast(`Email ${formData.email} sudah terdaftar!`, 'error');
         return;
       }
-      allUsers.push({ ...formData, role: 'industry', pics: [] });
+      addItem('users', {
+        id: `user-${Date.now()}`,
+        name: formData.name,
+        companyName: formData.name,
+        email: formData.email,
+        directorName: formData.directorName,
+        password: formData.password,
+        role: 'industry',
+        status: formData.status,
+        pics: []
+      });
       showToast(`Mitra industri "${formData.name}" berhasil dibuat!`, 'success');
     }
 
-    localStorage.setItem('spora_users', JSON.stringify(allUsers));
     refreshIndustries();
     setIsModalOpen(false);
   };
@@ -124,11 +129,7 @@ export const AdminIndustries: React.FC = () => {
   const handleDeleteIndustry = (email: string, name: string) => {
     if (!window.confirm(`Hapus mitra industri "${name}" dari sistem SporaOS?`)) return;
 
-    const raw = localStorage.getItem('spora_users');
-    const allUsers = raw ? JSON.parse(raw) : [];
-    const filtered = allUsers.filter((u: any) => u.email.toLowerCase() !== email.toLowerCase());
-
-    localStorage.setItem('spora_users', JSON.stringify(filtered));
+    removeWhere('users', (u: any) => u.email.toLowerCase() === email.toLowerCase());
     refreshIndustries();
     showToast(`Industri "${name}" dihapus.`, 'warning');
   };
@@ -219,26 +220,21 @@ export const AdminIndustries: React.FC = () => {
   };
 
   const savePicsToDB = (updatedPics: IndustryPIC[], dirName: string) => {
-    const raw = localStorage.getItem('spora_users');
-    let allUsers = raw ? JSON.parse(raw) : [];
+    const allUsers = getAll('users');
+    const target = allUsers.find((u: any) => u.email.toLowerCase() === selectedPicIndustry.email.toLowerCase());
 
-    allUsers = allUsers.map((u: any) => {
-      if (u.email.toLowerCase() === selectedPicIndustry.email.toLowerCase()) {
-        return {
-          ...u,
-          directorName: dirName,
-          pics: updatedPics,
-          // Sync primary PIC for backwards compatibility
-          picName: updatedPics[0]?.name || u.name,
-          picRole: updatedPics[0]?.role || 'HR Lead',
-          picEmail: updatedPics[0]?.email || u.email,
-          picPhone: updatedPics[0]?.phone || u.phone
-        };
-      }
-      return u;
-    });
+    if (target) {
+      const docId = target._docId || target.id || `user-${Date.now()}`;
+      updateItem('users', docId, {
+        directorName: dirName,
+        pics: updatedPics,
+        picName: updatedPics[0]?.name || target.name,
+        picRole: updatedPics[0]?.role || 'HR Lead',
+        picEmail: updatedPics[0]?.email || target.email,
+        picPhone: updatedPics[0]?.phone || target.phone
+      });
+    }
 
-    localStorage.setItem('spora_users', JSON.stringify(allUsers));
     refreshIndustries();
     setSelectedPicIndustry({ ...selectedPicIndustry, directorName: dirName, pics: updatedPics });
   };

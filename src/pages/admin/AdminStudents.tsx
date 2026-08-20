@@ -10,6 +10,8 @@ import { useToast } from '../../components/ui/Toast';
 import { localDB } from '../../services/db';
 import { GraduationCap, Plus, Edit2, Trash2, Award, Search, Filter, ExternalLink, ArrowLeft, School } from 'lucide-react';
 
+import { getAll, addItem, updateItem, removeItem } from '../../services/firestoreSync';
+
 export const AdminStudents: React.FC = () => {
   const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -18,29 +20,18 @@ export const AdminStudents: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Sync state with localDB and spora_students_db
+  // Sync state with localDB and students collection
   const students = useMemo(() => {
-    const raw = localStorage.getItem('spora_students_db');
-    let dbList = raw ? JSON.parse(raw) : [];
-
-    // Combine with localDB students
     const localStudents = localDB.getStudents();
-    localStudents.forEach((st: any) => {
-      const exists = dbList.some((d: any) => d.id === st.id || d.name === st.name || d.name === st.fullName);
-      if (!exists) {
-        dbList.push({
-          id: st.id || `st-${Date.now()}`,
-          name: st.name || st.fullName || 'Siswa Vokasi',
-          school: st.schoolName || st.schoolId || 'SMK Negeri 1 Cikarang',
-          major: st.major || 'Teknik Kendaraan Ringan (Otomotif EV)',
-          gradYear: st.graduationYear?.toString() || '2025',
-          province: st.province || 'Jawa Barat',
-          score: st.score || 85
-        });
-      }
-    });
-
-    return dbList;
+    return localStudents.map((st: any) => ({
+      id: st.id || `st-${Date.now()}`,
+      name: st.name || st.fullName || 'Siswa Vokasi',
+      school: st.schoolName || st.school || st.schoolId || 'SMK Negeri 1 Cikarang',
+      major: st.major || 'Teknik Kendaraan Ringan (Otomotif EV)',
+      gradYear: st.graduationYear?.toString() || st.gradYear || '2025',
+      province: st.province || 'Jawa Barat',
+      score: st.score || 85
+    }));
   }, [refreshKey]);
 
   // Filter students based on URL parameter & search input
@@ -60,22 +51,22 @@ export const AdminStudents: React.FC = () => {
 
   const [formData, setFormData] = useState({
     name: '',
-    school: schoolFilter || '',
+    school: '',
     major: '',
-    gradYear: '',
-    province: '',
-    score: 0
+    gradYear: '2025',
+    province: 'Jawa Barat',
+    score: 85
   });
 
   const handleOpenAddModal = () => {
     setEditingStudent(null);
-    setFormData({ 
-      name: '', 
-      school: schoolFilter || '', 
-      major: '', 
-      gradYear: '', 
-      province: '', 
-      score: 0 
+    setFormData({
+      name: '',
+      school: schoolFilter || 'SMK Negeri 1 Cikarang',
+      major: 'Teknik Kendaraan Ringan (Otomotif EV)',
+      gradYear: '2025',
+      province: 'Jawa Barat',
+      score: 85
     });
     setIsModalOpen(true);
   };
@@ -95,18 +86,34 @@ export const AdminStudents: React.FC = () => {
 
   const handleSaveStudent = (e: React.FormEvent) => {
     e.preventDefault();
-    let updatedList = [...students];
 
     if (editingStudent) {
-      updatedList = updatedList.map(s => s.id === editingStudent.id ? { ...s, ...formData } : s);
+      updateItem('students', editingStudent.id, {
+        ...formData,
+        fullName: formData.name,
+        schoolName: formData.school,
+        graduationYear: parseInt(formData.gradYear, 10) || 2025
+      });
       showToast(`Data siswa kandidat "${formData.name}" berhasil diperbarui.`, 'success');
     } else {
-      const newEntry = { id: Date.now().toString(), ...formData };
-      updatedList.unshift(newEntry);
+      const newEntry = {
+        id: `stu-${Date.now()}`,
+        userId: `user-${Date.now()}`,
+        name: formData.name,
+        fullName: formData.name,
+        schoolName: formData.school,
+        school: formData.school,
+        major: formData.major,
+        graduationYear: parseInt(formData.gradYear, 10) || 2025,
+        gradYear: formData.gradYear,
+        province: formData.province,
+        score: formData.score,
+        status: 'active'
+      };
+      addItem('students', newEntry);
       showToast(`Kandidat baru "${formData.name}" berhasil ditambahkan!`, 'success');
     }
 
-    localStorage.setItem('spora_students_db', JSON.stringify(updatedList));
     setRefreshKey(prev => prev + 1);
     setIsModalOpen(false);
   };
@@ -114,8 +121,7 @@ export const AdminStudents: React.FC = () => {
   const handleDeleteStudent = (id: string, name: string) => {
     if (!window.confirm(`Hapus kandidat siswa "${name}" dari database SporaOS?`)) return;
 
-    const filtered = students.filter((s: any) => s.id !== id);
-    localStorage.setItem('spora_students_db', JSON.stringify(filtered));
+    removeItem('students', id);
     setRefreshKey(prev => prev + 1);
     showToast(`Kandidat "${name}" dihapus.`, 'warning');
   };
