@@ -1,4 +1,8 @@
 import { getAll, setAll, addItem, updateItem, removeItem, removeWhere, findOne, findMany } from './firestoreSync';
+import { mockStudents } from '../data/students';
+import { mockSchools } from '../data/schools';
+import { mockIndustries } from '../data/industries';
+import { mockJobs } from '../data/jobs';
 
 export const localDB = {
   resetDB: () => {
@@ -76,7 +80,16 @@ export const localDB = {
 
   // Students
   getStudents: () => {
-    return getAll('students');
+    const students = getAll('students');
+    return students.length > 0 ? students : mockStudents;
+  },
+  getSchools: () => {
+    const schools = getAll('schools');
+    return schools.length > 0 ? schools : mockSchools;
+  },
+  getIndustries: () => {
+    const industries = getAll('industries');
+    return industries.length > 0 ? industries : mockIndustries;
   },
   getStudentById: (studentId: string) => {
     if (!studentId) return null;
@@ -323,7 +336,8 @@ export const localDB = {
 
   // Jobs
   getJobs: () => {
-    const jobs = getAll('jobs');
+    const rawJobs = getAll('jobs');
+    const jobs = rawJobs && rawJobs.length > 0 ? rawJobs : mockJobs;
     const uniqueMap = new Map();
     jobs.forEach((j: any) => {
       if (j && j.id && !uniqueMap.has(j.id)) {

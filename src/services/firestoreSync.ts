@@ -17,6 +17,10 @@ import {
   deleteDoc,
   writeBatch,
 } from 'firebase/firestore';
+import { mockStudents } from '../data/students';
+import { mockSchools } from '../data/schools';
+import { mockIndustries } from '../data/industries';
+import { mockJobs } from '../data/jobs';
 
 // Collection names
 const COLLECTIONS = [
@@ -120,6 +124,34 @@ export async function initFirestoreSync(): Promise<void> {
       adminUser.status = 'active';
       const docId = adminUser._docId || adminUser.id || 'sporaadmin_spora_id';
       await fsSet('users', docId, adminUser);
+    }
+
+    // Auto-seed schools if empty
+    if ((memoryStore['schools'] || []).length === 0) {
+      console.log(`[FirestoreSync] Seeding ${mockSchools.length} partner schools...`);
+      memoryStore['schools'] = [...mockSchools];
+      fsBatchSet('schools', mockSchools).catch(() => {});
+    }
+
+    // Auto-seed industries if empty
+    if ((memoryStore['industries'] || []).length === 0) {
+      console.log(`[FirestoreSync] Seeding ${mockIndustries.length} EV industries...`);
+      memoryStore['industries'] = [...mockIndustries];
+      fsBatchSet('industries', mockIndustries).catch(() => {});
+    }
+
+    // Auto-seed students (100 students) if empty or less than 50
+    if ((memoryStore['students'] || []).length < 50) {
+      console.log(`[FirestoreSync] Seeding ${mockStudents.length} vocational students...`);
+      memoryStore['students'] = [...mockStudents];
+      fsBatchSet('students', mockStudents).catch(() => {});
+    }
+
+    // Auto-seed jobs if empty
+    if ((memoryStore['jobs'] || []).length === 0) {
+      console.log(`[FirestoreSync] Seeding ${mockJobs.length} EV jobs...`);
+      memoryStore['jobs'] = [...mockJobs];
+      fsBatchSet('jobs', mockJobs).catch(() => {});
     }
 
     _initialized = true;
