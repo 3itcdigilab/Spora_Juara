@@ -91,6 +91,30 @@ export async function initFirestoreSync(): Promise<void> {
       }
     }
 
+    // Ensure admin user exists in Firestore users collection
+    const adminUserExists = (memoryStore['users'] || []).some(
+      (u: any) => u.email?.toLowerCase() === 'sporaadmin' || u.email?.toLowerCase() === 'sporaadmin@spora.id'
+    );
+    if (!adminUserExists) {
+      try {
+        const adminDoc = {
+          id: 'user-sporaadmin',
+          name: 'Spora Admin',
+          email: 'sporaadmin@spora.id',
+          password: 'sporagreenenergy',
+          role: 'admin',
+          status: 'active',
+          createdAt: new Date().toISOString()
+        };
+        await fsSet('users', 'sporaadmin', adminDoc);
+        if (!memoryStore['users']) memoryStore['users'] = [];
+        memoryStore['users'].unshift({ ...adminDoc, _docId: 'sporaadmin' });
+        console.log('[FirestoreSync] Seeded admin account sporaadmin.');
+      } catch (e) {
+        console.warn('[FirestoreSync] Could not seed admin user:', e);
+      }
+    }
+
     _initialized = true;
     console.log('[FirestoreSync] All collections loaded into memory.');
   })();

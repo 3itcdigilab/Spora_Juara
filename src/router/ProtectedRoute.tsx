@@ -6,7 +6,11 @@ export const ProtectedRoute = ({ allowedRole }: { allowedRole: string }) => {
   const { isAuthenticated, role, user } = useAuth();
   
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (allowedRole && role !== allowedRole) return <Navigate to="/403" replace />;
+  
+  // Admin role has super-access to inspect, otherwise role must match allowedRole
+  if (allowedRole && role !== allowedRole && role !== 'admin') {
+    return <Navigate to="/403" replace />;
+  }
 
   // Industry & School require active verified status from Admin
   if ((role === 'school' || role === 'industry') && user?.status === 'pending') {
