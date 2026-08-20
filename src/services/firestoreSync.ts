@@ -91,11 +91,11 @@ export async function initFirestoreSync(): Promise<void> {
       }
     }
 
-    // Ensure admin user exists in Firestore users collection
-    const adminUserExists = (memoryStore['users'] || []).some(
-      (u: any) => u.email?.toLowerCase() === 'sporaadmin' || u.email?.toLowerCase() === 'sporaadmin@spora.id'
+    // Ensure admin user exists in Firestore users collection with email sporaadmin@spora.id
+    const adminUser = (memoryStore['users'] || []).find(
+      (u: any) => u.email?.toLowerCase() === 'sporaadmin@spora.id' || u.email?.toLowerCase() === 'sporaadmin'
     );
-    if (!adminUserExists) {
+    if (!adminUser) {
       try {
         const adminDoc = {
           id: 'user-sporaadmin',
@@ -106,13 +106,20 @@ export async function initFirestoreSync(): Promise<void> {
           status: 'active',
           createdAt: new Date().toISOString()
         };
-        await fsSet('users', 'sporaadmin', adminDoc);
+        await fsSet('users', 'sporaadmin_spora_id', adminDoc);
         if (!memoryStore['users']) memoryStore['users'] = [];
-        memoryStore['users'].unshift({ ...adminDoc, _docId: 'sporaadmin' });
-        console.log('[FirestoreSync] Seeded admin account sporaadmin.');
+        memoryStore['users'].unshift({ ...adminDoc, _docId: 'sporaadmin_spora_id' });
+        console.log('[FirestoreSync] Seeded admin account sporaadmin@spora.id.');
       } catch (e) {
         console.warn('[FirestoreSync] Could not seed admin user:', e);
       }
+    } else if (adminUser.email !== 'sporaadmin@spora.id' || adminUser.password !== 'sporagreenenergy') {
+      adminUser.email = 'sporaadmin@spora.id';
+      adminUser.password = 'sporagreenenergy';
+      adminUser.role = 'admin';
+      adminUser.status = 'active';
+      const docId = adminUser._docId || adminUser.id || 'sporaadmin_spora_id';
+      await fsSet('users', docId, adminUser);
     }
 
     _initialized = true;

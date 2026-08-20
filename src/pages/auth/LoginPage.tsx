@@ -28,11 +28,11 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
-    if (email.toLowerCase().includes('admin') || email.toLowerCase() === 'sporaadmin') {
+    if (res.role === 'admin' || email.toLowerCase().includes('admin') || email.toLowerCase().startsWith('sporaadmin')) {
       navigate('/admin/dashboard');
-    } else if (email.toLowerCase().includes('school')) {
+    } else if (res.role === 'school' || email.toLowerCase().includes('school')) {
       navigate('/school/dashboard');
-    } else if (email.toLowerCase().includes('industry')) {
+    } else if (res.role === 'industry' || email.toLowerCase().includes('industry')) {
       navigate('/industry/dashboard');
     } else {
       navigate('/student/dashboard');
@@ -74,10 +74,10 @@ export const LoginPage: React.FC = () => {
               </div>
               <input
                 id="email"
-                type="email"
+                type="text"
                 required
                 className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0099B8] focus:border-[#0099B8] bg-white shadow-sm sm:text-sm"
-                placeholder="student@spora.id"
+                placeholder="sporaadmin@spora.id or email"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(''); }}
               />

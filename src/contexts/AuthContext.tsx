@@ -24,7 +24,7 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  login: (e: string, p: string) => Promise<{ success: boolean; status?: string; message?: string }>;
+  login: (e: string, p: string) => Promise<{ success: boolean; status?: string; role?: string; message?: string }>;
   register: (dataOrEmail: any, password?: string, role?: string) => Promise<void>;
   updateUser: (updatedData: Partial<User>) => void;
   approveUser: (email: string) => void;
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem('auth', JSON.stringify(state));
   }, [state]);
 
-  const login = async (e: string, p: string): Promise<{ success: boolean; status?: string; message?: string }> => {
+  const login = async (e: string, p: string): Promise<{ success: boolean; status?: string; role?: string; message?: string }> => {
     const users = getAll('users');
     const cleanEmail = e.toLowerCase().trim();
     let foundUser = users.find((u: any) => 
@@ -120,7 +120,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     setState(newState);
     localStorage.setItem('auth', JSON.stringify(newState));
-    return { success: true, status: userStatus };
+    return { success: true, status: userStatus, role: roleName };
   };
 
   const register = async (dataOrEmail: any, password?: string, role?: string) => {
