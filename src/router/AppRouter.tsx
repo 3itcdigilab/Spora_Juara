@@ -3,9 +3,49 @@ import { Routes, Route, Navigate } from 'react-router';
 import { ProtectedRoute } from './ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
 
-// Helper for named exports lazy loading
+// Eagerly import layouts for instant and resilient shell rendering
+import { StudentLayout } from '../layouts/StudentLayout';
+import { IndustryLayout } from '../layouts/IndustryLayout';
+import { SchoolLayout } from '../layouts/SchoolLayout';
+import { AdminLayout } from '../layouts/AdminLayout';
+
+// Helper for named exports lazy loading with auto-retry and cache recovery
 const lazyNamed = (importFn: () => Promise<any>, exportName: string) =>
-  lazy(() => importFn().then((module) => ({ default: module[exportName] })));
+  lazy(async () => {
+    try {
+      const module = await importFn();
+      return { default: module[exportName] };
+    } catch (error: any) {
+      console.warn(`[AppRouter] Chunk load error for ${exportName}, refreshing...`, error);
+      const isChunkLoadFailed =
+        error?.message?.includes('Failed to fetch dynamically imported module') ||
+        error?.message?.includes('Importing a module script failed') ||
+        error?.name === 'TypeError';
+      if (isChunkLoadFailed) {
+        const retryKey = `chunk_retry_${exportName}`;
+        if (!sessionStorage.getItem(retryKey)) {
+          sessionStorage.setItem(retryKey, '1');
+          window.location.reload();
+        }
+      }
+      throw error;
+    }
+  });
+
+const lazyDefault = (importFn: () => Promise<any>, name: string) =>
+  lazy(async () => {
+    try {
+      return await importFn();
+    } catch (error: any) {
+      console.warn(`[AppRouter] Chunk load error for ${name}, refreshing...`, error);
+      const retryKey = `chunk_retry_${name}`;
+      if (!sessionStorage.getItem(retryKey)) {
+        sessionStorage.setItem(retryKey, '1');
+        window.location.reload();
+      }
+      throw error;
+    }
+  });
 
 // Public & Auth Pages
 const LandingPage = lazyNamed(() => import('../pages/landing/LandingPage'), 'LandingPage');
@@ -14,12 +54,6 @@ const RegisterPage = lazyNamed(() => import('../pages/auth/RegisterPage'), 'Regi
 const ForgotPasswordPage = lazyNamed(() => import('../pages/auth/ForgotPasswordPage'), 'ForgotPasswordPage');
 const RoleSelectionPage = lazyNamed(() => import('../pages/auth/RoleSelectionPage'), 'RoleSelectionPage');
 const PendingVerificationPage = lazyNamed(() => import('../pages/auth/PendingVerificationPage'), 'PendingVerificationPage');
-
-// Layouts
-const StudentLayout = lazyNamed(() => import('../layouts/StudentLayout'), 'StudentLayout');
-const IndustryLayout = lazyNamed(() => import('../layouts/IndustryLayout'), 'IndustryLayout');
-const SchoolLayout = lazyNamed(() => import('../layouts/SchoolLayout'), 'SchoolLayout');
-const AdminLayout = lazyNamed(() => import('../layouts/AdminLayout'), 'AdminLayout');
 
 // Student Pages
 const StudentDashboard = lazyNamed(() => import('../pages/student/StudentDashboard'), 'StudentDashboard');
@@ -76,8 +110,8 @@ const AdminAnalytics = lazyNamed(() => import('../pages/admin/AdminAnalytics'), 
 const AdminSystem = lazyNamed(() => import('../pages/admin/AdminSystem'), 'AdminSystem');
 
 // Error Pages
-const Error403 = lazy(() => import('../pages/errors/Error403'));
-const Error404 = lazy(() => import('../pages/errors/Error404'));
+const Error403 = lazyDefault(() => import('../pages/errors/Error403'), 'Error403');
+const Error404 = lazyDefault(() => import('../pages/errors/Error404'), 'Error404');
 
 const DashboardRedirect: React.FC = () => {
   const { role } = useAuth();
