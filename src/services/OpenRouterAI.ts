@@ -7,10 +7,13 @@ export interface OpenRouterConfig {
 }
 
 const DEFAULT_MODEL = 'deepseek/deepseek-chat';
+const REPORTS_STORAGE_KEY = 'spora_ai_reports_db';
 
 export const openRouterService = {
   getApiKey: (): string => {
-    return localStorage.getItem('spora_openrouter_key') || (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '';
+    return localStorage.getItem('spora_openrouter_key') || 
+      (import.meta as any).env?.VITE_OPENROUTER_API_KEY || 
+      '';
   },
 
   setApiKey: (key: string): void => {
@@ -18,7 +21,9 @@ export const openRouterService = {
   },
 
   getModel: (): string => {
-    return localStorage.getItem('spora_openrouter_model') || DEFAULT_MODEL;
+    return localStorage.getItem('spora_openrouter_model') || 
+      (import.meta as any).env?.VITE_OPENROUTER_DEFAULT_MODEL || 
+      DEFAULT_MODEL;
   },
 
   setModel: (model: string): void => {
@@ -30,8 +35,47 @@ export const openRouterService = {
   },
 
   /**
+   * Retrieves all saved psychological assessment reports
+   */
+  getAllReports: (): (AIPsychologicalReport & { studentName?: string; nisn?: string; schoolName?: string; score?: number })[] => {
+    try {
+      const raw = localStorage.getItem(REPORTS_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  /**
+   * Retrieves a report by student ID or email
+   */
+  getReportByStudentId: (studentId: string): AIPsychologicalReport | null => {
+    const cleanId = studentId.toLowerCase().trim();
+    const reports = openRouterService.getAllReports();
+    return reports.find(r => r.studentId?.toLowerCase().trim() === cleanId) || null;
+  },
+
+  /**
+   * Saves a report to persistent local storage
+   */
+  saveReport: (report: AIPsychologicalReport & { studentName?: string; nisn?: string; schoolName?: string; score?: number }): void => {
+    try {
+      const reports = openRouterService.getAllReports();
+      const existingIdx = reports.findIndex(r => r.studentId?.toLowerCase().trim() === report.studentId?.toLowerCase().trim());
+      if (existingIdx >= 0) {
+        reports[existingIdx] = { ...reports[existingIdx], ...report };
+      } else {
+        reports.unshift(report);
+      }
+      localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(reports));
+    } catch (e) {
+      console.error('Failed to save AI report:', e);
+    }
+  },
+
+  /**
    * Generates a deep psychological and behavioral assessment report using OpenRouter LLM,
-   * with graceful deterministic fallback if no API key is present.
+   * with graceful deterministic fallback if any network or quota issues occur.
    */
   generatePsychologicalReport: async (params: {
     studentId: string;
@@ -59,17 +103,17 @@ export const openRouterService = {
     const agilityScore = dim.learningAgility || 80;
     const commScore = dim.communication || 80;
 
-    // Fallback template
+    // Rich fallback baseline
     const fallbackReport: AIPsychologicalReport = {
       id: `ai-rep-${Date.now()}`,
       studentId: params.studentId,
       generatedAt: new Date().toISOString(),
       modelUsed: apiKey ? model : 'Spora Industrial AI Heuristic Engine (Local)',
       archetype: params.personalityType || 'The High-Voltage Safety Champion & Precision Specialist',
-      summary: `Kandidat ${params.studentName} menunjukkan profil kerja dengan kesadaran K3 tinggi (${safetyScore}%) dan etos kerja industri solid (${psychoScore}%). Sangat direkomendasikan untuk lingkungan manufaktur perakitan baterai dan pemeliharaan powertrain kendaraan listrik yang menuntut ketelitian tinggi.`,
+      summary: `Kandidat ${params.studentName} (${params.major || 'Teknik Otomotif EV'}) menunjukkan profil kerja dengan kesadaran K3 tinggi (${safetyScore}%) dan etos kerja industri solid (${psychoScore}%). Sangat direkomendasikan untuk lingkungan manufaktur perakitan baterai dan pemeliharaan powertrain kendaraan listrik yang menuntut ketelitian tinggi.`,
       bigFiveTraits: {
         conscientiousness: {
-          score: Math.min(98, psychoScore + 5),
+          score: Math.min(98, psychoScore + 4),
           analysis: 'Tingkat disiplin dan kepatuhan SOP sangat tinggi. Cenderung teliti dalam kalibrasi torsi dan menjaga kerapihan 5S.'
         },
         emotionalStability: {
@@ -81,11 +125,11 @@ export const openRouterService = {
           analysis: 'Gaya komunikasi lugas, efektif dalam koordinasi serah terima shift kerja (handover) dan pelaporan insiden.'
         },
         agreeableness: {
-          score: Math.min(92, commScore + 4),
+          score: Math.min(92, commScore + 3),
           analysis: 'Kooperatif dalam tim manufaktur, mengutamakan penyelesaian masalah berbasis manual teknis pabrik.'
         },
         openness: {
-          score: Math.min(96, agilityScore + 5),
+          score: Math.min(96, agilityScore + 4),
           analysis: 'Antusias terhadap transisi energi hijau, adaptif dalam mempelajari software diagnostik BMS/ECU terbaru.'
         }
       },
@@ -96,7 +140,7 @@ export const openRouterService = {
         'Inisiatif pemeliharaan 5S dan budaya pencegahan defect (Poka-Yoke).'
       ],
       operationalRisks: [
-        'Perlu pendampingan berkala saat pertama kali menangani pack baterai tegangan di atas 800V DC.',
+        'Perlu pendampingan berkala saat pertama kali menangani pack baterai tegangan tinggi di atas 800V DC.',
         'Pastikan terus memperbarui wawasan standar protokol pengisian DC Fast Charging.'
       ],
       developmentRecommendations: [
@@ -111,14 +155,11 @@ export const openRouterService = {
       ]
     };
 
-    if (!apiKey) {
-      // Simulate brief thinking delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      return fallbackReport;
-    }
+    let resultReport = fallbackReport;
 
-    try {
-      const prompt = `Anda adalah Senior Industrial Psychologist & Lead Technical Recruiter di industri Kendaraan Listrik (Electric Vehicle & Green Energy).
+    if (apiKey) {
+      try {
+        const prompt = `Anda adalah Senior Industrial Psychologist & Lead Technical Recruiter di industri Kendaraan Listrik (Electric Vehicle & Green Energy).
 Analisis data hasil psikotes dan uji kompetensi energi hijau siswa vokasi berikut:
 - Nama Siswa: ${params.studentName}
 - NISN: ${params.nisn || 'Terdaftar'}
@@ -149,60 +190,68 @@ Hasilkan laporan analisis psikologis mendalam dalam format JSON murni TANPA mark
   "recommendedEVRoles": ["posisi pekerjaan 1", "posisi pekerjaan 2", "posisi pekerjaan 3"]
 }`;
 
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-          'HTTP-Referer': 'https://spora-juara.web.app',
-          'X-Title': 'Spora Juara Talent Pool'
-        },
-        body: JSON.stringify({
-          model: model,
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert Indonesian industrial psychologist specializing in vocational talent for the Electric Vehicle and Green Energy industries. You always output valid JSON.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          temperature: 0.3,
-          max_tokens: 1200
-        })
-      });
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+            'HTTP-Referer': 'https://spora-juara.web.app',
+            'X-Title': 'Spora Juara Talent Pool'
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an expert Indonesian industrial psychologist specializing in vocational talent for the Electric Vehicle and Green Energy industries. You always output valid JSON only.'
+              },
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            temperature: 0.3,
+            max_tokens: 1200
+          })
+        });
 
-      if (!response.ok) {
-        console.warn('OpenRouter API returned error, falling back to local engine:', response.statusText);
-        return fallbackReport;
+        if (response.ok) {
+          const data = await response.json();
+          const rawText = data.choices?.[0]?.message?.content || '';
+          const cleanJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(cleanJson);
+
+          resultReport = {
+            id: `ai-rep-${Date.now()}`,
+            studentId: params.studentId,
+            generatedAt: new Date().toISOString(),
+            modelUsed: `OpenRouter (${model})`,
+            archetype: parsed.archetype || fallbackReport.archetype,
+            summary: parsed.summary || fallbackReport.summary,
+            bigFiveTraits: parsed.bigFiveTraits || fallbackReport.bigFiveTraits,
+            safetyMindsetIndex: parsed.safetyMindsetIndex || safetyScore,
+            workplaceStrengths: parsed.workplaceStrengths || fallbackReport.workplaceStrengths,
+            operationalRisks: parsed.operationalRisks || fallbackReport.operationalRisks,
+            developmentRecommendations: parsed.developmentRecommendations || fallbackReport.developmentRecommendations,
+            recommendedEVRoles: parsed.recommendedEVRoles || fallbackReport.recommendedEVRoles
+          };
+        } else {
+          console.warn('OpenRouter API returned error, falling back to local engine:', response.statusText);
+        }
+      } catch (err) {
+        console.error('Error generating OpenRouter psychological report, using fallback:', err);
       }
-
-      const data = await response.json();
-      const rawText = data.choices?.[0]?.message?.content || '';
-      
-      // Clean JSON formatting
-      const cleanJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(cleanJson);
-
-      return {
-        id: `ai-rep-${Date.now()}`,
-        studentId: params.studentId,
-        generatedAt: new Date().toISOString(),
-        modelUsed: `OpenRouter (${model})`,
-        archetype: parsed.archetype || fallbackReport.archetype,
-        summary: parsed.summary || fallbackReport.summary,
-        bigFiveTraits: parsed.bigFiveTraits || fallbackReport.bigFiveTraits,
-        safetyMindsetIndex: parsed.safetyMindsetIndex || safetyScore,
-        workplaceStrengths: parsed.workplaceStrengths || fallbackReport.workplaceStrengths,
-        operationalRisks: parsed.operationalRisks || fallbackReport.operationalRisks,
-        developmentRecommendations: parsed.developmentRecommendations || fallbackReport.developmentRecommendations,
-        recommendedEVRoles: parsed.recommendedEVRoles || fallbackReport.recommendedEVRoles
-      };
-    } catch (err) {
-      console.error('Error generating OpenRouter psychological report, using fallback:', err);
-      return fallbackReport;
     }
+
+    // Persist to central reports storage
+    openRouterService.saveReport({
+      ...resultReport,
+      studentName: params.studentName,
+      nisn: params.nisn,
+      schoolName: params.schoolName,
+      score: params.overallScore
+    });
+
+    return resultReport;
   }
 };
