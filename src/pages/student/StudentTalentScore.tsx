@@ -73,7 +73,7 @@ export const StudentTalentScore: React.FC = () => {
           <h2 className="text-lg font-extrabold text-slate-900 mb-4 border-b pb-3">Distribusi Radar Kompetensi</h2>
           <div className="flex-1 flex items-center justify-center min-h-[300px] bg-slate-50 rounded-xl p-2">
              <RadarChart 
-                data={dimensions.map(d => ({ dimension: d.label.split('&')[0].trim(), score: d.score }))}
+                data={dimensions.map((d: any) => ({ dimension: d.label.split('&')[0].trim(), score: d.score }))}
                 indexBy="dimension"
                 keys={['score']}
                 height={320}
@@ -85,7 +85,7 @@ export const StudentTalentScore: React.FC = () => {
           <Card className="p-6 border-slate-200">
             <h2 className="text-lg font-extrabold text-slate-900 mb-4 border-b pb-3">Rincian Dimensi Penilaian</h2>
             <div className="space-y-4">
-              {dimensions.map((dim, idx) => (
+              {dimensions.map((dim: any, idx: number) => (
                 <div key={idx} className="space-y-1">
                   <div className="flex justify-between text-xs">
                     <span className="font-bold text-slate-800">{dim.label}</span>
