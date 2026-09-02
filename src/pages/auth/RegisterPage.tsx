@@ -3,7 +3,9 @@ import { useNavigate, useSearchParams, Link } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Logo } from '../../components/ui/Logo';
-import { GraduationCap, School, Factory, CheckCircle2, Phone, Mail, User, Lock } from 'lucide-react';
+import { GraduationCap, School, Factory, CheckCircle2, Phone, Mail, User, Lock, Sparkles } from 'lucide-react';
+import { StudentOnboardingAssessment } from '../../components/assessment/StudentOnboardingAssessment';
+import { localDB } from '../../services/db';
 
 const roleMeta: Record<string, { title: string; subtitle: string; icon: any; color: string }> = {
   student: {
@@ -84,6 +86,63 @@ export const RegisterPage: React.FC = () => {
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
+  const handleStudentCompleteWithAssessment = async (result: any) => {
+    let finalName = formData.name.trim() || 'Tubagus';
+    const payload = {
+      ...formData,
+      name: finalName
+    };
+
+    await register(payload);
+
+    // Save student calculated Talent Score & Assessment Results
+    const studentEmail = payload.email.toLowerCase().trim();
+    
+    // Save Talent Score with dynamic dimensions
+    localDB.saveTalentScore({
+      id: `score-${Date.now()}`,
+      studentId: studentEmail,
+      overall: result.percentage,
+      dimensions: [
+        { key: 'technical', label: 'Technical & Green Energy', score: result.dimensions.technical, weight: 0.25, source: 'Induction Assessment', description: 'Penguasaan konsep powertrain EV dan Green Energy', color: '#10B981' },
+        { key: 'safety', label: 'High Voltage Safety', score: result.dimensions.safety, weight: 0.25, source: 'Induction Assessment', description: 'Kepatuhan K3 & prosedur isolasi tegangan tinggi', color: '#0099B8' },
+        { key: 'psychometric', label: 'Work Style & 5S', score: result.dimensions.psychometric, weight: 0.20, source: 'Induction Assessment', description: 'Ketelitian torsi dan etos kerja industri', color: '#8B5CF6' },
+        { key: 'learningAgility', label: 'Learning Agility', score: result.dimensions.learningAgility, weight: 0.15, source: 'Induction Assessment', description: 'Kecepatan adaptasi teknologi baru', color: '#F59E0B' },
+        { key: 'communication', label: 'Communication & Teamwork', score: result.dimensions.communication, weight: 0.15, source: 'Induction Assessment', description: 'Kolaborasi dan pemecahan masalah tim', color: '#3B82F6' }
+      ],
+      calculatedAt: new Date().toISOString(),
+      configVersion: 'v2.0'
+    });
+
+    // Save Assessment Result
+    localDB.saveAssessmentResult({
+      id: `res-${Date.now()}`,
+      studentId: studentEmail,
+      assessmentId: 'ass-1',
+      score: result.percentage,
+      totalQuestions: result.maxScore / 5,
+      correctAnswers: result.totalScore / 5,
+      timeTaken: 600,
+      dimensionScores: result.dimensions,
+      strengths: result.strengths,
+      weaknesses: result.growthAreas,
+      personalityType: result.archetype.title,
+      completedAt: new Date().toISOString()
+    });
+
+    navigate('/student/dashboard');
+  };
+
+  const handleStudentSkipAssessment = async () => {
+    let finalName = formData.name.trim() || 'Tubagus';
+    const payload = {
+      ...formData,
+      name: finalName
+    };
+    await register(payload);
+    navigate('/student/dashboard');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step < 3) {
@@ -122,45 +181,49 @@ export const RegisterPage: React.FC = () => {
         </Link>
       </div>
 
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8">
+      <div className={`w-full ${step === 3 && formData.role === 'student' ? 'max-w-4xl' : 'max-w-2xl'} bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8 transition-all duration-300`}>
         
         {/* Role Selector Tabs (3 Core Roles) */}
-        <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-100 rounded-xl mb-6">
-          {[
-            { id: 'student', label: 'Talent Candidate', icon: GraduationCap },
-            { id: 'industry', label: 'Industry Partner', icon: Factory },
-            { id: 'school', label: 'Education Institution', icon: School }
-          ].map(item => {
-            const Icon = item.icon;
-            const isSelected = formData.role === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setRole(item.id)}
-                className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg text-xs font-semibold transition-all ${
-                  isSelected 
-                    ? 'bg-white text-slate-900 shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <Icon size={16} className={isSelected ? 'text-[#0099B8]' : ''} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        {step < 3 && (
+          <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-100 rounded-xl mb-6">
+            {[
+              { id: 'student', label: 'Talent Candidate', icon: GraduationCap },
+              { id: 'industry', label: 'Industry Partner', icon: Factory },
+              { id: 'school', label: 'Education Institution', icon: School }
+            ].map(item => {
+              const Icon = item.icon;
+              const isSelected = formData.role === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setRole(item.id)}
+                  className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg text-xs font-semibold transition-all ${
+                    isSelected 
+                      ? 'bg-white text-slate-900 shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <Icon size={16} className={isSelected ? 'text-[#0099B8]' : ''} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Role Header Banner */}
-        <div className="mb-6 flex items-start gap-4 p-4 rounded-xl border bg-slate-50/50">
-          <div className="p-3 rounded-xl bg-white shadow-sm border shrink-0" style={{ color: currentRoleMeta.color }}>
-            <currentRoleMeta.icon size={26} />
+        {step < 3 && (
+          <div className="mb-6 flex items-start gap-4 p-4 rounded-xl border bg-slate-50/50">
+            <div className="p-3 rounded-xl bg-white shadow-sm border shrink-0" style={{ color: currentRoleMeta.color }}>
+              <currentRoleMeta.icon size={26} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">{currentRoleMeta.title}</h2>
+              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{currentRoleMeta.subtitle}</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">{currentRoleMeta.title}</h2>
-            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{currentRoleMeta.subtitle}</p>
-          </div>
-        </div>
+        )}
 
         {/* Stepper Progress */}
         <div className="mb-8">
@@ -173,7 +236,7 @@ export const RegisterPage: React.FC = () => {
             {[
               { num: 1, label: 'Account' },
               { num: 2, label: 'Role Profile' },
-              { num: 3, label: 'Confirm' }
+              { num: 3, label: formData.role === 'student' ? 'Psikotes & Green Energy' : 'Confirm' }
             ].map((item) => (
               <div key={item.num} className="relative z-10 flex flex-col items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
@@ -187,7 +250,15 @@ export const RegisterPage: React.FC = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {step === 3 && formData.role === 'student' ? (
+          <StudentOnboardingAssessment
+            studentName={formData.name || 'Siswa Juara'}
+            studentEmail={formData.email}
+            onComplete={handleStudentCompleteWithAssessment}
+            onSkip={handleStudentSkipAssessment}
+          />
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
           {/* STEP 1: Account Credentials */}
           {step === 1 && (
             <div className="space-y-4 animate-fadeIn">
@@ -545,6 +616,7 @@ export const RegisterPage: React.FC = () => {
             </Button>
           </div>
         </form>
+        )}
 
         <div className="mt-6 text-center pt-4 border-t border-slate-100">
           <p className="text-xs text-slate-500">

@@ -319,7 +319,8 @@ export const localDB = {
   // Talent Scores
   getTalentScore: (studentId: string) => {
     const scores = getAll('talent_scores');
-    const found = scores.find((s: any) => s.studentId === studentId);
+    const cleanId = studentId ? studentId.toLowerCase().trim() : '';
+    const found = scores.find((s: any) => (s.studentId || '').toLowerCase().trim() === cleanId);
     if (found) return found;
 
     return {
@@ -332,6 +333,30 @@ export const localDB = {
         { key: 'communication', label: 'Communication', score: 82, weight: 0.10 }
       ]
     };
+  },
+  saveTalentScore: (scoreData: any) => {
+    const scores = getAll('talent_scores');
+    const cleanId = (scoreData.studentId || '').toLowerCase().trim();
+    const existing = scores.find((s: any) => (s.studentId || '').toLowerCase().trim() === cleanId);
+    if (existing && existing.id) {
+      updateItem('talent_scores', existing.id, scoreData);
+      return { ...existing, ...scoreData };
+    } else {
+      const newScore = { id: `score-${Date.now()}`, ...scoreData };
+      addItem('talent_scores', newScore);
+      return newScore;
+    }
+  },
+  getAssessmentResults: (studentId?: string) => {
+    const results = getAll('assessment_results');
+    if (!studentId) return results;
+    const cleanId = studentId.toLowerCase().trim();
+    return results.filter((r: any) => (r.studentId || '').toLowerCase().trim() === cleanId);
+  },
+  saveAssessmentResult: (resultData: any) => {
+    const newRes = { id: `res-${Date.now()}`, ...resultData };
+    addItem('assessment_results', newRes);
+    return newRes;
   },
 
   // Jobs

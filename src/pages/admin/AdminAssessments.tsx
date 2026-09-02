@@ -6,7 +6,9 @@ import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { useToast } from '../../components/ui/Toast';
-import { ClipboardList, Plus, Edit2, Trash2, HelpCircle, CheckCircle2, FileQuestion, Key } from 'lucide-react';
+import { ClipboardList, Plus, Edit2, Trash2, HelpCircle, CheckCircle2, FileQuestion, Key, Leaf, Zap, Sparkles, Filter } from 'lucide-react';
+import { defaultQuestionBank } from '../../data/psychometricBank';
+import { mockAssessments } from '../../data/assessments';
 
 export const AdminAssessments: React.FC = () => {
   const { showToast } = useToast();
@@ -14,59 +16,26 @@ export const AdminAssessments: React.FC = () => {
   // Assessment Modules State
   const [assessments, setAssessments] = useState<any[]>(() => {
     const raw = localStorage.getItem('spora_assessments_db');
-    if (raw) return JSON.parse(raw);
-
-    const defaults = [
-      { id: 'ass-1', title: 'Work Style & Psychometric Profile', category: 'Psychometric', timeLimit: 30, questionsCount: 5, passingScore: 70, status: 'Active' },
-      { id: 'ass-2', title: 'EV Battery Assembly & Thermal Test', category: 'Technical EV', timeLimit: 45, questionsCount: 5, passingScore: 75, status: 'Active' },
-      { id: 'ass-3', title: 'High Voltage Electrical Safety (1000V)', category: 'Safety & Compliance', timeLimit: 25, questionsCount: 5, passingScore: 80, status: 'Active' },
-    ];
-    localStorage.setItem('spora_assessments_db', JSON.stringify(defaults));
-    return defaults;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.length > 0) return parsed;
+    }
+    localStorage.setItem('spora_assessments_db', JSON.stringify(mockAssessments));
+    return mockAssessments;
   });
 
   // Questions Database State
   const [questionsDb, setQuestionsDb] = useState<any[]>(() => {
     const raw = localStorage.getItem('spora_questions_db');
-    if (raw) return JSON.parse(raw);
-
-    const defaults = [
-      {
-        id: 'q-1',
-        assessmentId: 'ass-2',
-        text: 'Berapa batas tegangan maksimal yang dikategorikan sebagai High Voltage (HV) pada sistem daya kendaraan listrik?',
-        options: ['AC > 30V / DC > 60V', 'AC > 12V / DC > 24V', 'AC > 100V / DC > 200V', 'AC > 220V / DC > 500V'],
-        correctAnswer: 'A',
-        points: 20
-      },
-      {
-        id: 'q-2',
-        assessmentId: 'ass-2',
-        text: 'Komponen apakah yang berfungsi mengawasi suhu, arus, dan sistem proteksi sel baterai lithium-ion?',
-        options: ['BMS (Battery Management System)', 'ECU (Electronic Control Unit)', 'Inverter DC-AC', 'MCU (Motor Control Unit)'],
-        correctAnswer: 'A',
-        points: 20
-      },
-      {
-        id: 'q-3',
-        assessmentId: 'ass-3',
-        text: 'Alat Pelindung Diri (APD) standar apakah yang wajib digunakan saat melakukan servis pada modul baterai HV?',
-        options: ['Sarung tangan isolasi karet Class 00 (1000V) & Face Shield', 'Sarung tangan kain katun biasa', 'Helm keselamatan proyek outdoor', 'Sepatu kets kancas'],
-        correctAnswer: 'A',
-        points: 20
-      },
-      {
-        id: 'q-4',
-        assessmentId: 'ass-1',
-        text: 'Bagaimanakah sikap Anda apabila menemukan kabel berisolasi oranye terkelupas pada area perakitan kendaraan listrik?',
-        options: ['Segera hentikan pekerjaan, pasang barikade LOTO, dan lapor supervisor safety', 'Menyentuhnya untuk memastikan adanya arus listrik', 'Menutupnya dengan selotip kertas biasa', 'Membiarkannya hingga jam kerja selesai'],
-        correctAnswer: 'A',
-        points: 20
-      }
-    ];
-    localStorage.setItem('spora_questions_db', JSON.stringify(defaults));
-    return defaults;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.length >= defaultQuestionBank.length) return parsed;
+    }
+    localStorage.setItem('spora_questions_db', JSON.stringify(defaultQuestionBank));
+    return defaultQuestionBank;
   });
+
+  const [questionCategoryFilter, setQuestionCategoryFilter] = useState<string>('All');
 
   // Modal States
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);

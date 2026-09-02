@@ -1,28 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Button } from '../../components/ui/Button';
-
-// Mock questions
-const mockQuestions = [
-  { id: 1, text: 'What is the primary function of a Battery Management System (BMS)?', options: ['Cooling', 'Monitoring cell voltage', 'Charging', 'Discharging'] },
-  { id: 2, text: 'Which tool is best for measuring high voltage systems safely?', options: ['Multimeter', 'Oscilloscope', 'Megohmmeter', 'Standard Voltmeter'] },
-  { id: 3, text: 'What is the standard PPE requirement for EV battery maintenance?', options: ['Safety glasses only', 'Class 0 gloves', 'Class 0 gloves, arc flash shield, insulated tools', 'Cotton gloves'] },
-  { id: 4, text: 'Identify the safe procedure for isolating an EV powertrain.', options: ['Remove main fuse', 'Disconnect 12V then service disconnect', 'Cut main cables', 'Turn off ignition only'] },
-  { id: 5, text: 'What does a sudden drop in a single cell voltage indicate?', options: ['Normal operation', 'Cell degradation or fault', 'Overcharging', 'BMS failure'] },
-];
+import { Badge } from '../../components/ui/Badge';
+import { defaultQuestionBank } from '../../data/psychometricBank';
+import { Clock, Flag, ArrowLeft, ArrowRight, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 export const AssessmentTest: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const questions = defaultQuestionBank;
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [flagged, setFlagged] = useState<Set<number>>(new Set());
+  const [answers, setAnswers] = useState<Record<string, string>>(() => {
+    try {
+      const saved = sessionStorage.getItem(`assessment_answers_${id}`);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 mins
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
 
-  const currentQ = mockQuestions[currentQuestionIdx];
-  const isLastQuestion = currentQuestionIdx === mockQuestions.length - 1;
+  const currentQ = questions[currentQuestionIdx];
+  const isLastQuestion = currentQuestionIdx === questions.length - 1;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -40,8 +42,12 @@ export const AssessmentTest: React.FC = () => {
 
   const handleAnswer = (val: string) => {
     setSaveState('saving');
-    setAnswers(prev => ({ ...prev, [currentQ.id]: val }));
-    setTimeout(() => setSaveState('saved'), 500);
+    const updated = { ...answers, [currentQ.id]: val };
+    setAnswers(updated);
+    try {
+      sessionStorage.setItem(`assessment_answers_${id}`, JSON.stringify(updated));
+    } catch {}
+    setTimeout(() => setSaveState('saved'), 400);
   };
 
   const toggleFlag = () => {
@@ -62,23 +68,27 @@ export const AssessmentTest: React.FC = () => {
   const isLowTime = timeLeft < 300; // < 5 mins
   const isCriticalTime = timeLeft < 60; // < 1 min
 
+  const optionLetters = ['A', 'B', 'C', 'D'];
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       {/* Topbar */}
-      <header className="bg-white border-b border-gray-200 px-4 h-16 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+      <header className="bg-white border-b border-slate-200 px-4 h-16 flex items-center justify-between sticky top-0 z-10 shadow-sm">
         <div>
-          <h1 className="font-bold text-gray-900 hidden sm:block">Technical Assessment: EV Fundamentals</h1>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span>Question {currentQuestionIdx + 1} of {mockQuestions.length}</span>
-            {saveState === 'saving' && <span className="text-amber-500 text-xs">Saving...</span>}
-            {saveState === 'saved' && <span className="text-emerald-500 text-xs">Saved ✓</span>}
+          <h1 className="font-bold text-slate-900 text-sm sm:text-base hidden sm:block">
+            Psikotes & Green Energy Induction Test (20 Soal)
+          </h1>
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span>Soal {currentQuestionIdx + 1} dari {questions.length}</span>
+            {saveState === 'saving' && <span className="text-amber-500 font-bold">Menyimpan...</span>}
+            {saveState === 'saved' && <span className="text-emerald-500 font-bold">Tersimpan ✓</span>}
           </div>
         </div>
         
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md font-mono text-lg font-bold
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-mono text-sm font-bold
           ${isCriticalTime ? 'bg-red-100 text-red-600 animate-pulse' : 
-            isLowTime ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-700'}`}>
-          ⏱ {formatTime(timeLeft)}
+            isLowTime ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-700'}`}>
+          <Clock size={16} /> {formatTime(timeLeft)}
         </div>
       </header>
 
@@ -86,71 +96,88 @@ export const AssessmentTest: React.FC = () => {
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-8 flex flex-col">
           <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-10 flex-1 flex flex-col">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 flex-1 flex flex-col justify-between">
               
-              <div className="flex justify-between items-start mb-6">
-                <span className="inline-block bg-blue-50 text-blue-700 font-bold px-3 py-1 rounded-md mb-4">
-                  Q{currentQuestionIdx + 1}
-                </span>
-                <button 
-                  onClick={toggleFlag}
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm transition-colors ${
-                    flagged.has(currentQ.id) 
-                      ? 'bg-amber-100 text-amber-700' 
-                      : 'text-gray-500 hover:bg-gray-100'
-                  }`}
-                >
-                  <span className="text-lg">⚑</span> {flagged.has(currentQ.id) ? 'Flagged' : 'Flag for Review'}
-                </button>
-              </div>
+              <div className="space-y-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block bg-[#0099B8] text-white font-extrabold px-3 py-1 rounded-lg text-xs">
+                      Soal #{currentQuestionIdx + 1}
+                    </span>
+                    <Badge variant="info" className="bg-cyan-50 text-[#0099B8] border-cyan-200 text-xs">
+                      {currentQ.category}
+                    </Badge>
+                  </div>
+                  <button 
+                    onClick={toggleFlag}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                      flagged.has(currentQ.id) 
+                        ? 'bg-amber-100 text-amber-700 border border-amber-300' 
+                        : 'text-slate-500 hover:bg-slate-100 border border-slate-200'
+                    }`}
+                  >
+                    <Flag size={14} /> {flagged.has(currentQ.id) ? 'Ditandai Ragu' : 'Tandai Ragu'}
+                  </button>
+                </div>
 
-              <h2 className="text-xl sm:text-2xl text-gray-900 font-medium mb-8">
-                {currentQ.text}
-              </h2>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-relaxed pt-2">
+                  {currentQ.text}
+                </h3>
 
-              <div className="space-y-3 flex-1">
-                {currentQ.options.map((opt, i) => (
-                  <label key={i} className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all ${
-                    answers[currentQ.id] === opt 
-                      ? 'border-blue-500 bg-blue-50/50 shadow-sm' 
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}>
-                    <input 
-                      type="radio" 
-                      name={`question-${currentQ.id}`}
-                      value={opt}
-                      checked={answers[currentQ.id] === opt}
-                      onChange={() => handleAnswer(opt)}
-                      className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
-                    />
-                    <span className="ml-3 text-gray-800 text-lg">{opt}</span>
-                  </label>
-                ))}
+                {/* Options List */}
+                <div className="space-y-2.5 pt-4">
+                  {currentQ.options.map((opt, optIdx) => {
+                    const letter = optionLetters[optIdx];
+                    const isSelected = answers[currentQ.id] === letter;
+
+                    return (
+                      <button
+                        key={optIdx}
+                        onClick={() => handleAnswer(letter)}
+                        className={`w-full text-left p-4 rounded-xl border transition-all flex items-start gap-3.5 ${
+                          isSelected 
+                            ? 'border-[#0099B8] bg-cyan-50/70 text-slate-900 ring-2 ring-[#0099B8] font-medium shadow-sm' 
+                            : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+                        }`}
+                      >
+                        <span className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
+                          isSelected ? 'bg-[#0099B8] text-white' : 'bg-slate-200 text-slate-600'
+                        }`}>
+                          {letter}
+                        </span>
+                        <span className="text-sm leading-relaxed">{opt}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Bottom Nav */}
-              <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
+              <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
                 <Button 
                   variant="outline" 
                   disabled={currentQuestionIdx === 0}
                   onClick={() => setCurrentQuestionIdx(prev => prev - 1)}
+                  className="px-5 py-2 font-bold text-xs"
                 >
-                  Previous
+                  <ArrowLeft size={14} className="mr-1" /> Sebelumnya
                 </Button>
                 
                 {isLastQuestion ? (
                   <Button 
                     variant="primary"
                     onClick={() => navigate(`/assessment/${id}/review`)}
+                    className="bg-[#0099B8] hover:bg-[#007A93] text-white px-6 font-bold text-xs shadow-md"
                   >
-                    Review & Submit
+                    Tinjau & Kumpulkan ➔
                   </Button>
                 ) : (
                   <Button 
                     variant="primary"
                     onClick={() => setCurrentQuestionIdx(prev => prev + 1)}
+                    className="bg-[#0099B8] hover:bg-[#007A93] text-white px-6 font-bold text-xs shadow-md"
                   >
-                    Next Question
+                    Soal Berikutnya <ArrowRight size={14} className="ml-1" />
                   </Button>
                 )}
               </div>
@@ -160,40 +187,40 @@ export const AssessmentTest: React.FC = () => {
         </main>
 
         {/* Sidebar Nav (Desktop) */}
-        <aside className="hidden lg:flex w-72 flex-col bg-white border-l border-gray-200 p-4">
-          <h3 className="font-semibold text-gray-900 mb-4">Question Navigator</h3>
+        <aside className="hidden lg:flex w-80 flex-col bg-white border-l border-slate-200 p-5 shadow-inner">
+          <h3 className="font-bold text-sm text-slate-900 mb-1">Navigasi Soal Asesmen</h3>
+          <p className="text-xs text-slate-500 mb-4">Pilih nomor untuk langsung menuju soal.</p>
+          
           <div className="grid grid-cols-4 gap-2">
-            {mockQuestions.map((q, i) => {
+            {questions.map((q, i) => {
               const isCurrent = i === currentQuestionIdx;
               const isAnswered = !!answers[q.id];
               const isFlagged = flagged.has(q.id);
               
-              let btnClass = "border-gray-200 text-gray-600 hover:bg-gray-50"; // default unattempted
-              if (isCurrent) btnClass = "border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-200";
-              else if (isFlagged) btnClass = "border-amber-400 bg-amber-50 text-amber-700";
-              else if (isAnswered) btnClass = "border-emerald-500 bg-emerald-50 text-emerald-700";
+              let btnClass = "border-slate-200 text-slate-600 hover:bg-slate-50";
+              if (isCurrent) btnClass = "border-[#0099B8] bg-cyan-50 text-[#0099B8] ring-2 ring-[#0099B8]";
+              else if (isFlagged) btnClass = "border-amber-400 bg-amber-50 text-amber-700 font-bold";
+              else if (isAnswered) btnClass = "border-emerald-500 bg-emerald-50 text-emerald-700 font-bold";
 
               return (
                 <button
                   key={q.id}
                   onClick={() => setCurrentQuestionIdx(i)}
-                  className={`h-10 rounded-md border font-medium flex items-center justify-center transition-all ${btnClass}`}
+                  className={`h-10 rounded-xl border font-bold text-xs flex items-center justify-center transition-all relative ${btnClass}`}
                 >
                   {i + 1}
-                  {isFlagged && <span className="absolute -top-1 -right-1 text-[10px]">⚑</span>}
+                  {isFlagged && <span className="absolute -top-1 -right-1 text-[10px] text-amber-600">⚑</span>}
                 </button>
               );
             })}
           </div>
           
-          <div className="mt-auto pt-4 space-y-2 text-sm">
-            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-500"></span> Answered</div>
-            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-gray-200"></span> Unanswered</div>
-            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-400"></span> Flagged</div>
+          <div className="mt-auto pt-6 space-y-2 text-xs border-t border-slate-100 font-semibold text-slate-600">
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-500"></span> Sudah Terjawab ({Object.keys(answers).length})</div>
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-slate-200"></span> Belum Terjawab ({questions.length - Object.keys(answers).length})</div>
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-400"></span> Ditandai Ragu ({flagged.size})</div>
           </div>
         </aside>
-
-        {/* Mobile bottom drawer toggle could go here */}
       </div>
     </div>
   );
