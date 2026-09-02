@@ -314,10 +314,10 @@ export const AdminIndustries: React.FC = () => {
       {/* Modal Add/Edit Industry Partner */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingIndustry ? "Edit Industry Partner" : "Add Industry Partner"}>
         <form onSubmit={handleSaveIndustry} className="space-y-4 pt-2">
-          <Input label="Company Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required placeholder="e.g. ABC Corp" />
-          <Input label="Nama Direktur Perusahaan / Managing Director" value={formData.directorName} onChange={(e) => setFormData({ ...formData, directorName: e.target.value })} placeholder="e.g. Director Name" />
-          <Input label="Email Utama Perusahaan" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required disabled={!!editingIndustry} />
-          <Input label="Password Akun" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required />
+          <Input label="Nama Perusahaan" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required placeholder="Nama Perusahaan" />
+          <Input label="Nama Direktur Perusahaan / Managing Director" value={formData.directorName} onChange={(e) => setFormData({ ...formData, directorName: e.target.value })} placeholder="Nama Direktur Perusahaan" />
+          <Input label="Email Utama Perusahaan" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required disabled={!!editingIndustry} placeholder="Email" />
+          <Input label="Password Akun" type="text" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required placeholder="Password" />
           
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">Status Verifikasi</label>

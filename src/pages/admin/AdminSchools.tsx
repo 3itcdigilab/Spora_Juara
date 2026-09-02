@@ -10,7 +10,7 @@ import { useToast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { localDB } from '../../services/db';
 import { mockSchools } from '../../data/schools';
-import { School, Plus, Edit2, Trash2, GraduationCap, Users, UserPlus, Save, ExternalLink, LayoutDashboard } from 'lucide-react';
+import { School, Plus, Edit2, Trash2, GraduationCap, Users, UserPlus, Save, ExternalLink, LayoutDashboard, Key, ShieldCheck } from 'lucide-react';
 
 import { getAll, addItem, updateItem, removeWhere } from '../../services/firestoreSync';
 
@@ -30,6 +30,10 @@ export const AdminSchools: React.FC = () => {
     name: '',
     email: '',
     password: '123',
+    registrationToken: '',
+    schoolType: 'State Vocational School (SMKN)',
+    province: 'Jawa Barat',
+    city: 'Cikarang',
     status: 'active'
   });
 
@@ -55,16 +59,31 @@ export const AdminSchools: React.FC = () => {
 
   const handleOpenAddModal = () => {
     setEditingSchool(null);
-    setFormData({ name: '', email: '', password: '123', status: 'active' });
+    const autoToken = `SMK${users.length + 1}-2025`;
+    setFormData({
+      name: '',
+      email: '',
+      password: '123',
+      registrationToken: autoToken,
+      schoolType: 'State Vocational School (SMKN)',
+      province: 'Jawa Barat',
+      city: 'Cikarang',
+      status: 'active'
+    });
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (s: any) => {
     setEditingSchool(s);
+    const currentToken = s.registrationToken || s.schoolToken || (mockSchools.find(ms => ms.name.toLowerCase() === s.name?.toLowerCase())?.registrationToken) || `SMK${users.indexOf(s) + 1}-2025`;
     setFormData({
       name: s.name || '',
       email: s.email || '',
       password: s.password || '123',
+      registrationToken: currentToken,
+      schoolType: s.schoolType || 'State Vocational School (SMKN)',
+      province: s.province || 'Jawa Barat',
+      city: s.city || 'Cikarang',
       status: s.status || 'active'
     });
     setIsModalOpen(true);
@@ -83,6 +102,11 @@ export const AdminSchools: React.FC = () => {
           schoolName: formData.name,
           school: formData.name,
           password: formData.password,
+          registrationToken: formData.registrationToken.trim().toUpperCase(),
+          schoolToken: formData.registrationToken.trim().toUpperCase(),
+          schoolType: formData.schoolType,
+          province: formData.province,
+          city: formData.city,
           status: formData.status
         });
       }
@@ -101,9 +125,14 @@ export const AdminSchools: React.FC = () => {
         email: formData.email,
         password: formData.password,
         role: 'school',
+        registrationToken: formData.registrationToken.trim().toUpperCase() || `SMK${Date.now()}-2025`,
+        schoolToken: formData.registrationToken.trim().toUpperCase() || `SMK${Date.now()}-2025`,
+        schoolType: formData.schoolType,
+        province: formData.province,
+        city: formData.city,
         status: formData.status
       });
-      showToast(`Institusi pendidikan baru "${formData.name}" berhasil dibuat!`, 'success');
+      showToast(`Institusi pendidikan baru "${formData.name}" berhasil dibuat langsung oleh Admin!`, 'success');
     }
 
     refreshSchools();
@@ -111,7 +140,7 @@ export const AdminSchools: React.FC = () => {
   };
 
   const handleDeleteSchool = (email: string, name: string) => {
-    if (!window.confirm(`Hapus institusi pendidikan "${name}" dari sistem SporaOS?`)) return;
+    if (!window.confirm(`Hapus institusi pendidikan "${name}" dari sistem Spora Juara?`)) return;
 
     removeWhere('users', (u: any) => u.email.toLowerCase() === email.toLowerCase());
     refreshSchools();
@@ -138,7 +167,7 @@ export const AdminSchools: React.FC = () => {
       if (!dbStudents.some((d: any) => d.id === st.id)) {
         dbStudents.push({
           id: st.id,
-          name: st.major || st.fullName || 'Siswa Vokasi',
+          name: st.name || st.fullName || 'Siswa Vokasi',
           school: st.schoolName || st.schoolId || 'SMK Negeri 1 Cikarang',
           major: st.major || 'Teknik Kendaraan Ringan (Otomotif EV)',
           gradYear: st.graduationYear?.toString() || '2025',
@@ -157,14 +186,6 @@ export const AdminSchools: React.FC = () => {
     setIsAddStudentForm(false);
     setEditingStudent(null);
     setIsStudentsModalOpen(true);
-  };
-
-  // Open Full-Page Dashboard View
-  const handleOpenFullPageStudents = () => {
-    if (!selectedInstitution) return;
-    const targetUrl = `/admin/students?schoolName=${encodeURIComponent(selectedInstitution.name)}`;
-    window.open(targetUrl, '_blank');
-    showToast(`Membuka halaman lengkap daftar siswa ${selectedInstitution.name}...`, 'info');
   };
 
   const handleOpenAddStudent = () => {
@@ -258,12 +279,12 @@ export const AdminSchools: React.FC = () => {
         title="Education Institutions (Institution CRUD)" 
         subtitle="Tambah, edit, hapus, kelola institusi pendidikan (SMK, Politeknik, Universitas, BLK) & siswa terdaftar."
       >
-        <Button variant="primary" className="bg-[#0099B8] hover:bg-[#007A93] text-white flex items-center gap-1.5" onClick={handleOpenAddModal}>
-          <Plus size={16} /> Add Institution
+        <Button variant="primary" className="bg-[#0099B8] hover:bg-[#007A93] text-white flex items-center gap-1.5 font-bold text-xs" onClick={handleOpenAddModal}>
+          <Plus size={16} /> Add New Institution
         </Button>
       </PageHeader>
 
-      <Card className="p-0 overflow-hidden">
+      <Card className="p-0 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -280,7 +301,7 @@ export const AdminSchools: React.FC = () => {
               {users.map((s, idx) => {
                 const schoolToken = s.registrationToken || s.schoolToken || (mockSchools.find(ms => ms.name.toLowerCase() === s.name?.toLowerCase())?.registrationToken) || `SMK${idx + 1}-2025`;
                 return (
-                <tr key={idx} className="hover:bg-slate-50">
+                <tr key={idx} className="hover:bg-slate-50 transition">
                   <td className="p-4 font-bold text-slate-900 flex items-center gap-2">
                     <School size={18} className="text-[#0099B8]" /> {s.name}
                   </td>
@@ -321,14 +342,14 @@ export const AdminSchools: React.FC = () => {
                   <td className="p-4 text-right">
                     <div className="flex justify-end gap-2 items-center">
                       {s.status === 'pending' && (
-                        <Button size="sm" className="bg-emerald-600 text-white text-xs px-2.5 py-1" onClick={() => handleApprove(s.email, s.name)}>
+                        <Button size="sm" className="bg-emerald-600 text-white text-xs px-2.5 py-1 font-bold" onClick={() => handleApprove(s.email, s.name)}>
                           Setujui
                         </Button>
                       )}
-                      <Button size="sm" variant="outline" className="p-1.5" onClick={() => handleOpenEditModal(s)}>
+                      <Button size="sm" variant="outline" className="p-1.5" onClick={() => handleOpenEditModal(s)} title="Edit Institusi">
                         <Edit2 size={14} className="text-slate-600" />
                       </Button>
-                      <Button size="sm" variant="ghost" className="p-1.5 text-red-600 hover:bg-red-50" onClick={() => handleDeleteSchool(s.email, s.name)}>
+                      <Button size="sm" variant="ghost" className="p-1.5 text-red-600 hover:bg-red-50" onClick={() => handleDeleteSchool(s.email, s.name)} title="Hapus Institusi">
                         <Trash2 size={14} />
                       </Button>
                     </div>
@@ -342,22 +363,74 @@ export const AdminSchools: React.FC = () => {
       </Card>
 
       {/* Modal Add/Edit Institution */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingSchool ? "Edit Education Institution" : "Add Education Institution"}>
-        <form onSubmit={handleSaveSchool} className="space-y-4 pt-2">
-          <Input label="Institution Name (e.g. SMKN 1 Cikarang / Politeknik Negeri)" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-          <Input label="Official Contact Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required disabled={!!editingSchool} />
-          <Input label="Password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required />
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Status</label>
-            <select className="w-full p-2.5 border rounded-lg text-sm bg-white" value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
-              <option value="active">Active & Verified</option>
-              <option value="pending">Pending Approval</option>
-              <option value="rejected">Inactive</option>
-            </select>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingSchool ? "Edit Data Institusi Pendidikan" : "Tambah Institusi Pendidikan Baru (Admin Direct)"}>
+        <form onSubmit={handleSaveSchool} className="space-y-4 pt-2 font-sans">
+          <Input 
+            label="Nama Resmi Institusi (e.g. SMKN 1 Cikarang Pusat / Politeknik Negeri)" 
+            value={formData.name} 
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+            required 
+            placeholder="Nama Sekolah / Institusi"
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input 
+              label="Email Kontak Resmi (Untuk Login)" 
+              type="email" 
+              value={formData.email} 
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+              required 
+              disabled={!!editingSchool} 
+              placeholder="Email Kontak"
+            />
+            <Input 
+              label="Password Akun" 
+              type="text" 
+              value={formData.password} 
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
+              required 
+              placeholder="Password"
+            />
           </div>
+
+          <div className="p-3 bg-cyan-50/50 rounded-xl border border-cyan-200 space-y-1">
+            <label className="block text-xs font-bold text-slate-800 flex items-center gap-1">
+              <Key size={13} className="text-[#0099B8]" /> Token Registrasi Siswa Resmi (Anti-Palsu)
+            </label>
+            <input 
+              type="text" 
+              className="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono uppercase font-bold tracking-wider focus:ring-2 focus:ring-[#0099B8] bg-white"
+              value={formData.registrationToken} 
+              onChange={(e) => setFormData({ ...formData, registrationToken: e.target.value.toUpperCase() })} 
+              required
+              placeholder="Contoh: SMK1CIK-2025"
+            />
+            <p className="text-[10px] text-slate-500">Token ini akan dibagikan ke siswa agar terverifikasi asli dari sekolah ini saat registrasi.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Status Akun</label>
+              <select className="w-full p-2.5 border rounded-lg text-xs bg-white font-semibold" value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
+                <option value="active">Active & Verified</option>
+                <option value="pending">Pending Approval</option>
+                <option value="rejected">Inactive / Nonaktif</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Tipe Institusi</label>
+              <select className="w-full p-2.5 border rounded-lg text-xs bg-white font-semibold" value={formData.schoolType} onChange={(e) => setFormData({ ...formData, schoolType: e.target.value })}>
+                <option value="State Vocational School (SMKN)">SMK Negeri (SMKN)</option>
+                <option value="Private Vocational School (SMKS)">SMK Swasta (SMKS)</option>
+                <option value="Vocational Training Center (BLK)">Balai Latihan Kerja (BLK)</option>
+                <option value="Polytechnic / University">Politeknik / Vokasi Kampus</option>
+              </select>
+            </div>
+          </div>
+
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" className="bg-[#0099B8]">Save Institution</Button>
+            <Button type="submit" variant="primary" className="bg-[#0099B8] text-white font-bold">Simpan Data Institusi</Button>
           </div>
         </form>
       </Modal>
@@ -369,127 +442,104 @@ export const AdminSchools: React.FC = () => {
         title={`Daftar Siswa/Kandidat Enrolled — ${selectedInstitution?.name || ''}`}
         size="lg"
       >
-        <div className="space-y-4 pt-2">
-          {/* Header Action Banner */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-cyan-50 to-blue-50 p-4 rounded-xl border border-cyan-200">
+        <div className="space-y-4 font-sans max-h-[70vh] overflow-y-auto pr-1">
+          {/* Header Action inside Modal */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
             <div>
-              <p className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
-                <School size={16} className="text-[#0099B8]" /> {selectedInstitution?.name}
+              <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <GraduationCap size={16} className="text-[#0099B8]" /> Total Siswa Terdaftar: {institutionStudents.length} Siswa
               </p>
-              <p className="text-[11px] text-slate-500 font-mono mt-0.5">{selectedInstitution?.email}</p>
+              <p className="text-[11px] text-slate-500">Kelola langsung siswa vokasi dari institusi ini.</p>
             </div>
-
-            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-              <Button 
-                size="sm" 
-                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs" 
-                onClick={handleOpenFullPageStudents}
-              >
-                <LayoutDashboard size={14} /> Halaman List Siswa (Page Baru) <ExternalLink size={13} />
-              </Button>
-              <Button size="sm" className="bg-[#0099B8] hover:bg-[#007A93] text-white text-xs font-bold flex items-center gap-1" onClick={handleOpenAddStudent}>
-                <UserPlus size={14} /> + Tambah Siswa Baru
+            <div className="flex gap-2">
+              <Button size="sm" variant="primary" className="bg-[#0099B8] text-white text-xs flex items-center gap-1" onClick={handleOpenAddStudent}>
+                <UserPlus size={14} /> Tambah Siswa Baru
               </Button>
             </div>
           </div>
 
-          {/* Form inline edit/add student */}
+          {/* Inline Add / Edit Student Form */}
           {isAddStudentForm && (
-            <form onSubmit={handleSaveStudent} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 animate-fadeIn">
-              <h4 className="text-xs font-bold text-slate-900 border-b pb-1">
-                {editingStudent ? `Edit Data Siswa: ${editingStudent.name || editingStudent.fullName}` : 'Form Tambah Siswa Baru'}
-              </h4>
+            <form onSubmit={handleSaveStudent} className="p-4 border-2 border-cyan-200 rounded-xl bg-cyan-50/40 space-y-3 animate-fadeIn">
+              <div className="flex justify-between items-center border-b pb-2">
+                <h4 className="font-bold text-xs text-slate-900 flex items-center gap-1">
+                  {editingStudent ? <Edit2 size={13} className="text-[#0099B8]" /> : <Plus size={13} className="text-[#0099B8]" />}
+                  {editingStudent ? 'Edit Data Siswa' : 'Tambah Siswa Baru ke Institusi'}
+                </h4>
+                <button type="button" onClick={() => setIsAddStudentForm(false)} className="text-xs text-slate-500 hover:text-slate-800">Batal ✕</button>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input label="Nama Lengkap Siswa" value={studentFormData.name} onChange={(e) => setStudentFormData({ ...studentFormData, name: e.target.value })} required />
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Jurusan / Program Studi</label>
-                  <select 
-                    className="w-full p-2.5 border rounded-lg text-xs bg-white"
-                    value={studentFormData.major} 
-                    onChange={(e) => setStudentFormData({ ...studentFormData, major: e.target.value })}
-                  >
-                    <option value="Teknik Kendaraan Ringan (Otomotif EV)">Teknik Kendaraan Ringan (Otomotif EV)</option>
-                    <option value="Teknik Elektronika Industri">Teknik Elektronika Industri</option>
-                    <option value="Teknik Mekatronika">Teknik Mekatronika</option>
-                    <option value="Teknik Listrik Industri">Teknik Listrik Industri</option>
-                  </select>
-                </div>
-                <Input label="Tahun Kelulusan" value={studentFormData.graduationYear} onChange={(e) => setStudentFormData({ ...studentFormData, graduationYear: e.target.value })} required />
+                <Input label="Jurusan Vokasi (e.g. Teknik Kendaraan Listrik)" value={studentFormData.major} onChange={(e) => setStudentFormData({ ...studentFormData, major: e.target.value })} required />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input label="Tahun Kelulusan (e.g. 2025)" value={studentFormData.graduationYear} onChange={(e) => setStudentFormData({ ...studentFormData, graduationYear: e.target.value })} required />
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Status</label>
-                  <select className="w-full p-2.5 border rounded-lg text-xs bg-white" value={studentFormData.status} onChange={(e) => setStudentFormData({ ...studentFormData, status: e.target.value })}>
-                    <option value="active">Aktif / Siap Kerja</option>
-                    <option value="graduated">Lulus</option>
-                    <option value="employed">Terekrut</option>
+                  <select className="w-full p-2 border rounded-lg text-xs bg-white" value={studentFormData.status} onChange={(e) => setStudentFormData({ ...studentFormData, status: e.target.value })}>
+                    <option value="active">Active (Siap Direkrut)</option>
+                    <option value="employed">Employed (Sudah Bekerja)</option>
+                    <option value="graduated">Graduated (Alumni)</option>
                   </select>
                 </div>
               </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" size="sm" variant="outline" onClick={() => setIsAddStudentForm(false)}>Batal</Button>
-                <Button type="submit" size="sm" className="bg-[#0099B8] text-white flex items-center gap-1">
-                  <Save size={14} /> Simpan Siswa
+
+              <div className="flex justify-end gap-2 pt-2 border-t">
+                <Button size="sm" variant="outline" type="button" onClick={() => setIsAddStudentForm(false)}>Batal</Button>
+                <Button size="sm" variant="primary" type="submit" className="bg-[#0099B8] text-white flex items-center gap-1">
+                  <Save size={13} /> {editingStudent ? 'Perbarui Siswa' : 'Simpan Siswa'}
                 </Button>
               </div>
             </form>
           )}
 
-          {/* Table list of students */}
-          <div className="overflow-x-auto border rounded-xl">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-100 text-slate-600 border-b font-bold uppercase">
-                  <th className="p-3">Nama Siswa</th>
-                  <th className="p-3">Jurusan / Stream</th>
-                  <th className="p-3">Tahun Lulus</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {institutionStudents.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-500">
-                      <GraduationCap size={32} className="mx-auto text-slate-300 mb-2" />
-                      <p className="font-bold text-slate-700">Belum Ada Siswa Terdaftar</p>
-                      <p className="text-xs text-slate-400 mt-1">Klik "+ Tambah Siswa Baru" di atas untuk menambahkan kandidat.</p>
-                    </td>
+          {/* Students Table */}
+          {institutionStudents.length === 0 ? (
+            <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed text-slate-500 text-xs">
+              Belum ada data siswa terdaftar untuk sekolah ini. Klik <strong>"+ Tambah Siswa Baru"</strong> untuk menginput siswa secara manual.
+            </div>
+          ) : (
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-600 border-b font-bold uppercase">
+                    <th className="p-3">Nama Siswa</th>
+                    <th className="p-3">Jurusan Vokasi</th>
+                    <th className="p-3">Tahun Lulus</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3 text-right">Aksi</th>
                   </tr>
-                ) : (
-                  institutionStudents.map((st, idx) => (
-                    <tr key={st.id || idx} className="hover:bg-slate-50">
-                      <td className="p-3 font-bold text-slate-900">{st.name || st.fullName}</td>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {institutionStudents.map((st) => (
+                    <tr key={st.id} className="hover:bg-slate-50">
+                      <td className="p-3 font-bold text-slate-900">{st.name}</td>
                       <td className="p-3 text-slate-600">{st.major}</td>
-                      <td className="p-3 font-mono text-slate-700">{st.gradYear || st.graduationYear}</td>
+                      <td className="p-3 text-slate-600 font-mono">{st.gradYear || st.graduationYear || '2025'}</td>
                       <td className="p-3">
-                        <Badge variant="success" className="text-[10px]">Aktif Vokasi</Badge>
+                        <Badge variant="success" className="text-[10px] px-2 py-0.5">Active</Badge>
                       </td>
                       <td className="p-3 text-right">
-                        <div className="flex justify-end gap-1.5 items-center">
-                          <Button size="sm" variant="outline" className="p-1 text-xs" onClick={() => handleEditStudent(st)}>
-                            <Edit2 size={13} />
+                        <div className="flex justify-end gap-1">
+                          <Button size="sm" variant="outline" className="p-1" onClick={() => handleEditStudent(st)} title="Edit Siswa">
+                            <Edit2 size={12} className="text-slate-600" />
                           </Button>
-                          <Button size="sm" variant="ghost" className="p-1 text-red-600 hover:bg-red-50" onClick={() => handleDeleteStudent(st.id, st.name || st.fullName)}>
-                            <Trash2 size={13} />
+                          <Button size="sm" variant="ghost" className="p-1 text-red-600 hover:bg-red-50" onClick={() => handleDeleteStudent(st.id, st.name)} title="Hapus Siswa">
+                            <Trash2 size={12} />
                           </Button>
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-          <div className="flex justify-between items-center pt-3 border-t">
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="text-xs text-[#0099B8] border-cyan-200 bg-cyan-50 hover:bg-cyan-100 font-bold flex items-center gap-1.5"
-              onClick={handleOpenFullPageStudents}
-            >
-              <LayoutDashboard size={14} /> Buka Halaman Full Dashboard List ↗
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setIsStudentsModalOpen(false)}>Tutup</Button>
+          <div className="flex justify-end pt-4 border-t">
+            <Button variant="outline" onClick={() => setIsStudentsModalOpen(false)}>Tutup</Button>
           </div>
         </div>
       </Modal>
