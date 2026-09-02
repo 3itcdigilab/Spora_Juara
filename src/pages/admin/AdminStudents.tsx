@@ -253,7 +253,7 @@ export const AdminStudents: React.FC = () => {
       {/* Modal Add/Edit */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingStudent ? "Edit Student Candidate" : "Add New Student Candidate"}>
         <form onSubmit={handleSaveStudent} className="space-y-4 pt-2 font-sans">
-          <Input label="Student Full Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required placeholder="e.g. Student Name" />
+          <Input label="Student Full Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required placeholder="Nama Lengkap Siswa" />
           <Input label="Vocational School Name" value={formData.school} onChange={(e) => setFormData({ ...formData, school: e.target.value })} required />
           <Input label="Major / Vocational Stream" value={formData.major} onChange={(e) => setFormData({ ...formData, major: e.target.value })} required />
           

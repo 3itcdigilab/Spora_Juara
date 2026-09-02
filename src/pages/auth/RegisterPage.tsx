@@ -94,7 +94,7 @@ export const RegisterPage: React.FC = () => {
   const prevStep = () => setStep(step - 1);
 
   const handleStudentCompleteWithAssessment = async (result: any) => {
-    let finalName = formData.name.trim() || 'Tubagus';
+    let finalName = formData.name.trim() || 'Kandidat Siswa';
     const payload = {
       ...formData,
       name: finalName,
@@ -156,7 +156,7 @@ export const RegisterPage: React.FC = () => {
   };
 
   const handleStudentSkipAssessment = async () => {
-    let finalName = formData.name.trim() || 'Tubagus';
+    let finalName = formData.name.trim() || 'Kandidat Siswa';
     const payload = {
       ...formData,
       name: finalName,
@@ -176,9 +176,9 @@ export const RegisterPage: React.FC = () => {
     // Set name fallback based on role if left empty
     let finalName = formData.name.trim();
     if (!finalName) {
-      if (formData.role === 'school') finalName = formData.schoolName || 'SMK Negeri 1 Cikarang Pusat';
-      else if (formData.role === 'industry') finalName = formData.companyName || 'Hyundai Motor Indonesia';
-      else finalName = 'Tubagus';
+      if (formData.role === 'school') finalName = formData.schoolName || 'Institusi Sekolah';
+      else if (formData.role === 'industry') finalName = formData.companyName || 'Mitra Industri';
+      else finalName = 'Kandidat Siswa';
     }
 
     const payload = {
@@ -197,76 +197,74 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 py-10 font-sans">
-      {/* Brand Header */}
-      <div className="mb-6 text-center">
-        <Link to="/" className="inline-flex items-center gap-2">
-          <Logo size="lg" />
-        </Link>
-      </div>
-
-      <div className={`w-full ${step === 3 && formData.role === 'student' ? 'max-w-4xl' : 'max-w-2xl'} bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8 transition-all duration-300`}>
+    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-10">
         
-        {/* Role Selector Tabs (3 Core Roles) */}
-        {step < 3 && (
-          <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-100 rounded-xl mb-6">
-            {[
-              { id: 'student', label: 'Talent Candidate', icon: GraduationCap },
-              { id: 'industry', label: 'Industry Partner', icon: Factory },
-              { id: 'school', label: 'Education Institution', icon: School }
-            ].map(item => {
-              const Icon = item.icon;
-              const isSelected = formData.role === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setRole(item.id)}
-                  className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg text-xs font-semibold transition-all ${
-                    isSelected 
-                      ? 'bg-white text-slate-900 shadow-sm' 
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  <Icon size={16} className={isSelected ? 'text-[#0099B8]' : ''} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
+        {/* Header Title */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-3">
+            <Link to="/" className="inline-flex items-center gap-2">
+              <Logo size="md" />
+            </Link>
           </div>
-        )}
+          
+          <div className="inline-flex p-1 bg-slate-100 rounded-xl mb-6">
+            <button
+              type="button"
+              onClick={() => setRole('student')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                formData.role === 'student' ? 'bg-white text-[#0099B8] shadow-sm' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <GraduationCap size={16} /> Talent Candidate
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('industry')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                formData.role === 'industry' ? 'bg-white text-violet-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Factory size={16} /> Industry Partner
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('school')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                formData.role === 'school' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <School size={16} /> Education Institution
+            </button>
+          </div>
 
-        {/* Role Header Banner */}
-        {step < 3 && (
-          <div className="mb-6 flex items-start gap-4 p-4 rounded-xl border bg-slate-50/50">
-            <div className="p-3 rounded-xl bg-white shadow-sm border shrink-0" style={{ color: currentRoleMeta.color }}>
-              <currentRoleMeta.icon size={26} />
+          <div className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 flex items-center gap-4 text-left">
+            <div className="p-3 rounded-xl bg-white border border-slate-200 text-[#0099B8] shrink-0">
+              <currentRoleMeta.icon size={28} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900">{currentRoleMeta.title}</h2>
-              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{currentRoleMeta.subtitle}</p>
+              <h2 className="text-base font-extrabold text-slate-900">{currentRoleMeta.title}</h2>
+              <p className="text-xs text-slate-500 mt-0.5">{currentRoleMeta.subtitle}</p>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Stepper Progress */}
+        {/* Form Stepper */}
         <div className="mb-8">
           <div className="flex items-center justify-between relative">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-100 z-0 rounded"></div>
-            <div 
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-[#0099B8] z-0 rounded transition-all duration-300" 
-              style={{ width: `${((step - 1) / 2) * 100}%` }}
-            ></div>
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-full bg-slate-200 -z-0"></div>
             {[
               { num: 1, label: 'Account' },
               { num: 2, label: 'Role Profile' },
               { num: 3, label: formData.role === 'student' ? 'Psikotes & Green Energy' : 'Confirm' }
             ].map((item) => (
               <div key={item.num} className="relative z-10 flex flex-col items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                  step >= item.num ? 'bg-[#0099B8] text-white shadow-md' : 'bg-slate-200 text-slate-500'
-                }`}>
-                  {step > item.num ? '✓' : item.num}
+                <div 
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    step >= item.num ? 'bg-[#0099B8] text-white shadow-md' : 'bg-slate-200 text-slate-500'
+                  }`}
+                >
+                  {item.num}
                 </div>
                 <span className="text-[10px] font-medium text-slate-500 mt-1">{item.label}</span>
               </div>
@@ -276,7 +274,7 @@ export const RegisterPage: React.FC = () => {
 
         {step === 3 && formData.role === 'student' ? (
           <StudentOnboardingAssessment
-            studentName={formData.name || 'Siswa Juara'}
+            studentName={formData.name || 'Kandidat Siswa'}
             studentEmail={formData.email}
             onComplete={handleStudentCompleteWithAssessment}
             onSkip={handleStudentSkipAssessment}
@@ -291,14 +289,14 @@ export const RegisterPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    {formData.role === 'school' ? 'Coordinator / Headmaster Name' : 
-                     formData.role === 'industry' ? 'Company Representative Name' : 'Full Candidate Name (Nama Lengkap)'}
+                    {formData.role === 'school' ? 'Nama Koordinator / Kepala Sekolah' : 
+                     formData.role === 'industry' ? 'Nama Perwakilan Perusahaan' : 'Nama Lengkap'}
                   </label>
                   <input 
                     type="text" 
                     name="name" 
                     required 
-                    placeholder={formData.role === 'school' ? 'e.g. Drs. H. Ahmad Wijaya' : formData.role === 'industry' ? 'e.g. Hendra Pratama' : 'e.g. Tubagus Pratama'}
+                    placeholder="Nama Lengkap"
                     className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
                     value={formData.name} 
                     onChange={handleChange} 
@@ -308,14 +306,14 @@ export const RegisterPage: React.FC = () => {
                 {formData.role === 'student' ? (
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      NISN (Nomor Induk Siswa Nasional - 10 Digit)
+                      NISN (10 Digit)
                     </label>
                     <input 
                       type="text" 
                       name="nisn" 
                       required 
                       maxLength={10}
-                      placeholder="e.g. 0071234501"
+                      placeholder="NISN"
                       className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none font-mono tracking-wider" 
                       value={formData.nisn} 
                       onChange={handleChange} 
@@ -323,11 +321,11 @@ export const RegisterPage: React.FC = () => {
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Organization Code / NPWP</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Kode Organisasi / NPWP</label>
                     <input 
                       type="text" 
                       name="nisn" 
-                      placeholder="e.g. REG-2025-01"
+                      placeholder="Kode Organisasi / NPWP"
                       className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
                       value={formData.nisn} 
                       onChange={handleChange} 
@@ -338,12 +336,12 @@ export const RegisterPage: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
                   <input 
                     type="email" 
                     name="email" 
                     required 
-                    placeholder={formData.role === 'school' ? 'admin@smkn1cikarang.sch.id' : formData.role === 'industry' ? 'hr@hyundai.co.id' : 'tubagus@gmail.com'}
+                    placeholder="Email"
                     className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
                     value={formData.email} 
                     onChange={handleChange} 
@@ -351,12 +349,12 @@ export const RegisterPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Phone / WhatsApp Number (No. HP / WA)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Nomor HP / WhatsApp</label>
                   <input 
                     type="tel" 
                     name="phone" 
                     required 
-                    placeholder="e.g. 0812-3456-7890"
+                    placeholder="Nomor HP / WhatsApp"
                     className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
                     value={formData.phone} 
                     onChange={handleChange} 
@@ -404,7 +402,7 @@ export const RegisterPage: React.FC = () => {
               {formData.role === 'student' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Vocational School (Pilih SMK Mitra)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Pilih SMK Mitra</label>
                     <select 
                       name="school" 
                       className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white"
@@ -438,7 +436,7 @@ export const RegisterPage: React.FC = () => {
                     <input 
                       type="text" 
                       name="schoolToken" 
-                      placeholder={`Contoh Token ${currentSelectedSchool?.name}: ${currentSelectedSchool?.registrationToken || 'SMK1CIK-2025'}`}
+                      placeholder="Kode Token Registrasi Sekolah"
                       className={`w-full p-2.5 border rounded-lg text-xs font-mono uppercase tracking-wider focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white ${
                         isTokenMatch ? 'border-emerald-400 ring-1 ring-emerald-300' : 'border-slate-300'
                       }`}
@@ -446,12 +444,12 @@ export const RegisterPage: React.FC = () => {
                       onChange={handleChange} 
                     />
                     <p className="text-[11px] text-slate-500 leading-relaxed">
-                      💡 Minta kode token pendaftaran dari guru atau koordinator BKK sekolah Anda untuk validasi keaslian institusi asal.
+                      💡 Masukkan kode token pendaftaran dari guru atau koordinator BKK sekolah Anda.
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Major / Vocational Specialization (Jurusan Vokasi EV)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Jurusan Vokasi EV</label>
                     <select 
                       name="major" 
                       className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white"
@@ -483,10 +481,11 @@ export const RegisterPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Province</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Provinsi</label>
                       <input 
                         type="text" 
                         name="province" 
+                        placeholder="Provinsi"
                         value={formData.province} 
                         onChange={handleChange}
                         className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
@@ -494,10 +493,11 @@ export const RegisterPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">City / Regency</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Kota / Kabupaten</label>
                       <input 
                         type="text" 
                         name="city" 
+                        placeholder="Kota / Kabupaten"
                         value={formData.city} 
                         onChange={handleChange}
                         className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
@@ -511,12 +511,12 @@ export const RegisterPage: React.FC = () => {
               {formData.role === 'industry' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Company Name (Nama Perusahaan Industri)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Nama Perusahaan</label>
                     <input 
                       type="text" 
                       name="companyName" 
                       required 
-                      placeholder="e.g. PT Hyundai Motor Manufacturing Indonesia"
+                      placeholder="Nama Perusahaan"
                       className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
                       value={formData.companyName} 
                       onChange={handleChange} 
@@ -524,11 +524,11 @@ export const RegisterPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Nama Direktur Perusahaan / Managing Director Name</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Nama Direktur Perusahaan</label>
                     <input 
                       type="text" 
                       name="directorName" 
-                      placeholder="e.g. Bpk. Ir. H. Bambang Soesilo, M.T."
+                      placeholder="Nama Direktur Perusahaan"
                       className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
                       value={formData.directorName} 
                       onChange={handleChange} 
@@ -537,22 +537,22 @@ export const RegisterPage: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Nama PIC Rekrutmen / Contact Person</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Nama PIC Rekrutmen</label>
                       <input 
                         type="text" 
                         name="picName" 
-                        placeholder="e.g. Hendra Pratama, S.Psi"
+                        placeholder="Nama PIC Rekrutmen"
                         className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
                         value={formData.picName} 
                         onChange={handleChange} 
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Jabatan PIC (Role / Title)</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Jabatan PIC</label>
                       <input 
                         type="text" 
                         name="picRole" 
-                        placeholder="e.g. Senior Talent Acquisition Manager"
+                        placeholder="Jabatan PIC"
                         className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
                         value={formData.picRole} 
                         onChange={handleChange} 
@@ -578,10 +578,11 @@ export const RegisterPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Plant / Office Location</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Lokasi Pabrik / Kantor</label>
                       <input 
                         type="text" 
                         name="officeCity" 
+                        placeholder="Lokasi Pabrik / Kantor"
                         value={formData.officeCity} 
                         onChange={handleChange}
                         className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
@@ -595,12 +596,12 @@ export const RegisterPage: React.FC = () => {
               {formData.role === 'school' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">School Official Name</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Nama Resmi Sekolah</label>
                     <input 
                       type="text" 
                       name="schoolName" 
                       required 
-                      placeholder="e.g. SMKN 1 Cikarang Barat"
+                      placeholder="Nama Resmi Sekolah"
                       className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
                       value={formData.schoolName} 
                       onChange={handleChange} 

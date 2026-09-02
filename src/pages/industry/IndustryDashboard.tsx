@@ -384,7 +384,7 @@ export const IndustryDashboard: React.FC = () => {
             value={picFormData.name} 
             onChange={(e) => setPicFormData({ ...picFormData, name: e.target.value })} 
             required 
-            placeholder="e.g. Hendra Pratama, S.Psi"
+            placeholder="Nama Lengkap PIC"
           />
 
           <Input 
@@ -392,7 +392,7 @@ export const IndustryDashboard: React.FC = () => {
             value={picFormData.role} 
             onChange={(e) => setPicFormData({ ...picFormData, role: e.target.value })} 
             required 
-            placeholder="e.g. Senior Talent Acquisition Lead"
+            placeholder="Jabatan / Posisi PIC"
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -402,13 +402,14 @@ export const IndustryDashboard: React.FC = () => {
               value={picFormData.email} 
               onChange={(e) => setPicFormData({ ...picFormData, email: e.target.value })} 
               required 
+              placeholder="Email"
             />
             <Input 
               label="No. WhatsApp / Telepon PIC" 
               value={picFormData.phone} 
               onChange={(e) => setPicFormData({ ...picFormData, phone: e.target.value })} 
               required 
-              placeholder="e.g. 0812-3456-7890"
+              placeholder="Nomor HP / WhatsApp"
             />
           </div>
 

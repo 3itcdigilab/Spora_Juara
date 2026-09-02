@@ -155,14 +155,14 @@ export const IndustryInterviews: React.FC = () => {
             label="Candidate Name" 
             value={formData.candidateName} 
             onChange={(e) => setFormData({ ...formData, candidateName: e.target.value })} 
-            placeholder="e.g. Usman Domiri" 
+            placeholder="Nama Lengkap Kandidat" 
             required 
           />
           <Input 
             label="Interviewer Name / Panel" 
             value={formData.interviewerName} 
             onChange={(e) => setFormData({ ...formData, interviewerName: e.target.value })} 
-            placeholder="e.g. Hendra Pratama (HR Lead)" 
+            placeholder="Nama Pewawancara / Panel HR" 
             required 
           />
           <Input 
