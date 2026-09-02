@@ -68,7 +68,7 @@ export const LoginPage: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="email">
-              Email Address / NISN (10 Digit Siswa)
+              Email / NISN
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -79,7 +79,7 @@ export const LoginPage: React.FC = () => {
                 type="text"
                 required
                 className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0099B8] focus:border-[#0099B8] bg-white shadow-sm sm:text-sm"
-                placeholder="sporaadmin@spora.id atau NISN: 0071234501"
+                placeholder="Email / NISN"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(''); }}
               />
@@ -142,41 +142,6 @@ export const LoginPage: React.FC = () => {
             </Button>
           </div>
         </form>
-
-        {/* Quick Demo Credentials */}
-        <div className="mt-6 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1.5">
-          <p className="font-bold text-slate-700 flex items-center gap-1">🔑 Quick Demo Accounts (Klik untuk Isi):</p>
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            <button 
-              type="button" 
-              onClick={() => { setEmail('sporaadmin@spora.id'); setPassword('sporagreenenergy'); }}
-              className="px-2 py-1 bg-white border rounded text-[11px] font-semibold text-slate-700 hover:bg-cyan-50 hover:text-[#0099B8]"
-            >
-              Admin
-            </button>
-            <button 
-              type="button" 
-              onClick={() => { setEmail('0071234501'); setPassword('123'); }}
-              className="px-2 py-1 bg-white border rounded text-[11px] font-semibold text-slate-700 hover:bg-cyan-50 hover:text-[#0099B8]"
-            >
-              Siswa (via NISN: 0071234501)
-            </button>
-            <button 
-              type="button" 
-              onClick={() => { setEmail('smkn1cikarang@spora.id'); setPassword('123'); }}
-              className="px-2 py-1 bg-white border rounded text-[11px] font-semibold text-slate-700 hover:bg-cyan-50 hover:text-[#0099B8]"
-            >
-              SMKN 1 Cikarang
-            </button>
-            <button 
-              type="button" 
-              onClick={() => { setEmail('hyundai@spora.id'); setPassword('123'); }}
-              className="px-2 py-1 bg-white border rounded text-[11px] font-semibold text-slate-700 hover:bg-cyan-50 hover:text-[#0099B8]"
-            >
-              Hyundai EV
-            </button>
-          </div>
-        </div>
 
         <div className="mt-6 text-center text-sm border-t pt-4">
           <p className="text-slate-600">
