@@ -201,9 +201,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         province: dataOrEmail.province || 'Jawa Barat',
         city: dataOrEmail.city || 'Kabupaten Bekasi',
         status: 'active',
-        skills: ['High Voltage Safety', 'EV Battery Assembly', '5S Standards'],
-        languages: ['Bahasa Indonesia', 'English'],
-        score: 85,
+        score: typeof dataOrEmail.score === 'number' ? dataOrEmail.score : 85,
         profileCompletion: 90
       };
       addItem('students', studentEntry);

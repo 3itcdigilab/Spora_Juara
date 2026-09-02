@@ -22,9 +22,29 @@ export const StudentDashboard: React.FC = () => {
   const userName = rawName.includes('@') ? (savedProfile?.fullName || 'Kandidat') : rawName;
   const profileCompletion = 85;
 
+  const cachedScoreObj = (() => {
+    try {
+      const raw = localStorage.getItem('spora_current_talent_score');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
+
   const talentScore = localDB.getTalentScore(studentEmail);
   const aiReport = openRouterService.getReportByStudentId(studentEmail);
-  const realScore = talentScore?.overall || (aiReport as any)?.score || (talentScore?.dimensions ? Math.round(talentScore.dimensions.reduce((a: number, b: any) => a + (b.score * b.weight), 0)) : 88);
+  
+  const realScore = (typeof talentScore?.overall === 'number' && talentScore.overall > 0)
+    ? talentScore.overall
+    : (cachedScoreObj && cachedScoreObj.email === studentEmail && typeof cachedScoreObj.score === 'number')
+    ? cachedScoreObj.score
+    : (aiReport as any)?.score || (user as any)?.score || 85;
+
+  const tierText = realScore >= 85 
+    ? 'Tier 1 Competency' 
+    : realScore >= 70 
+    ? 'Tier 2 Competency' 
+    : 'Tier 3 Competency';
 
   const allJobs = localDB.getJobs();
   const activeJobs = allJobs.filter((j: any) => j.status === 'open' || j.status === 'published' || j.status === 'active');
@@ -99,7 +119,7 @@ export const StudentDashboard: React.FC = () => {
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">AI Talent Score</p>
             <h3 className="text-2xl font-extrabold text-[#0099B8] mt-1">{realScore}<span className="text-xs text-slate-400 font-normal">/100</span></h3>
-            <p className="text-[11px] text-emerald-600 font-bold mt-0.5">Tier 1 Competency</p>
+            <p className="text-[11px] text-emerald-600 font-bold mt-0.5">{tierText}</p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-[#0099B8] font-bold">
             <Target size={24} />

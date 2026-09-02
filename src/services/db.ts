@@ -320,17 +320,39 @@ export const localDB = {
   getTalentScore: (studentId: string) => {
     const scores = getAll('talent_scores');
     const cleanId = studentId ? studentId.toLowerCase().trim() : '';
-    const found = scores.find((s: any) => (s.studentId || '').toLowerCase().trim() === cleanId);
+    
+    // 1. Check exact match in talent_scores
+    const found = scores.find((s: any) => 
+      (s.studentId && s.studentId.toLowerCase().trim() === cleanId) ||
+      (s.id && s.id.toLowerCase().trim() === `score-${cleanId}`)
+    );
     if (found) return found;
 
+    // 2. Check in students collection
+    const students = getAll('students');
+    const matchedStudent = students.find((st: any) => 
+      (st.email && st.email.toLowerCase().trim() === cleanId) ||
+      (st.id && st.id.toLowerCase().trim() === cleanId) ||
+      (st.nisn && st.nisn.toString().trim() === cleanId)
+    );
+    
+    // 3. Check in users collection
+    const users = getAll('users');
+    const matchedUser = users.find((u: any) =>
+      (u.email && u.email.toLowerCase().trim() === cleanId) ||
+      (u.nisn && u.nisn.toString().trim() === cleanId)
+    );
+
+    const calculatedScore = matchedStudent?.score || matchedUser?.score || 0;
+
     return {
-      overall: 88,
+      overall: calculatedScore,
       dimensions: [
-        { key: 'technical', label: 'Technical Competency', score: 85, weight: 0.25 },
-        { key: 'psychometric', label: 'Psychometric', score: 80, weight: 0.20 },
-        { key: 'learningAgility', label: 'Learning Agility', score: 90, weight: 0.15 },
-        { key: 'safety', label: 'Safety Protocols', score: 95, weight: 0.15 },
-        { key: 'communication', label: 'Communication', score: 82, weight: 0.10 }
+        { key: 'technical', label: 'Technical & Green Energy', score: calculatedScore, weight: 0.25, color: '#10B981' },
+        { key: 'safety', label: 'High Voltage Safety', score: calculatedScore, weight: 0.25, color: '#0099B8' },
+        { key: 'psychometric', label: 'Work Style & 5S', score: calculatedScore, weight: 0.20, color: '#8B5CF6' },
+        { key: 'learningAgility', label: 'Learning Agility', score: calculatedScore, weight: 0.15, color: '#F59E0B' },
+        { key: 'communication', label: 'Communication & Teamwork', score: calculatedScore, weight: 0.15, color: '#3B82F6' }
       ]
     };
   },

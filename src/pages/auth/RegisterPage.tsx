@@ -159,6 +159,7 @@ export const RegisterPage: React.FC = () => {
       ...formData,
       name: finalName,
       school: finalSchool,
+      score: result.percentage,
       isSchoolVerified: isTokenMatch
     };
 
@@ -166,10 +167,11 @@ export const RegisterPage: React.FC = () => {
 
     // Save student calculated Talent Score & Assessment Results
     const studentEmail = payload.email.toLowerCase().trim();
+    localStorage.setItem('spora_current_talent_score', JSON.stringify({ score: result.percentage, email: studentEmail, dimensions: result.dimensions }));
     
     // Save Talent Score with dynamic dimensions
     localDB.saveTalentScore({
-      id: `score-${Date.now()}`,
+      id: `score-${studentEmail}`,
       studentId: studentEmail,
       overall: result.percentage,
       dimensions: [
