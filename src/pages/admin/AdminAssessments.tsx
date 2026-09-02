@@ -16,31 +16,22 @@ import { mockAssessments } from '../../data/assessments';
 import { mockStudents } from '../../data/students';
 import { openRouterService } from '../../services/OpenRouterAI';
 import { AIPsychologicalReport } from '../../data/types';
+import { getAll, addItem, updateItem, removeItem } from '../../services/firestoreSync';
 
 export const AdminAssessments: React.FC = () => {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'questions' | 'ai_reports'>('ai_reports');
 
-  // Assessment Modules State
+  // Assessment Modules State backed by Firestore
   const [assessments, setAssessments] = useState<any[]>(() => {
-    const raw = localStorage.getItem('spora_assessments_db');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed.length > 0) return parsed;
-    }
-    localStorage.setItem('spora_assessments_db', JSON.stringify(mockAssessments));
-    return mockAssessments;
+    const fromFs = getAll('assessments');
+    return fromFs.length > 0 ? fromFs : mockAssessments;
   });
 
-  // Questions Database State
+  // Questions Database State backed by Firestore
   const [questionsDb, setQuestionsDb] = useState<any[]>(() => {
-    const raw = localStorage.getItem('spora_questions_db');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed.length >= defaultQuestionBank.length) return parsed;
-    }
-    localStorage.setItem('spora_questions_db', JSON.stringify(defaultQuestionBank));
-    return defaultQuestionBank;
+    const fromFs = getAll('questions');
+    return fromFs.length > 0 ? fromFs : defaultQuestionBank;
   });
 
   // AI Psychological Reports State
@@ -169,14 +160,15 @@ export const AdminAssessments: React.FC = () => {
 
     if (editingAssessment) {
       updatedList = updatedList.map(a => a.id === editingAssessment.id ? { ...a, ...moduleFormData } : a);
+      updateItem('assessments', editingAssessment.id, moduleFormData);
       showToast(`Modul asesmen "${moduleFormData.title}" diperbarui.`, 'success');
     } else {
       const newEntry = { id: `ass-${Date.now()}`, ...moduleFormData, questionsCount: 0 };
       updatedList.unshift(newEntry);
+      addItem('assessments', newEntry);
       showToast(`Modul asesmen baru "${moduleFormData.title}" berhasil dibuat!`, 'success');
     }
 
-    localStorage.setItem('spora_assessments_db', JSON.stringify(updatedList));
     setAssessments(updatedList);
     setIsModuleModalOpen(false);
   };
@@ -185,7 +177,7 @@ export const AdminAssessments: React.FC = () => {
     if (!window.confirm(`Hapus modul asesmen "${title}"?`)) return;
 
     const filtered = assessments.filter(a => a.id !== id);
-    localStorage.setItem('spora_assessments_db', JSON.stringify(filtered));
+    removeItem('assessments', id);
     setAssessments(filtered);
     showToast(`Modul asesmen "${title}" dihapus.`, 'warning');
   };
@@ -240,18 +232,19 @@ export const AdminAssessments: React.FC = () => {
 
     if (editingQuestion) {
       currentQuestions = currentQuestions.map(q => q.id === editingQuestion.id ? newQuestionObj : q);
+      updateItem('questions', editingQuestion.id, newQuestionObj);
       showToast('Soal & Kunci Jawaban diperbarui.', 'success');
     } else {
       currentQuestions.push(newQuestionObj);
+      addItem('questions', newQuestionObj);
       showToast('Soal & Kunci Jawaban baru ditambahkan!', 'success');
     }
 
-    localStorage.setItem('spora_questions_db', JSON.stringify(currentQuestions));
     setQuestionsDb(currentQuestions);
 
     const updatedCount = currentQuestions.filter(q => q.assessmentId === selectedAssessmentForQuestions.id).length;
     const updatedModules = assessments.map(a => a.id === selectedAssessmentForQuestions.id ? { ...a, questionsCount: updatedCount } : a);
-    localStorage.setItem('spora_assessments_db', JSON.stringify(updatedModules));
+    updateItem('assessments', selectedAssessmentForQuestions.id, { questionsCount: updatedCount });
     setAssessments(updatedModules);
 
     setIsQuestionFormOpen(false);
@@ -261,13 +254,13 @@ export const AdminAssessments: React.FC = () => {
     if (!window.confirm('Hapus soal ini dari bank pertanyaan?')) return;
 
     const filtered = questionsDb.filter(q => q.id !== qId);
-    localStorage.setItem('spora_questions_db', JSON.stringify(filtered));
+    removeItem('questions', qId);
     setQuestionsDb(filtered);
 
     if (selectedAssessmentForQuestions) {
       const updatedCount = filtered.filter(q => q.assessmentId === selectedAssessmentForQuestions.id).length;
       const updatedModules = assessments.map(a => a.id === selectedAssessmentForQuestions.id ? { ...a, questionsCount: updatedCount } : a);
-      localStorage.setItem('spora_assessments_db', JSON.stringify(updatedModules));
+      updateItem('assessments', selectedAssessmentForQuestions.id, { questionsCount: updatedCount });
       setAssessments(updatedModules);
     }
 

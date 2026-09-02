@@ -1,4 +1,5 @@
 import { AIPsychologicalReport } from '../data/types';
+import { getAll, addItem, updateItem } from './firestoreSync';
 
 export interface OpenRouterConfig {
   apiKey: string;
@@ -7,7 +8,6 @@ export interface OpenRouterConfig {
 }
 
 const DEFAULT_MODEL = 'deepseek/deepseek-chat';
-const REPORTS_STORAGE_KEY = 'spora_ai_reports_db';
 
 export const openRouterService = {
   getApiKey: (): string => {
@@ -35,15 +35,10 @@ export const openRouterService = {
   },
 
   /**
-   * Retrieves all saved psychological assessment reports
+   * Retrieves all saved psychological assessment reports from Cloud Firestore
    */
   getAllReports: (): (AIPsychologicalReport & { studentName?: string; nisn?: string; schoolName?: string; score?: number })[] => {
-    try {
-      const raw = localStorage.getItem(REPORTS_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) {
-      return [];
-    }
+    return getAll('ai_reports');
   },
 
   /**
@@ -56,20 +51,19 @@ export const openRouterService = {
   },
 
   /**
-   * Saves a report to persistent local storage
+   * Saves a report directly to Cloud Firestore collection 'ai_reports'
    */
   saveReport: (report: AIPsychologicalReport & { studentName?: string; nisn?: string; schoolName?: string; score?: number }): void => {
     try {
-      const reports = openRouterService.getAllReports();
-      const existingIdx = reports.findIndex(r => r.studentId?.toLowerCase().trim() === report.studentId?.toLowerCase().trim());
-      if (existingIdx >= 0) {
-        reports[existingIdx] = { ...reports[existingIdx], ...report };
+      const reports = getAll('ai_reports');
+      const existing = reports.find(r => r.studentId?.toLowerCase().trim() === report.studentId?.toLowerCase().trim());
+      if (existing) {
+        updateItem('ai_reports', existing.id || existing._docId, report);
       } else {
-        reports.unshift(report);
+        addItem('ai_reports', report);
       }
-      localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(reports));
     } catch (e) {
-      console.error('Failed to save AI report:', e);
+      console.error('Failed to save AI report to Firestore:', e);
     }
   },
 
@@ -108,7 +102,7 @@ export const openRouterService = {
       id: `ai-rep-${Date.now()}`,
       studentId: params.studentId,
       generatedAt: new Date().toISOString(),
-      modelUsed: apiKey ? model : 'Spora Industrial AI Heuristic Engine (Local)',
+      modelUsed: apiKey ? `OpenRouter (${model})` : 'Spora Industrial AI Heuristic Engine (Local)',
       archetype: params.personalityType || 'The High-Voltage Safety Champion & Precision Specialist',
       summary: `Kandidat ${params.studentName} (${params.major || 'Teknik Otomotif EV'}) menunjukkan profil kerja dengan kesadaran K3 tinggi (${safetyScore}%) dan etos kerja industri solid (${psychoScore}%). Sangat direkomendasikan untuk lingkungan manufaktur perakitan baterai dan pemeliharaan powertrain kendaraan listrik yang menuntut ketelitian tinggi.`,
       bigFiveTraits: {
@@ -243,7 +237,7 @@ Hasilkan laporan analisis psikologis mendalam dalam format JSON murni TANPA mark
       }
     }
 
-    // Persist to central reports storage
+    // Persist to central Cloud Firestore reports collection
     openRouterService.saveReport({
       ...resultReport,
       studentName: params.studentName,
