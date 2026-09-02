@@ -121,7 +121,7 @@ export const RegisterPage: React.FC = () => {
       setFormData(prev => ({
         ...prev,
         school: matchedSchool.name,
-        province: matchedSchool.province || prev.province,
+        province: (matchedSchool as any).province || prev.province,
         city: matchedSchool.city || prev.city
       }));
     } else if (formData.role === 'student') {
@@ -506,7 +506,7 @@ export const RegisterPage: React.FC = () => {
                             <ShieldCheck size={12} /> Institusi Mitra Resmi Terdeteksi
                           </p>
                           <h4 className="text-sm font-extrabold text-slate-900">{matchedSchool.name}</h4>
-                          <p className="text-xs text-slate-500 font-medium">{matchedSchool.city}, {matchedSchool.province || 'Indonesia'}</p>
+                          <p className="text-xs text-slate-500 font-medium">{matchedSchool.city}, {(matchedSchool as any).province || 'Indonesia'}</p>
                         </div>
                       </div>
                     ) : formData.schoolToken.trim().length > 0 ? (
