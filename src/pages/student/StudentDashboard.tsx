@@ -24,7 +24,7 @@ export const StudentDashboard: React.FC = () => {
 
   const talentScore = localDB.getTalentScore(studentEmail);
   const aiReport = openRouterService.getReportByStudentId(studentEmail);
-  const realScore = talentScore?.overall || aiReport?.score || (talentScore?.dimensions ? Math.round(talentScore.dimensions.reduce((a: number, b: any) => a + (b.score * b.weight), 0)) : 88);
+  const realScore = talentScore?.overall || (aiReport as any)?.score || (talentScore?.dimensions ? Math.round(talentScore.dimensions.reduce((a: number, b: any) => a + (b.score * b.weight), 0)) : 88);
 
   const allJobs = localDB.getJobs();
   const activeJobs = allJobs.filter((j: any) => j.status === 'open' || j.status === 'published' || j.status === 'active');

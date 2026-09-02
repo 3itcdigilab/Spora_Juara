@@ -14,7 +14,7 @@ export const StudentAssessments: React.FC = () => {
   
   const talentScore = localDB.getTalentScore(studentEmail);
   const aiReport = openRouterService.getReportByStudentId(studentEmail);
-  const overallScore = talentScore?.overall || aiReport?.score || (talentScore?.dimensions ? Math.round(talentScore.dimensions.reduce((a: number, b: any) => a + (b.score * b.weight), 0)) : 88);
+  const overallScore = talentScore?.overall || (aiReport as any)?.score || (talentScore?.dimensions ? Math.round(talentScore.dimensions.reduce((a: number, b: any) => a + (b.score * b.weight), 0)) : 88);
 
   return (
     <div className="max-w-5xl mx-auto pb-10 space-y-6 font-sans">
