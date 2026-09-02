@@ -291,7 +291,7 @@ export const AdminSchools: React.FC = () => {
               <tr className="bg-slate-100 text-slate-600 border-b text-xs font-bold uppercase">
                 <th className="p-4">Nama Institusi Pendidikan</th>
                 <th className="p-4">Email Kontak</th>
-                <th className="p-4 text-center">Token Registrasi (Anti-Palsu)</th>
+                <th className="p-4 text-center">Token Registrasi</th>
                 <th className="p-4 text-center">Siswa Enrolled</th>
                 <th className="p-4">Status Verifikasi</th>
                 <th className="p-4 text-right">Aksi Admin (CRUD)</th>
@@ -393,9 +393,9 @@ export const AdminSchools: React.FC = () => {
             />
           </div>
 
-          <div className="p-3 bg-cyan-50/50 rounded-xl border border-cyan-200 space-y-1">
+          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
             <label className="block text-xs font-bold text-slate-800 flex items-center gap-1">
-              <Key size={13} className="text-[#0099B8]" /> Token Registrasi Siswa Resmi (Anti-Palsu)
+              <Key size={13} className="text-[#0099B8]" /> Token Registrasi Siswa
             </label>
             <input 
               type="text" 
@@ -405,7 +405,7 @@ export const AdminSchools: React.FC = () => {
               required
               placeholder="Contoh: SMK1CIK-2025"
             />
-            <p className="text-[10px] text-slate-500">Token ini akan dibagikan ke siswa agar terverifikasi asli dari sekolah ini saat registrasi.</p>
+            <p className="text-[10px] text-slate-500">Token ini akan dibagikan ke siswa sekolah ini untuk pendaftaran akun.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -466,19 +466,15 @@ export const RegisterPage: React.FC = () => {
               {/* Student Fields */}
               {formData.role === 'student' && (
                 <>
-                  {/* PURE TOKEN-BASED SCHOOL IDENTIFICATION (ANTI-FRAUD / ANTI-PEMALSUAN) */}
-                  <div className="p-5 bg-gradient-to-r from-slate-50 via-cyan-50/40 to-blue-50/30 rounded-2xl border border-cyan-200 space-y-3">
+                  {/* TOKEN-BASED SCHOOL IDENTIFICATION */}
+                  <div className="p-5 bg-slate-50/70 rounded-2xl border border-slate-200 space-y-3">
                     <div className="flex justify-between items-center">
-                      <label className="block text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
-                        <Key size={16} className="text-[#0099B8]" /> Token Registrasi Sekolah (Wajib Diisi)
+                      <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <Key size={15} className="text-[#0099B8]" /> Token Registrasi Sekolah
                       </label>
-                      {isTokenMatch ? (
-                        <span className="text-xs font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs animate-fadeIn">
-                          <ShieldCheck size={14} /> Terverifikasi Asli ✓
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md font-bold">
-                          Anti-Pemalsuan Institusi
+                      {isTokenMatch && (
+                        <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-fadeIn">
+                          <ShieldCheck size={13} /> Terverifikasi ✓
                         </span>
                       )}
                     </div>
@@ -486,39 +482,35 @@ export const RegisterPage: React.FC = () => {
                     <input 
                       type="text" 
                       name="schoolToken" 
-                      placeholder="Masukkan Kode Token Resmi Sekolah Anda (contoh: SMK1CIK-2025)"
-                      className={`w-full p-3 border rounded-xl text-sm font-mono uppercase font-black tracking-widest focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white shadow-inner transition ${
-                        isTokenMatch ? 'border-emerald-500 ring-2 ring-emerald-200 text-emerald-900' : 'border-slate-300 text-slate-800'
+                      placeholder="Token Registrasi Sekolah"
+                      className={`w-full p-3 border rounded-xl text-sm font-mono uppercase font-bold tracking-widest focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white transition ${
+                        isTokenMatch ? 'border-emerald-500 ring-1 ring-emerald-200 text-emerald-900' : 'border-slate-300 text-slate-800'
                       }`}
                       value={formData.schoolToken} 
                       onChange={handleChange} 
                       required
                     />
 
-                    {/* Live School Recognition Feedback Card */}
+                    {/* School Recognition Feedback Card */}
                     {isTokenMatch && matchedSchool ? (
-                      <div className="p-3.5 bg-white rounded-xl border border-emerald-300 shadow-sm flex items-center gap-3.5 animate-fadeIn">
-                        <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold">
-                          <School size={22} />
+                      <div className="p-3.5 bg-white rounded-xl border border-emerald-200 shadow-sm flex items-center gap-3.5 animate-fadeIn">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 font-bold">
+                          <School size={20} />
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase font-bold text-emerald-700 tracking-wider flex items-center gap-1">
-                            <ShieldCheck size={12} /> Institusi Mitra Resmi Terdeteksi
+                          <p className="text-[10px] uppercase font-bold text-emerald-600 tracking-wider">
+                            Institusi Terverifikasi
                           </p>
                           <h4 className="text-sm font-extrabold text-slate-900">{matchedSchool.name}</h4>
-                          <p className="text-xs text-slate-500 font-medium">{matchedSchool.city}, {(matchedSchool as any).province || 'Indonesia'}</p>
+                          <p className="text-xs text-slate-500">{matchedSchool.city}, {(matchedSchool as any).province || 'Indonesia'}</p>
                         </div>
                       </div>
                     ) : formData.schoolToken.trim().length > 0 ? (
-                      <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-700 font-semibold flex items-center gap-2 animate-fadeIn">
-                        <AlertCircle size={16} className="shrink-0" />
-                        <span>Token tidak valid atau belum terdaftar di sistem. Minta kode token resmi dari guru atau koordinator BKK sekolah Anda.</span>
+                      <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-700 font-medium flex items-center gap-2 animate-fadeIn">
+                        <AlertCircle size={15} className="shrink-0" />
+                        <span>Token tidak valid. Silakan periksa kembali kode token dari sekolah Anda.</span>
                       </div>
-                    ) : (
-                      <p className="text-[11px] text-slate-500 leading-relaxed">
-                        💡 <strong>Sistem Validasi Anti-Pemalsuan</strong>: Anda tidak perlu memilih nama sekolah secara manual. Cukup masukkan token resmi dari sekolah Anda, dan sistem akan mengidentifikasi SMK asal secara otomatis.
-                      </p>
-                    )}
+                    ) : null}
                   </div>
 
                   <div>
