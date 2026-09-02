@@ -4,10 +4,13 @@ export interface ExtendedStudent extends Student {
   name: string;
   fullName?: string;
   email: string;
+  nisn: string;
   phone?: string;
   bio?: string;
   schoolName: string;
   school: string;
+  schoolToken?: string;
+  isSchoolVerified?: boolean;
   score: number;
 }
 
@@ -70,11 +73,12 @@ const bioPool = [
   'Terampil dalam pemeliharaan preventif charging station (SPKLU), sistem proteksi arus bocor, dan kelistrikan industri.'
 ];
 
-export const mockStudents: (Student & { name: string; fullName: string; email: string; phone: string; bio: string; schoolName: string; school: string; score: number })[] = Array.from({ length: 100 }, (_, idx) => {
+export const mockStudents: (Student & { name: string; fullName: string; email: string; nisn: string; phone: string; bio: string; schoolName: string; school: string; score: number })[] = Array.from({ length: 100 }, (_, idx) => {
   const fName = firstNames[idx % firstNames.length];
   const lName = lastNames[(idx * 3 + 7) % lastNames.length];
   const fullName = `${fName} ${lName}`;
   const email = `${fName.toLowerCase()}.${lName.toLowerCase()}${idx + 1}@spora.id`;
+  const nisn = `007${(1234500 + idx + 1).toString().padStart(7, '0')}`;
   const schoolObj = schoolPool[idx % schoolPool.length];
   const major = majorPool[idx % majorPool.length];
   const skills = skillPool[idx % skillPool.length];
@@ -88,11 +92,13 @@ export const mockStudents: (Student & { name: string; fullName: string; email: s
     name: fullName,
     fullName: fullName,
     email: email,
+    nisn: nisn,
     phone: `0812${(10000000 + idx * 83457).toString().slice(0, 8)}`,
     bio: bio,
     schoolId: schoolObj.schoolId,
     schoolName: schoolObj.name,
     school: schoolObj.name,
+    isSchoolVerified: true,
     major: major,
     graduationYear: gradYear,
     province: schoolObj.province,

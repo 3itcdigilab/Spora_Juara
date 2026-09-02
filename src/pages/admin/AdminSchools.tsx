@@ -9,6 +9,7 @@ import { Input } from '../../components/ui/Input';
 import { useToast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { localDB } from '../../services/db';
+import { mockSchools } from '../../data/schools';
 import { School, Plus, Edit2, Trash2, GraduationCap, Users, UserPlus, Save, ExternalLink, LayoutDashboard } from 'lucide-react';
 
 import { getAll, addItem, updateItem, removeWhere } from '../../services/firestoreSync';
@@ -269,18 +270,35 @@ export const AdminSchools: React.FC = () => {
               <tr className="bg-slate-100 text-slate-600 border-b text-xs font-bold uppercase">
                 <th className="p-4">Nama Institusi Pendidikan</th>
                 <th className="p-4">Email Kontak</th>
-                <th className="p-4 text-center">Siswa / Kandidat Enrolled</th>
+                <th className="p-4 text-center">Token Registrasi (Anti-Palsu)</th>
+                <th className="p-4 text-center">Siswa Enrolled</th>
                 <th className="p-4">Status Verifikasi</th>
                 <th className="p-4 text-right">Aksi Admin (CRUD)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {users.map((s, idx) => (
+              {users.map((s, idx) => {
+                const schoolToken = s.registrationToken || s.schoolToken || (mockSchools.find(ms => ms.name.toLowerCase() === s.name?.toLowerCase())?.registrationToken) || `SMK${idx + 1}-2025`;
+                return (
                 <tr key={idx} className="hover:bg-slate-50">
                   <td className="p-4 font-bold text-slate-900 flex items-center gap-2">
                     <School size={18} className="text-[#0099B8]" /> {s.name}
                   </td>
                   <td className="p-4 text-slate-600 font-mono text-xs">{s.email}</td>
+                  <td className="p-4 text-center">
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(schoolToken);
+                        showToast(`Token "${schoolToken}" disalin ke clipboard!`, 'info');
+                      }}
+                      className="px-2.5 py-1 bg-cyan-50 border border-cyan-200 text-[#0099B8] hover:bg-cyan-100 rounded-lg text-xs font-mono font-bold inline-flex items-center gap-1 shadow-2xs"
+                      title="Klik untuk Salin Token"
+                    >
+                      <span>{schoolToken}</span>
+                      <span className="text-[10px] text-slate-400">📋</span>
+                    </button>
+                  </td>
                   <td className="p-4 text-center">
                     <Button 
                       size="sm" 
@@ -316,7 +334,8 @@ export const AdminSchools: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

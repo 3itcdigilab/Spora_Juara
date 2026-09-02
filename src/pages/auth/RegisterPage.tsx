@@ -3,9 +3,11 @@ import { useNavigate, useSearchParams, Link } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Logo } from '../../components/ui/Logo';
-import { GraduationCap, School, Factory, CheckCircle2, Phone, Mail, User, Lock, Sparkles } from 'lucide-react';
+import { GraduationCap, School, Factory, CheckCircle2, Phone, Mail, User, Lock, Sparkles, Key, ShieldCheck } from 'lucide-react';
 import { StudentOnboardingAssessment } from '../../components/assessment/StudentOnboardingAssessment';
 import { localDB } from '../../services/db';
+import { mockSchools } from '../../data/schools';
+import { openRouterService } from '../../services/OpenRouterAI';
 
 const roleMeta: Record<string, { title: string; subtitle: string; icon: any; color: string }> = {
   student: {
@@ -45,7 +47,9 @@ export const RegisterPage: React.FC = () => {
     password: '',
     confirmPassword: '',
     // Student specific
-    school: 'SMKN 1 Cikarang',
+    nisn: '',
+    school: 'SMKN 1 Cikarang Pusat',
+    schoolToken: '',
     major: 'Teknik Kendaraan Ringan (Otomotif EV)',
     graduationYear: '2025',
     province: 'Jawa Barat',
@@ -74,6 +78,9 @@ export const RegisterPage: React.FC = () => {
 
   const currentRoleMeta = roleMeta[formData.role] || roleMeta.student;
 
+  const currentSelectedSchool = mockSchools.find(s => s.name.toLowerCase() === formData.school.toLowerCase()) || mockSchools[0];
+  const isTokenMatch = formData.schoolToken.trim().toUpperCase() === currentSelectedSchool?.registrationToken?.toUpperCase();
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -90,7 +97,8 @@ export const RegisterPage: React.FC = () => {
     let finalName = formData.name.trim() || 'Tubagus';
     const payload = {
       ...formData,
-      name: finalName
+      name: finalName,
+      isSchoolVerified: isTokenMatch
     };
 
     await register(payload);
@@ -130,6 +138,20 @@ export const RegisterPage: React.FC = () => {
       completedAt: new Date().toISOString()
     });
 
+    // Trigger AI deep report generation in background if OpenRouter key exists
+    if (openRouterService.hasApiKey()) {
+      openRouterService.generatePsychologicalReport({
+        studentId: studentEmail,
+        studentName: finalName,
+        nisn: formData.nisn,
+        schoolName: formData.school,
+        major: formData.major,
+        dimensionScores: result.dimensions,
+        overallScore: result.percentage,
+        personalityType: result.archetype.title
+      }).catch(err => console.error('Background AI Report error:', err));
+    }
+
     navigate('/student/dashboard');
   };
 
@@ -137,7 +159,8 @@ export const RegisterPage: React.FC = () => {
     let finalName = formData.name.trim() || 'Tubagus';
     const payload = {
       ...formData,
-      name: finalName
+      name: finalName,
+      isSchoolVerified: isTokenMatch
     };
     await register(payload);
     navigate('/student/dashboard');
@@ -153,14 +176,15 @@ export const RegisterPage: React.FC = () => {
     // Set name fallback based on role if left empty
     let finalName = formData.name.trim();
     if (!finalName) {
-      if (formData.role === 'school') finalName = formData.schoolName || 'SMK Negeri 1 Cikarang';
+      if (formData.role === 'school') finalName = formData.schoolName || 'SMK Negeri 1 Cikarang Pusat';
       else if (formData.role === 'industry') finalName = formData.companyName || 'Hyundai Motor Indonesia';
       else finalName = 'Tubagus';
     }
 
     const payload = {
       ...formData,
-      name: finalName
+      name: finalName,
+      isSchoolVerified: isTokenMatch
     };
 
     await register(payload);
@@ -264,20 +288,52 @@ export const RegisterPage: React.FC = () => {
             <div className="space-y-4 animate-fadeIn">
               <h3 className="text-base font-bold text-slate-900 border-b pb-2">Step 1: Account Credentials</h3>
               
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {formData.role === 'school' ? 'Coordinator / Headmaster Name' : 
-                   formData.role === 'industry' ? 'Company Representative Name' : 'Full Candidate Name'}
-                </label>
-                <input 
-                  type="text" 
-                  name="name" 
-                  required 
-                  placeholder={formData.role === 'school' ? 'e.g. Drs. H. Ahmad Wijaya' : formData.role === 'industry' ? 'e.g. Hendra Pratama' : 'e.g. Tubagus'}
-                  className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
-                  value={formData.name} 
-                  onChange={handleChange} 
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    {formData.role === 'school' ? 'Coordinator / Headmaster Name' : 
+                     formData.role === 'industry' ? 'Company Representative Name' : 'Full Candidate Name (Nama Lengkap)'}
+                  </label>
+                  <input 
+                    type="text" 
+                    name="name" 
+                    required 
+                    placeholder={formData.role === 'school' ? 'e.g. Drs. H. Ahmad Wijaya' : formData.role === 'industry' ? 'e.g. Hendra Pratama' : 'e.g. Tubagus Pratama'}
+                    className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
+                    value={formData.name} 
+                    onChange={handleChange} 
+                  />
+                </div>
+
+                {formData.role === 'student' ? (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      NISN (Nomor Induk Siswa Nasional - 10 Digit)
+                    </label>
+                    <input 
+                      type="text" 
+                      name="nisn" 
+                      required 
+                      maxLength={10}
+                      placeholder="e.g. 0071234501"
+                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none font-mono tracking-wider" 
+                      value={formData.nisn} 
+                      onChange={handleChange} 
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Organization Code / NPWP</label>
+                    <input 
+                      type="text" 
+                      name="nisn" 
+                      placeholder="e.g. REG-2025-01"
+                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none" 
+                      value={formData.nisn} 
+                      onChange={handleChange} 
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -348,23 +404,54 @@ export const RegisterPage: React.FC = () => {
               {formData.role === 'student' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Vocational School (SMK)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Vocational School (Pilih SMK Mitra)</label>
                     <select 
                       name="school" 
                       className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white"
                       value={formData.school}
                       onChange={handleChange}
                     >
-                      <option value="SMKN 1 Cikarang">SMKN 1 Cikarang (Kabupaten Bekasi)</option>
-                      <option value="SMKN 2 Karawang">SMKN 2 Karawang (Kabupaten Karawang)</option>
-                      <option value="SMKN 1 Bekasi">SMKN 1 Bekasi (Kota Bekasi)</option>
-                      <option value="SMKN 5 Surabaya">SMKN 5 Surabaya (Kota Surabaya)</option>
-                      <option value="SMKN 2 Bandung">SMKN 2 Bandung (Kota Bandung)</option>
+                      {mockSchools.map(sch => (
+                        <option key={sch.id} value={sch.name}>
+                          {sch.name} ({sch.city})
+                        </option>
+                      ))}
                     </select>
                   </div>
 
+                  {/* School Token Input */}
+                  <div className="p-4 bg-gradient-to-r from-slate-50 to-cyan-50/40 rounded-xl border border-cyan-100 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <Key size={14} className="text-[#0099B8]" /> Token Registrasi Sekolah (Enrollment Token)
+                      </label>
+                      {isTokenMatch ? (
+                        <span className="text-[11px] font-extrabold text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md flex items-center gap-1">
+                          <ShieldCheck size={13} /> Token Terverifikasi ✓
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                          Wajib Diisi
+                        </span>
+                      )}
+                    </div>
+                    <input 
+                      type="text" 
+                      name="schoolToken" 
+                      placeholder={`Contoh Token ${currentSelectedSchool?.name}: ${currentSelectedSchool?.registrationToken || 'SMK1CIK-2025'}`}
+                      className={`w-full p-2.5 border rounded-lg text-xs font-mono uppercase tracking-wider focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white ${
+                        isTokenMatch ? 'border-emerald-400 ring-1 ring-emerald-300' : 'border-slate-300'
+                      }`}
+                      value={formData.schoolToken} 
+                      onChange={handleChange} 
+                    />
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      💡 Minta kode token pendaftaran dari guru atau koordinator BKK sekolah Anda untuk validasi keaslian institusi asal.
+                    </p>
+                  </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Major / Vocational Specialization</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Major / Vocational Specialization (Jurusan Vokasi EV)</label>
                     <select 
                       name="major" 
                       className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white"
@@ -373,8 +460,9 @@ export const RegisterPage: React.FC = () => {
                     >
                       <option value="Teknik Kendaraan Ringan (Otomotif EV)">Teknik Kendaraan Ringan (Otomotif EV)</option>
                       <option value="Teknik Elektronika Industri">Teknik Elektronika Industri</option>
-                      <option value="Teknik Mekatronika">Teknik Mekatronika</option>
-                      <option value="Teknik Listrik Industri">Teknik Listrik Industri</option>
+                      <option value="Teknik Mekatronika & Otomasi EV">Teknik Mekatronika & Otomasi EV</option>
+                      <option value="Teknik Baterai & Elektronika Daya">Teknik Baterai & Elektronika Daya</option>
+                      <option value="Teknik Tenaga Listrik & SPKLU">Teknik Tenaga Listrik & SPKLU</option>
                       <option value="Teknik Sepeda Motor (EV Conversion)">Teknik Sepeda Motor (EV Conversion)</option>
                     </select>
                   </div>

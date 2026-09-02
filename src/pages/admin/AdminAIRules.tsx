@@ -6,7 +6,8 @@ import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { useToast } from '../../components/ui/Toast';
 import { defaultScoreConfig } from '../../data/scoreConfig';
-import { Sparkles, Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Plus, AlertCircle, CheckCircle2, Key, Cpu, ShieldCheck, Zap } from 'lucide-react';
+import { openRouterService } from '../../services/OpenRouterAI';
 
 export const AdminAIRules: React.FC = () => {
   const { showToast } = useToast();
@@ -15,6 +16,12 @@ export const AdminAIRules: React.FC = () => {
     const saved = localStorage.getItem('spora_score_config');
     return saved ? JSON.parse(saved) : defaultScoreConfig;
   });
+
+  // OpenRouter State
+  const [apiKey, setApiKey] = useState(() => openRouterService.getApiKey());
+  const [selectedModel, setSelectedModel] = useState(() => openRouterService.getModel());
+  const [isTestingAI, setIsTestingAI] = useState(false);
+  const [testResult, setTestResult] = useState<string | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newKey, setNewKey] = useState('');
@@ -34,6 +41,46 @@ export const AdminAIRules: React.FC = () => {
       return d;
     });
     setConfig({ ...config, dimensions: updatedDims });
+  };
+
+  const handleSaveOpenRouter = () => {
+    openRouterService.setApiKey(apiKey);
+    openRouterService.setModel(selectedModel);
+    showToast('Konfigurasi OpenRouter AI berhasil disimpan!', 'success');
+  };
+
+  const handleTestOpenRouter = async () => {
+    setIsTestingAI(true);
+    setTestResult(null);
+    try {
+      openRouterService.setApiKey(apiKey);
+      openRouterService.setModel(selectedModel);
+
+      const report = await openRouterService.generatePsychologicalReport({
+        studentId: 'test-user',
+        studentName: 'Budi Pratama (Test)',
+        nisn: '0071234501',
+        schoolName: 'SMKN 1 Cikarang Pusat',
+        major: 'Teknik Kendaraan Ringan EV',
+        dimensionScores: {
+          technical: 90,
+          safety: 95,
+          psychometric: 88,
+          learningAgility: 92,
+          communication: 85
+        },
+        overallScore: 90,
+        personalityType: 'The High-Voltage Safety Champion'
+      });
+
+      setTestResult(`✓ Sukses! AI Engine (${report.modelUsed}) berhasil menganalisis profil: "${report.archetype}"`);
+      showToast('Koneksi OpenRouter AI Berhasil!', 'success');
+    } catch (err: any) {
+      setTestResult(`❌ Error: ${err.message || 'Gagal terhubung ke OpenRouter.'}`);
+      showToast('Gagal terhubung ke OpenRouter', 'error');
+    } finally {
+      setIsTestingAI(false);
+    }
   };
 
   const handleAddDimension = (e: React.FormEvent) => {
@@ -66,16 +113,108 @@ export const AdminAIRules: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 font-sans">
+    <div className="space-y-6 font-sans pb-10">
       <PageHeader 
-        title="AI Matching & Talent Rules" 
-        subtitle="Configure the 7-dimension Talent Score weights, threshold limits, and dynamic calculation rules."
+        title="AI Matching & Psychological Assessment Rules" 
+        subtitle="Konfigurasi OpenRouter LLM, bobot dimensi Talent Score, dan parameter evaluasi psikologis otomatis."
         actions={
           <Button onClick={handleSaveConfig} disabled={!isValidTotal} variant="primary" className="bg-[#0099B8] hover:bg-[#007A93]">
             Save AI Rules
           </Button>
         }
       />
+
+      {/* OpenRouter LLM Engine Integration Box */}
+      <Card className="p-6 border-l-4 border-[#0099B8] bg-gradient-to-r from-cyan-50/50 via-white to-slate-50 space-y-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-[#0099B8] text-white flex items-center justify-center shadow-md">
+              <Zap size={24} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-extrabold text-slate-900">OpenRouter AI Integration</h3>
+                {apiKey ? (
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    <ShieldCheck size={13} /> Live LLM Connected
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-bold text-slate-600 bg-slate-100 border border-slate-300 px-2.5 py-0.5 rounded-full">
+                    Local Heuristic Engine Active
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500">
+                Gunakan OpenRouter API Key untuk mengaktifkan analisis psikologis mendalam, Big Five Traits, dan evaluasi K3 otomatis.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="text-xs font-bold border-cyan-300 text-[#0099B8] bg-white hover:bg-cyan-50"
+              onClick={handleTestOpenRouter}
+              disabled={isTestingAI}
+            >
+              {isTestingAI ? '🔄 Testing...' : '⚡ Test AI Generation'}
+            </Button>
+            <Button 
+              size="sm" 
+              variant="primary" 
+              className="bg-[#0099B8] hover:bg-[#007A93] text-white text-xs font-bold"
+              onClick={handleSaveOpenRouter}
+            >
+              Simpan API Key
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+              <Key size={14} className="text-[#0099B8]" /> OpenRouter API Key
+            </label>
+            <input 
+              type="password"
+              placeholder="sk-or-v1-xxxxxxxxxxxxxxxx..."
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-[#0099B8] focus:outline-none"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">
+              Dapat diperoleh dari <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" className="text-[#0099B8] underline">openrouter.ai/keys</a>. Tersimpan aman di localStorage browser Anda.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+              <Cpu size={14} className="text-[#0099B8]" /> Model Selection
+            </label>
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              className="w-full p-2.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-[#0099B8] focus:outline-none font-medium"
+            >
+              <option value="deepseek/deepseek-chat">DeepSeek V3 (deepseek/deepseek-chat) — Cepat & Hemat</option>
+              <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet (anthropic/claude-3.5-sonnet) — Analisis Tertinggi</option>
+              <option value="meta-llama/llama-3.3-70b-instruct">Meta Llama 3.3 70B (meta-llama/llama-3.3-70b-instruct)</option>
+              <option value="google/gemini-flash-1.5">Google Gemini 1.5 Flash (google/gemini-flash-1.5)</option>
+              <option value="openai/gpt-4o-mini">OpenAI GPT-4o Mini (openai/gpt-4o-mini)</option>
+            </select>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Model yang digunakan untuk menghasilkan laporan psikometrik & behavioral assessment.
+            </p>
+          </div>
+        </div>
+
+        {testResult && (
+          <div className="p-3 bg-white border border-cyan-200 rounded-xl text-xs text-slate-700 animate-fadeIn">
+            {testResult}
+          </div>
+        )}
+      </Card>
       
       {/* Weight Summary Banner */}
       <Card className="p-6 border-l-4 border-violet-500 bg-violet-50/20">
@@ -174,23 +313,44 @@ export const AdminAIRules: React.FC = () => {
             <p className="font-bold text-slate-800 flex items-center gap-1.5">
               <CheckCircle2 size={14} className="text-emerald-600" /> Active AI Provider Engine
             </p>
-            <p>Provider: <span className="font-mono bg-white px-1.5 py-0.5 rounded border text-blue-600">MockAIProvider (Deterministic + Local DB)</span></p>
+            <p>Provider: <span className="font-mono bg-white px-1.5 py-0.5 rounded border text-blue-600">{apiKey ? `OpenRouter API (${selectedModel})` : 'Spora Local Deterministic Engine'}</span></p>
             <p>Config Version: <span className="font-mono">{config.version || '4.0.0'}</span></p>
           </div>
         </Card>
       </div>
 
-      {/* Modal Add Dimension */}
+      {/* Add Dimension Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Custom Score Dimension">
-        <form onSubmit={handleAddDimension} className="space-y-4 pt-4">
-          <Input label="Dimension Label" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder="e.g. Digital Literacy" required />
-          <Input label="Dimension Key" value={newKey} onChange={(e) => setNewKey(e.target.value)} placeholder="e.g. digital_literacy" required />
-          <Input label="Initial Weight (%)" type="number" value={newWeight} onChange={(e) => setNewWeight(parseInt(e.target.value))} required />
-          <Input label="Description" value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Description of what this measures..." />
-          
-          <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" type="button" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button type="submit">Add Dimension</Button>
+        <form onSubmit={handleAddDimension} className="space-y-4 pt-2">
+          <Input 
+            label="Dimension Key (e.g. greenEnergy, safetyProtocol)" 
+            value={newKey} 
+            onChange={(e) => setNewKey(e.target.value)} 
+            required 
+          />
+          <Input 
+            label="Dimension Display Label (e.g. Green Energy Mastery)" 
+            value={newLabel} 
+            onChange={(e) => setNewLabel(e.target.value)} 
+            required 
+          />
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Weight Percentage (%)</label>
+            <Input 
+              type="number" 
+              value={newWeight} 
+              onChange={(e) => setNewWeight(parseInt(e.target.value))} 
+              required 
+            />
+          </div>
+          <Input 
+            label="Description" 
+            value={newDescription} 
+            onChange={(e) => setNewDescription(e.target.value)} 
+          />
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button type="submit" variant="primary">Add Dimension</Button>
           </div>
         </form>
       </Modal>

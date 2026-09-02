@@ -5,9 +5,13 @@ import { getAll, addItem, updateItem, findOne } from '../services/firestoreSync'
 export interface User {
   name: string;
   email: string;
+  nisn?: string;
+  schoolToken?: string;
+  isSchoolVerified?: boolean;
   avatarUrl?: string;
   status?: 'active' | 'pending' | 'rejected';
   directorName?: string;
+  schoolName?: string;
   picName?: string;
   picPhone?: string;
   picRole?: string;
@@ -71,13 +75,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (e: string, p: string): Promise<{ success: boolean; status?: string; role?: string; message?: string }> => {
     const users = getAll('users');
-    const cleanEmail = e.toLowerCase().trim();
+    const cleanInput = e.toLowerCase().trim();
+
+    // Check by email, NISN, or username
     let foundUser = users.find((u: any) => 
-      u.email.toLowerCase().trim() === cleanEmail ||
-      (cleanEmail === 'sporaadmin' && (u.email.toLowerCase().includes('sporaadmin') || u.name?.toLowerCase().includes('sporaadmin')))
+      (u.email && u.email.toLowerCase().trim() === cleanInput) ||
+      (u.nisn && u.nisn.toString().trim() === cleanInput) ||
+      (cleanInput === 'sporaadmin' && (u.email.toLowerCase().includes('sporaadmin') || u.name?.toLowerCase().includes('sporaadmin')))
     );
 
-    if (!foundUser && (cleanEmail === 'sporaadmin' || cleanEmail === 'sporaadmin@spora.id')) {
+    if (!foundUser && (cleanInput === 'sporaadmin' || cleanInput === 'sporaadmin@spora.id')) {
       if (p === 'sporagreenenergy') {
         foundUser = {
           name: 'Spora Admin',
@@ -91,7 +98,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     if (!foundUser || foundUser.password !== p) {
-      return { success: false, message: 'Akun belum terdaftar atau password salah.' };
+      return { success: false, message: 'Akun / NISN belum terdaftar atau password salah.' };
     }
 
     const resolvedName = foundUser.name || 'User';
@@ -104,11 +111,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (studentProfile?.avatarUrl) userAvatar = studentProfile.avatarUrl;
     }
 
+    if (!userAvatar) {
+      if (roleName === 'admin') userAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
+      else if (roleName === 'industry') userAvatar = 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=150';
+      else if (roleName === 'school') userAvatar = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=150';
+      else userAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150';
+    }
+
     const newState: AuthState = {
       user: {
         ...foundUser,
         name: resolvedName,
         email: foundUser.email,
+        nisn: foundUser.nisn,
+        schoolToken: foundUser.schoolToken,
+        isSchoolVerified: foundUser.isSchoolVerified,
         avatarUrl: userAvatar,
         status: userStatus
       },
@@ -129,10 +146,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const pwd = isObj ? dataOrEmail.password : password;
     const roleName = role || (isObj ? dataOrEmail.role : 'student');
     const name = isObj && dataOrEmail.name ? dataOrEmail.name : 'Candidate';
+    const nisn = isObj ? dataOrEmail.nisn : undefined;
+    const schoolToken = isObj ? dataOrEmail.schoolToken : undefined;
+    const isSchoolVerified = isObj ? dataOrEmail.isSchoolVerified : true;
 
     const status = (roleName === 'industry' || roleName === 'school') ? 'pending' : 'active';
 
-    const newUserEntry = { ...dataOrEmail, email, password: pwd, name, role: roleName, status, avatarUrl: '' };
+    const newUserEntry = { 
+      ...dataOrEmail, 
+      email, 
+      nisn,
+      schoolToken,
+      isSchoolVerified,
+      password: pwd, 
+      name, 
+      role: roleName, 
+      status, 
+      avatarUrl: '' 
+    };
 
     const existingUser = findOne('users', (u: any) => u.email.toLowerCase() === email.toLowerCase());
 
@@ -142,11 +173,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       addItem('users', newUserEntry);
     }
 
+    // If student, also sync to students & profiles in localDB
+    if (roleName === 'student') {
+      localDB.saveProfile({
+        studentId: email.toLowerCase().trim(),
+        email: email.toLowerCase().trim(),
+        fullName: name,
+        nisn: nisn || '',
+        phone: dataOrEmail.phone || '',
+        address: `${dataOrEmail.city || ''}, ${dataOrEmail.province || ''}`,
+        bio: `Siswa vokasi EV ${dataOrEmail.school || ''} jurusan ${dataOrEmail.major || ''}.`
+      });
+
+      const studentEntry = {
+        id: `stu-${Date.now()}`,
+        userId: `user-${Date.now()}`,
+        name: name,
+        fullName: name,
+        email: email.toLowerCase().trim(),
+        nisn: nisn || '',
+        schoolName: dataOrEmail.school || 'SMKN 1 Cikarang',
+        school: dataOrEmail.school || 'SMKN 1 Cikarang',
+        schoolToken: schoolToken || '',
+        isSchoolVerified: Boolean(isSchoolVerified),
+        major: dataOrEmail.major || 'Teknik Kendaraan Ringan (Otomotif EV)',
+        graduationYear: parseInt(dataOrEmail.graduationYear, 10) || 2025,
+        province: dataOrEmail.province || 'Jawa Barat',
+        city: dataOrEmail.city || 'Kabupaten Bekasi',
+        status: 'active',
+        skills: ['High Voltage Safety', 'EV Battery Assembly', '5S Standards'],
+        languages: ['Bahasa Indonesia', 'English'],
+        score: 85,
+        profileCompletion: 90
+      };
+      addItem('students', studentEntry);
+    }
+
     const newState: AuthState = {
       user: {
         ...newUserEntry,
         name,
         email,
+        nisn,
         avatarUrl: '',
         status
       },
@@ -178,28 +246,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const approveUser = (email: string) => {
-    const existingUser = findOne('users', (u: any) => u.email.toLowerCase() === email.toLowerCase());
+    const cleanEmail = email.toLowerCase().trim();
+    const existingUser = findOne('users', (u: any) => u.email.toLowerCase() === cleanEmail);
     if (existingUser) {
       updateItem('users', existingUser.id, { status: 'active' });
-    }
-    if (state.user && state.user.email.toLowerCase() === email.toLowerCase()) {
-      setState(prev => ({
-        ...prev,
-        user: prev.user ? { ...prev.user, status: 'active' } : null
-      }));
     }
   };
 
   const rejectUser = (email: string) => {
-    const existingUser = findOne('users', (u: any) => u.email.toLowerCase() === email.toLowerCase());
+    const cleanEmail = email.toLowerCase().trim();
+    const existingUser = findOne('users', (u: any) => u.email.toLowerCase() === cleanEmail);
     if (existingUser) {
       updateItem('users', existingUser.id, { status: 'rejected' });
-    }
-    if (state.user && state.user.email.toLowerCase() === email.toLowerCase()) {
-      setState(prev => ({
-        ...prev,
-        user: prev.user ? { ...prev.user, status: 'rejected' } : null
-      }));
     }
   };
 

@@ -7,8 +7,10 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Users, TrendingUp, Award, CheckCircle, Activity, School, MessageSquare, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Users, TrendingUp, Award, CheckCircle, Activity, School, MessageSquare, AlertTriangle, ArrowRight, Key, Share2, Copy, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { mockSchools } from '../../data/schools';
+import { useToast } from '../../components/ui/Toast';
 
 interface Feedback {
   company: string;
@@ -18,8 +20,21 @@ interface Feedback {
 
 export const SchoolDashboard: React.FC = () => {
   const { user } = useAuth();
-  const schoolName = user?.name || 'SMK Negeri 1 Cikarang';
-  // Mock fetching feedback or just leave empty if not present.
+  const { showToast } = useToast();
+  const schoolName = user?.name || 'SMKN 1 Cikarang Pusat';
+  const matchingSchool = mockSchools.find(s => s.name.toLowerCase() === schoolName.toLowerCase()) || mockSchools[0];
+  const schoolToken = user?.schoolToken || matchingSchool?.registrationToken || 'SMK1CIK-2025';
+
+  const registrationUrl = `${window.location.origin}/register?role=student`;
+  const waShareText = encodeURIComponent(
+    `Halo Siswa/i ${schoolName}!\n\nSilakan lengkapi pendaftaran dan ikuti asesmen bakat kendaraan listrik (EV) di platform resmi Spora Juara Talent Pool:\n🔗 ${registrationUrl}\n\n🔑 Gunakan Kode Token Sekolah: *${schoolToken}* saat mendaftar agar akun Anda otomatis terverifikasi oleh sekolah.\n\nSalam, BKK ${schoolName}`
+  );
+
+  const handleCopyToken = () => {
+    navigator.clipboard.writeText(schoolToken);
+    showToast(`Token Sekolah "${schoolToken}" berhasil disalin!`, 'success');
+  };
+
   const feedbacks: Feedback[] = [];
 
   return (
@@ -53,6 +68,46 @@ export const SchoolDashboard: React.FC = () => {
               </Button>
             </Link>
           </div>
+        </div>
+      </div>
+
+      {/* Official School Registration Token Widget (Anti-Pemalsuan Siswa) */}
+      <div className="bg-gradient-to-r from-cyan-900 via-[#005f73] to-slate-900 rounded-2xl p-5 text-white shadow-md flex flex-col md:flex-row items-center justify-between gap-5 border border-cyan-700/50">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center shrink-0">
+            <Key className="w-6 h-6 text-cyan-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-extrabold text-white">Token Resmi Pendaftaran Siswa</h3>
+              <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
+                <ShieldCheck size={11} /> Anti-Impersonation Active
+              </span>
+            </div>
+            <p className="text-xs text-cyan-100/80 mt-0.5">
+              Bagikan token ini ke siswa agar otomatis terdaftar dan terverifikasi di bawah naungan <strong>{schoolName}</strong>.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+          <div className="bg-black/30 border border-cyan-400/40 px-4 py-2 rounded-xl font-mono text-lg font-black text-cyan-300 tracking-widest flex items-center gap-2 shadow-inner">
+            {schoolToken}
+          </div>
+          <Button 
+            onClick={handleCopyToken}
+            className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-2.5 rounded-xl border border-white/20 flex items-center gap-1.5"
+          >
+            <Copy size={14} /> Salin Token
+          </Button>
+          <a 
+            href={`https://wa.me/?text=${waShareText}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition"
+          >
+            <Share2 size={14} /> Share WhatsApp
+          </a>
         </div>
       </div>
 

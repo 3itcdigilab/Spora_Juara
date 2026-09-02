@@ -7,6 +7,8 @@ export interface BaseUser {
   name: string;
   email: string;
   password?: string;
+  nisn?: string;
+  schoolToken?: string;
   role: 'admin' | 'school' | 'industry' | 'student';
   status: 'active' | 'pending' | 'rejected';
   directorName?: string;
@@ -82,6 +84,7 @@ export const mockStudentUsers: BaseUser[] = mockStudents.map((st) => ({
   id: st.userId || `user-${st.id}`,
   name: st.name,
   email: st.email,
+  nisn: st.nisn,
   password: '123',
   role: 'student',
   status: 'active',

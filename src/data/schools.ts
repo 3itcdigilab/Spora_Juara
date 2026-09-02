@@ -12,6 +12,7 @@ export const mockSchools: School[] = [
     totalStudents: 1250,
     employmentRate: 92,
     avgTalentScore: 88,
+    registrationToken: 'SMK1CIK-2025',
     partnershipStatus: 'active'
   },
   {
@@ -25,6 +26,7 @@ export const mockSchools: School[] = [
     totalStudents: 1100,
     employmentRate: 89,
     avgTalentScore: 86,
+    registrationToken: 'SMK2KRW-2025',
     partnershipStatus: 'active'
   },
   {
@@ -38,6 +40,7 @@ export const mockSchools: School[] = [
     totalStudents: 980,
     employmentRate: 91,
     avgTalentScore: 87,
+    registrationToken: 'SMK1BKS-2025',
     partnershipStatus: 'active'
   },
   {
@@ -51,6 +54,7 @@ export const mockSchools: School[] = [
     totalStudents: 1320,
     employmentRate: 94,
     avgTalentScore: 89,
+    registrationToken: 'SMK2BDG-2025',
     partnershipStatus: 'active'
   },
   {
@@ -58,12 +62,13 @@ export const mockSchools: School[] = [
     name: 'SMKN 5 Surabaya',
     provinceId: 'prov-jatim',
     city: 'Kota Surabaya',
-    address: 'Jl. Mayjen Prof. Dr. Moestopo No. 37, Surabaya',
+    address: 'Jl. Prof. Dr. Moestopo No. 37, Surabaya',
     type: 'SMK Negeri (Pusat Keunggulan)',
-    majors: ['Teknik Baterai & Elektronika Daya', 'Teknik Kendaraan Ringan EV', 'Teknik Pemesinan CNC'],
+    majors: ['Teknik Kendaraan Listrik Terbarukan', 'Teknik Pembangkit Tenaga Listrik', 'Teknik Fabrikasi Logam'],
     totalStudents: 1450,
-    employmentRate: 93,
+    employmentRate: 95,
     avgTalentScore: 90,
+    registrationToken: 'SMK5SBY-2025',
     partnershipStatus: 'active'
   },
   {
@@ -71,12 +76,13 @@ export const mockSchools: School[] = [
     name: 'SMKN 1 Semarang',
     provinceId: 'prov-jateng',
     city: 'Kota Semarang',
-    address: 'Jl. Dr. Cipto No. 121, Semarang',
-    type: 'SMK Negeri',
-    majors: ['Teknik Otomotif & SPKLU', 'Teknik Instalasi Tenaga Listrik', 'Teknik Mekatronika'],
-    totalStudents: 1180,
-    employmentRate: 88,
-    avgTalentScore: 85,
+    address: 'Jl. Dr. Cipto No. 93, Semarang',
+    type: 'SMK Negeri (Pusat Keunggulan)',
+    majors: ['Teknik Otomotif Listrik', 'Teknik Mekatronika Otomasi', 'Teknik Tenaga Surya'],
+    totalStudents: 1200,
+    employmentRate: 90,
+    avgTalentScore: 87,
+    registrationToken: 'SMK1SMG-2025',
     partnershipStatus: 'active'
   },
   {
@@ -84,12 +90,13 @@ export const mockSchools: School[] = [
     name: 'SMKN 2 Surakarta',
     provinceId: 'prov-jateng',
     city: 'Kota Surakarta',
-    address: 'Jl. Brigjend Slamet Riyadi No. 445, Solo',
-    type: 'SMK Negeri (Pusat Keunggulan)',
-    majors: ['Teknik Konversi Motor Listrik', 'Teknik Ototronik', 'Teknik Fabrikasi Logam'],
+    address: 'Jl. Adi Sucipto No. 33, Manahan, Solo',
+    type: 'SMK Negeri',
+    majors: ['Teknik Rekayasa Perangkat Lunak EV', 'Teknik Mekatronika', 'Teknik Mesin Presisi'],
     totalStudents: 1050,
-    employmentRate: 90,
-    avgTalentScore: 87,
+    employmentRate: 88,
+    avgTalentScore: 86,
+    registrationToken: 'SMK2SKT-2025',
     partnershipStatus: 'active'
   },
   {
@@ -97,12 +104,13 @@ export const mockSchools: School[] = [
     name: 'SMKN 3 Yogyakarta',
     provinceId: 'prov-diy',
     city: 'Kota Yogyakarta',
-    address: 'Jl. RW Monginsidi No. 2, Jetis, Yogyakarta',
+    address: 'Jl. RW Monginsidi No. 2, Yogyakarta',
     type: 'SMK Negeri (Pusat Keunggulan)',
-    majors: ['Teknik Energi Terbarukan & SPKLU', 'Teknik Elektronika Industri', 'Teknik Mekatronika'],
-    totalStudents: 1200,
-    employmentRate: 92,
-    avgTalentScore: 88,
+    majors: ['Teknik Kendaraan Ringan EV', 'Teknik Listrik & Energi Terbarukan', 'Teknik Audio Video'],
+    totalStudents: 1150,
+    employmentRate: 93,
+    avgTalentScore: 89,
+    registrationToken: 'SMK3YOG-2025',
     partnershipStatus: 'active'
   },
   {
@@ -112,23 +120,25 @@ export const mockSchools: School[] = [
     city: 'Kota Tangerang',
     address: 'Jl. Perintis Kemerdekaan II, Cikokol, Tangerang',
     type: 'SMK Negeri',
-    majors: ['Teknik Perakitan Kendaraan Listrik', 'Teknik Instalasi Listrik', 'Teknik Mekatronika'],
-    totalStudents: 1150,
-    employmentRate: 89,
-    avgTalentScore: 86,
+    majors: ['Teknik Otomotif Kendaraan Ringan', 'Teknik Elektronika Industri', 'Teknik Mekatronika'],
+    totalStudents: 990,
+    employmentRate: 87,
+    avgTalentScore: 85,
+    registrationToken: 'SMK1TNG-2025',
     partnershipStatus: 'active'
   },
   {
     id: 'school-10',
-    name: 'SMKN 26 Jakarta (STM Pembangunan)',
+    name: 'SMKN 26 Jakarta',
     provinceId: 'prov-dki',
     city: 'Jakarta Timur',
-    address: 'Jl. Balai Pustaka Baru I, Rawamangun, Jakarta Timur',
-    type: 'SMK Negeri (Pusat Keunggulan 4 Tahun)',
-    majors: ['Teknik Otomasi Industri & Robotik', 'Teknik Kendaraan Listrik', 'Teknik Elektronika Daya'],
-    totalStudents: 1500,
+    address: 'Jl. Balai Pustaka Baru I No. 2, Rawamangun',
+    type: 'SMK Negeri (Pusat Keunggulan)',
+    majors: ['Teknik Mekatronika Robotika', 'Teknik Listrik Arus Kuat', 'Teknik Otomasi Manufaktur EV'],
+    totalStudents: 1400,
     employmentRate: 96,
-    avgTalentScore: 92,
+    avgTalentScore: 91,
+    registrationToken: 'SMK26JKT-2025',
     partnershipStatus: 'active'
   },
   {
@@ -138,10 +148,11 @@ export const mockSchools: School[] = [
     city: 'Kota Medan',
     address: 'Jl. Sindoro No. 1, Medan',
     type: 'SMK Negeri',
-    majors: ['Teknik Kendaraan Ringan Otomotif', 'Teknik Tenaga Listrik', 'Teknik Komputer'],
-    totalStudents: 920,
+    majors: ['Teknik Kendaraan Ringan EV', 'Teknik Tenaga Listrik', 'Teknik Komputer Terapan'],
+    totalStudents: 1020,
     employmentRate: 85,
     avgTalentScore: 84,
+    registrationToken: 'SMK1MDN-2025',
     partnershipStatus: 'active'
   },
   {
@@ -151,10 +162,11 @@ export const mockSchools: School[] = [
     city: 'Kota Makassar',
     address: 'Jl. Pancasila No. 15, Makassar',
     type: 'SMK Negeri (Pusat Keunggulan)',
-    majors: ['Teknik Kelistrikan & SPKLU', 'Teknik Otomotif', 'Teknik Mekatronika'],
+    majors: ['Teknik Konversi Energi Listrik', 'Teknik Mekatronika', 'Teknik Otomotif EV'],
     totalStudents: 1080,
-    employmentRate: 87,
+    employmentRate: 88,
     avgTalentScore: 85,
+    registrationToken: 'SMK2MKS-2025',
     partnershipStatus: 'active'
   }
 ];

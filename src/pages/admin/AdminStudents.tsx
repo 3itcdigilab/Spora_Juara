@@ -23,10 +23,11 @@ export const AdminStudents: React.FC = () => {
   // Sync state with localDB and students collection
   const students = useMemo(() => {
     const localStudents = localDB.getStudents();
-    return localStudents.map((st: any) => ({
+    return localStudents.map((st: any, idx: number) => ({
       id: st.id || `st-${Date.now()}`,
       name: st.name || st.fullName || 'Siswa Vokasi',
-      school: st.schoolName || st.school || st.schoolId || 'SMK Negeri 1 Cikarang',
+      nisn: st.nisn || `007${(1234500 + idx + 1).toString().padStart(7, '0')}`,
+      school: st.schoolName || st.school || st.schoolId || 'SMK Negeri 1 Cikarang Pusat',
       major: st.major || 'Teknik Kendaraan Ringan (Otomotif EV)',
       gradYear: st.graduationYear?.toString() || st.gradYear || '2025',
       province: st.province || 'Jawa Barat',
@@ -40,6 +41,7 @@ export const AdminStudents: React.FC = () => {
       const matchSchool = !schoolFilter || s.school?.toLowerCase().includes(schoolFilter.toLowerCase()) || schoolFilter.toLowerCase().includes(s.school?.toLowerCase() || '');
       const matchSearch = !searchTerm || 
         s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.nisn?.includes(searchTerm) ||
         s.school?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.major?.toLowerCase().includes(searchTerm.toLowerCase());
       return matchSchool && matchSearch;
@@ -51,6 +53,7 @@ export const AdminStudents: React.FC = () => {
 
   const [formData, setFormData] = useState({
     name: '',
+    nisn: '',
     school: '',
     major: '',
     gradYear: '2025',
@@ -62,7 +65,8 @@ export const AdminStudents: React.FC = () => {
     setEditingStudent(null);
     setFormData({
       name: '',
-      school: schoolFilter || 'SMK Negeri 1 Cikarang',
+      nisn: '',
+      school: schoolFilter || 'SMK Negeri 1 Cikarang Pusat',
       major: 'Teknik Kendaraan Ringan (Otomotif EV)',
       gradYear: '2025',
       province: 'Jawa Barat',
@@ -75,6 +79,7 @@ export const AdminStudents: React.FC = () => {
     setEditingStudent(st);
     setFormData({
       name: st.name || '',
+      nisn: st.nisn || '',
       school: st.school || '',
       major: st.major || '',
       gradYear: st.gradYear || '',
@@ -101,6 +106,7 @@ export const AdminStudents: React.FC = () => {
         userId: `user-${Date.now()}`,
         name: formData.name,
         fullName: formData.name,
+        nisn: formData.nisn || `007${Math.floor(1000000 + Math.random() * 9000000)}`,
         schoolName: formData.school,
         school: formData.school,
         major: formData.major,
@@ -145,7 +151,7 @@ export const AdminStudents: React.FC = () => {
       {schoolFilter && (
         <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-200 p-4 rounded-xl flex items-center justify-between shadow-2xs">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-[#0099B8] text-white">
+            <div className="w-10 h-10 rounded-lg bg-[#0099B8] text-white flex items-center justify-center">
               <School size={20} />
             </div>
             <div>
@@ -177,7 +183,7 @@ export const AdminStudents: React.FC = () => {
               <Search size={15} className="absolute left-3 top-2.5 text-slate-400" />
               <input 
                 type="text" 
-                placeholder="Cari siswa, jurusan, sekolah..." 
+                placeholder="Cari siswa, NISN, jurusan, sekolah..." 
                 className="w-full pl-9 pr-3 py-1.5 border rounded-lg text-xs bg-white focus:outline-none focus:ring-1 focus:ring-[#0099B8]"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -194,6 +200,7 @@ export const AdminStudents: React.FC = () => {
             <thead>
               <tr className="bg-slate-100 text-slate-600 border-b text-xs font-bold uppercase">
                 <th className="p-4">Nama Siswa Kandidat</th>
+                <th className="p-4">NISN (10 Digit)</th>
                 <th className="p-4">Sekolah / Institusi Pendidikan</th>
                 <th className="p-4">Jurusan / Vocational Stream</th>
                 <th className="p-4">Tahun Lulus</th>
@@ -204,7 +211,7 @@ export const AdminStudents: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-500">
+                  <td colSpan={7} className="p-8 text-center text-slate-500">
                     <GraduationCap size={36} className="mx-auto text-slate-300 mb-2" />
                     <p className="font-bold text-slate-700">Belum Ada Siswa Terdaftar</p>
                     <p className="text-xs text-slate-400 mt-1">Gunakan tombol "+ Add New Student Candidate" untuk menambahkan data siswa baru.</p>
@@ -214,12 +221,15 @@ export const AdminStudents: React.FC = () => {
                 filteredStudents.map((s: any) => (
                   <tr key={s.id} className="hover:bg-slate-50">
                     <td className="p-4 font-bold text-slate-900">{s.name}</td>
+                    <td className="p-4 font-mono text-xs font-bold text-[#0099B8] bg-cyan-50/40">
+                      {s.nisn}
+                    </td>
                     <td className="p-4 text-slate-700 font-semibold">{s.school}</td>
                     <td className="p-4 text-slate-600 text-xs">{s.major}</td>
                     <td className="p-4 font-mono text-xs text-slate-700">{s.gradYear}</td>
                     <td className="p-4">
-                      <Badge className="bg-emerald-100 text-emerald-800 font-bold border-emerald-300">
-                        {s.score || 80}/100
+                      <Badge className={`font-bold ${s.score >= 90 ? 'bg-emerald-100 text-emerald-800' : 'bg-cyan-50 text-[#0099B8]'}`}>
+                        ⭐ {s.score}/100
                       </Badge>
                     </td>
                     <td className="p-4 text-right">
