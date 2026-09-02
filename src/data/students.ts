@@ -73,7 +73,7 @@ const bioPool = [
   'Terampil dalam pemeliharaan preventif charging station (SPKLU), sistem proteksi arus bocor, dan kelistrikan industri.'
 ];
 
-export const mockStudents: (Student & { name: string; fullName: string; email: string; nisn: string; phone: string; bio: string; schoolName: string; school: string; score: number })[] = Array.from({ length: 100 }, (_, idx) => {
+export const mockStudents: (Student & { name: string; fullName: string; email: string; nisn: string; phone: string; bio: string; schoolName: string; school: string; score: number })[] = Array.from({ length: 117 }, (_, idx) => {
   const fName = firstNames[idx % firstNames.length];
   const lName = lastNames[(idx * 3 + 7) % lastNames.length];
   const fullName = `${fName} ${lName}`;

@@ -123,15 +123,15 @@ export async function initFirestoreSync(): Promise<void> {
       fsBatchSet('industries', mockIndustries).catch(() => {});
     }
 
-    // 4. Auto-seed All 100 Vocational Students if empty
-    if ((memoryStore['students'] || []).length < 50) {
+    // 4. Auto-seed All 117 Vocational Students
+    if ((memoryStore['students'] || []).length < mockStudents.length) {
       console.log(`[FirestoreSync] Seeding ${mockStudents.length} vocational students to Firestore...`);
       memoryStore['students'] = [...mockStudents];
       fsBatchSet('students', mockStudents).catch(() => {});
     }
 
-    // 5. Auto-seed All User Accounts (100 students, 12 schools, 12 industries, admin)
-    if ((memoryStore['users'] || []).length < 30) {
+    // 5. Auto-seed All User Accounts (117 students, 12 schools, 12 industries, admin)
+    if ((memoryStore['users'] || []).length < mockAllUsers.length) {
       console.log(`[FirestoreSync] Seeding ${mockAllUsers.length} user accounts to Firestore...`);
       memoryStore['users'] = [...mockAllUsers];
       fsBatchSet('users', mockAllUsers).catch(() => {});
@@ -157,8 +157,8 @@ export async function initFirestoreSync(): Promise<void> {
       fsBatchSet('questions', defaultQuestionBank).catch(() => {});
     }
 
-    // 8. Auto-seed Talent Scores & Profiles for all 100 students
-    if ((memoryStore['talent_scores'] || []).length < 50) {
+    // 8. Auto-seed Talent Scores & Profiles for all 117 students
+    if ((memoryStore['talent_scores'] || []).length < mockStudents.length) {
       const generatedScores = mockStudents.map(st => ({
         id: `score-${st.id}`,
         studentId: st.email.toLowerCase().trim(),
@@ -177,8 +177,8 @@ export async function initFirestoreSync(): Promise<void> {
       fsBatchSet('talent_scores', generatedScores).catch(() => {});
     }
 
-    // 9. Auto-seed Profiles for all 100 students
-    if ((memoryStore['profiles'] || []).length < 50) {
+    // 9. Auto-seed Profiles for all 117 students
+    if ((memoryStore['profiles'] || []).length < mockStudents.length) {
       const generatedProfiles = mockStudents.map(st => ({
         id: `prof-${st.id}`,
         studentId: st.id,
