@@ -8,17 +8,23 @@ import { ProgressRing } from '../../components/ui/ProgressRing';
 import { Timeline } from '../../components/ui/Timeline';
 import { ProgressGauge } from '../../components/charts/ProgressGauge';
 import { RadarChart } from '../../components/charts/RadarChart';
-import { Sparkles, ArrowRight, Briefcase, FileCheck, Clock, Award, UserCheck, ShieldCheck, Zap, Target } from 'lucide-react';
+import { Sparkles, ArrowRight, Briefcase, FileCheck, Clock, Award, UserCheck, ShieldCheck, Zap, Target, Brain, CheckCircle2 } from 'lucide-react';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { localDB } from '../../services/db';
+import { openRouterService } from '../../services/OpenRouterAI';
 
 export const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
-  const savedProfile = localDB.getProfile(user?.email || '');
-  const rawName = user?.name || savedProfile?.fullName || 'Student';
-  const userName = rawName.includes('@') ? (savedProfile?.fullName || 'Student') : rawName;
+  const studentEmail = user?.email || '';
+  const savedProfile = localDB.getProfile(studentEmail);
+  const rawName = user?.name || savedProfile?.fullName || 'Kandidat';
+  const userName = rawName.includes('@') ? (savedProfile?.fullName || 'Kandidat') : rawName;
   const profileCompletion = 85;
+
+  const talentScore = localDB.getTalentScore(studentEmail);
+  const aiReport = openRouterService.getReportByStudentId(studentEmail);
+  const realScore = talentScore?.overall || aiReport?.score || (talentScore?.dimensions ? Math.round(talentScore.dimensions.reduce((a: number, b: any) => a + (b.score * b.weight), 0)) : 88);
 
   const allJobs = localDB.getJobs();
   const activeJobs = allJobs.filter((j: any) => j.status === 'open' || j.status === 'published' || j.status === 'active');
@@ -31,7 +37,7 @@ export const StudentDashboard: React.FC = () => {
     return 'Competitive Salary';
   };
 
-  const myApps = user?.email ? localDB.getApplications(user.email) : [];
+  const myApps = studentEmail ? localDB.getApplications(studentEmail) : [];
   const timelineItems = myApps.length > 0 
     ? myApps.map(app => {
         const job = allJobs.find((j: any) => j.id === app.jobId);
@@ -41,7 +47,21 @@ export const StudentDashboard: React.FC = () => {
           status: 'completed' as const
         };
       }).slice(0, 4)
-    : [{ title: 'Joined Spora TalentOS', date: 'Recently', status: 'completed' as const }];
+    : [{ title: 'Psikotes & Green Energy AI Induction Selesai', date: 'Hari Ini', status: 'completed' as const }];
+
+  // Radar Data from dimensions
+  const radarData = talentScore?.dimensions && talentScore.dimensions.length > 0
+    ? talentScore.dimensions.map((d: any) => ({
+        dimension: d.label.split('&')[0].trim(),
+        score: d.score
+      }))
+    : [
+        { dimension: 'Technical', score: 85 },
+        { dimension: 'Safety HV', score: 90 },
+        { dimension: '5S Work', score: 88 },
+        { dimension: 'Agility', score: 86 },
+        { dimension: 'Teamwork', score: 82 },
+      ];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10 font-sans">
@@ -58,8 +78,8 @@ export const StudentDashboard: React.FC = () => {
             <Zap size={14} className="text-amber-300" /> Spora Vocational Candidate Dashboard
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Selamat Datang, {userName}!</h1>
-          <p className="text-slate-300 text-xs sm:text-sm">
-            Pantau skor kompetensi vokasi EV 7-dimensi Anda, ikuti asesmen teknis & psikotes, dan dapatkan panggilan kerja langsung dari Industri EV Indonesia.
+          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+            Hasil Psikotes & Karakter Kerja Anda telah dievaluasi oleh AI. Nilai Anda: <strong className="text-white">{realScore}/100</strong> ({aiReport?.archetype || 'The Precision EV Battery Specialist'}).
           </p>
         </div>
       </div>
@@ -77,8 +97,8 @@ export const StudentDashboard: React.FC = () => {
 
         <Card className="p-5 border-slate-200 flex items-center justify-between hover:shadow-md transition-shadow">
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Talent Score</p>
-            <h3 className="text-2xl font-extrabold text-[#0099B8] mt-1">88<span className="text-xs text-slate-400 font-normal">/100</span></h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">AI Talent Score</p>
+            <h3 className="text-2xl font-extrabold text-[#0099B8] mt-1">{realScore}<span className="text-xs text-slate-400 font-normal">/100</span></h3>
             <p className="text-[11px] text-emerald-600 font-bold mt-0.5">Tier 1 Competency</p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-[#0099B8] font-bold">
@@ -89,11 +109,13 @@ export const StudentDashboard: React.FC = () => {
         <Card className="p-5 border-slate-200 flex items-center justify-between hover:shadow-md transition-shadow">
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Assessment Status</p>
-            <h3 className="text-xl font-extrabold text-emerald-600 mt-1">Verified ✓</h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">Psychometric & Technical Done</p>
+            <h3 className="text-xl font-extrabold text-emerald-600 mt-1 flex items-center gap-1">
+              <CheckCircle2 size={18} /> Verified ✓
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">Psikotes Selesai (AI Verified)</p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-bold">
-            <ShieldCheck size={24} />
+            <Brain size={24} />
           </div>
         </Card>
 
@@ -138,44 +160,44 @@ export const StudentDashboard: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="p-5 border-t-4 border-t-violet-500 hover:shadow-md transition-all">
-            <Badge className="bg-violet-100 text-violet-700 mb-3 text-xs">Career Path</Badge>
+            <Badge className="bg-violet-100 text-violet-700 mb-3 text-xs font-bold">AI Career Path</Badge>
             <h3 className="font-bold text-slate-900 text-base">EV Battery Technician</h3>
             <p className="text-xs text-slate-500 mt-1 mb-4 line-clamp-2 leading-relaxed">
-              Based on your mechanical aptitude and competency scores, this path aligns with your specialization.
+              Berdasarkan hasil psikotes AI dan skor keselamatan K3 Anda ({talentScore?.dimensions?.find((d:any)=>d.key==='safety')?.score || 88}%), jalur karir ini sangat cocok.
             </p>
             <Link to="/student/talent-score" className="text-xs font-bold text-violet-600 flex items-center gap-1 hover:text-violet-700">
-              View Path <ArrowRight size={14} />
+              Buka Analisis Karir AI <ArrowRight size={14} />
             </Link>
           </Card>
           
           <Card className="p-5 border-t-4 border-t-cyan-500 hover:shadow-md transition-all">
-            <Badge className="bg-cyan-100 text-cyan-800 mb-3 text-xs">Learning Module</Badge>
-            <h3 className="font-bold text-slate-900 text-base">Safety Protocols 101</h3>
+            <Badge className="bg-cyan-100 text-cyan-800 mb-3 text-xs font-bold">Ujian Teknis Tersedia</Badge>
+            <h3 className="font-bold text-slate-900 text-base">EV Battery Assembly</h3>
             <p className="text-xs text-slate-500 mt-1 mb-4 line-clamp-2 leading-relaxed">
-              Complete this module to boost your High Voltage Safety score by up to 15 points.
+              Ikuti modul ujian teknis lanjutan untuk menambah poin portofolio dan sertifikasi industri.
             </p>
-            <Link to="/student/talent-score" className="text-xs font-bold text-[#0099B8] flex items-center gap-1 hover:text-[#007A93]">
-              Start Course <ArrowRight size={14} />
+            <Link to="/student/assessments" className="text-xs font-bold text-[#0099B8] flex items-center gap-1 hover:text-[#007A93]">
+              Buka Daftar Asesmen <ArrowRight size={14} />
             </Link>
           </Card>
 
           <Card className="p-5 border-t-4 border-t-emerald-500 hover:shadow-md transition-all">
-            <Badge className="bg-emerald-100 text-emerald-700 mb-3 text-xs">Recommended Job</Badge>
+            <Badge className="bg-emerald-100 text-emerald-700 mb-3 text-xs font-bold">Lowongan Rekomendasi</Badge>
             {recommendedJobs.length > 0 ? (
               <>
                 <h3 className="font-bold text-slate-900 text-base">{getCompanyName(recommendedJobs[0])} - {recommendedJobs[0].title}</h3>
                 <p className="text-xs text-slate-500 mt-1 mb-4 line-clamp-2 leading-relaxed">
-                  High alignment with your EV Assembly specialization in {recommendedJobs[0].location || 'Indonesia'}.
+                  Kesesuaian tinggi dengan jurusan vokasi & skor asesmen Anda di {recommendedJobs[0].location || 'Indonesia'}.
                 </p>
                 <Link to={`/student/jobs/${recommendedJobs[0].id}`} className="text-xs font-bold text-emerald-600 flex items-center gap-1 hover:text-emerald-700">
-                  View Job Detail <ArrowRight size={14} />
+                  Lihat Detail Lowongan <ArrowRight size={14} />
                 </Link>
               </>
             ) : (
               <>
-                <h3 className="font-bold text-slate-900 text-base">No Jobs Found</h3>
+                <h3 className="font-bold text-slate-900 text-base">Lowongan EV</h3>
                 <p className="text-xs text-slate-500 mt-1 mb-4 line-clamp-2 leading-relaxed">
-                  There are no recommended jobs available at this time. Check back later.
+                  Cek lowongan kerja terbaru di papan lowongan Spora TalentOS.
                 </p>
               </>
             )}
@@ -190,7 +212,7 @@ export const StudentDashboard: React.FC = () => {
             <div className="flex justify-between items-center mb-4 border-b pb-3">
               <div>
                 <h2 className="text-base font-bold text-slate-900">EV Competency Skills Radar</h2>
-                <p className="text-xs text-slate-500">Your standardized score across 5 key industry dimensions.</p>
+                <p className="text-xs text-slate-500">Skor terstandarisasi 5 pilar dari asesmen induksi Anda.</p>
               </div>
               <Link to="/student/talent-score" className="text-xs text-[#0099B8] font-bold hover:underline">
                 Full Talent Score →
@@ -198,13 +220,7 @@ export const StudentDashboard: React.FC = () => {
             </div>
             <div className="h-64 flex items-center justify-center bg-slate-50 rounded-xl border p-2">
               <RadarChart 
-                data={[
-                  { dimension: 'Technical', score: 85 },
-                  { dimension: 'Cognitive', score: 70 },
-                  { dimension: 'Personality', score: 80 },
-                  { dimension: 'Safety', score: 95 },
-                  { dimension: 'Teamwork', score: 88 },
-                ]}
+                data={radarData}
                 indexBy="dimension"
                 keys={['score']}
                 height={240}
@@ -219,69 +235,55 @@ export const StudentDashboard: React.FC = () => {
                 View Job Board →
               </Link>
             </div>
-            <div className="space-y-3">
-              {recommendedJobs.length > 0 ? recommendedJobs.map((job: any) => (
-                <div key={job.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-slate-100 rounded-xl hover:border-slate-200 hover:shadow-xs transition-all bg-white gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 text-[#0099B8] flex items-center justify-center font-black text-sm shrink-0">
-                      {(getCompanyName(job) || job.title || 'E').charAt(0)}
+
+            <div className="divide-y divide-slate-100">
+              {recommendedJobs.map((j) => (
+                <div key={j.id} className="py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 first:pt-0 last:pb-0">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900 text-sm">{j.title}</span>
+                      <Badge variant="primary" className="bg-blue-50 text-blue-700 text-[10px]">
+                        {j.department || 'EV Assembly'}
+                      </Badge>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-slate-900">{job.title}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">{getCompanyName(job)} • {job.location || 'Indonesia'} • {getSalaryText(job)}</p>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mt-1">
+                      <span className="font-semibold text-slate-700">{getCompanyName(j)}</span>
+                      <span>• {j.location || 'Cikarang, Jawa Barat'}</span>
+                      <span className="text-emerald-700 font-bold">• {getSalaryText(j)}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 self-end sm:self-center">
-                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-bold">
-                      92% Match
-                    </Badge>
-                    <Link to={`/student/jobs/${job.id}`}>
-                      <Button size="sm" variant="outline" className="text-xs font-bold border-slate-200 hover:bg-slate-50">
-                        Apply Now
-                      </Button>
-                    </Link>
-                  </div>
+
+                  <Link to={`/student/jobs/${j.id}`}>
+                    <Button size="sm" variant="outline" className="text-xs font-bold text-[#0099B8] border-cyan-200 hover:bg-cyan-50">
+                      Apply Now
+                    </Button>
+                  </Link>
                 </div>
-              )) : (
-                <div className="text-center py-6 text-slate-500 text-sm">
-                  No open jobs found.
-                </div>
-              )}
+              ))}
             </div>
           </Card>
         </div>
 
-        {/* Right Column: Upcoming Schedules & Activity */}
+        {/* Sidebar Activity Timeline */}
         <div className="space-y-6">
           <Card className="p-6">
-            <h2 className="text-base font-bold text-slate-900 mb-4 border-b pb-3">Upcoming Events</h2>
-            <div className="space-y-4">
-              <div className="flex gap-3 items-start">
-                <div className="mt-0.5 bg-amber-100 p-2 rounded-xl text-amber-700 shrink-0">
-                  <Clock size={18} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900">EV Technical Interview</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Scheduled by Industry Recruiter • Online Meet</p>
-                </div>
-              </div>
-              <div className="flex gap-3 items-start">
-                <div className="mt-0.5 bg-cyan-100 p-2 rounded-xl text-[#0099B8] shrink-0">
-                  <FileCheck size={18} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900">High Voltage Safety Assessment</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Verified Standard</p>
-                </div>
-              </div>
-            </div>
+            <h2 className="text-base font-bold text-slate-900 mb-4 border-b pb-3">Aktivitas Terkini</h2>
+            <Timeline items={timelineItems} />
           </Card>
 
-          <Card className="p-6">
-            <h2 className="text-base font-bold text-slate-900 mb-4 border-b pb-3">Recent Activity</h2>
-            <Timeline 
-              items={timelineItems}
-            />
+          <Card className="p-6 bg-gradient-to-br from-cyan-50 to-blue-50 border-cyan-100">
+            <div className="flex items-center gap-2 text-[#0099B8] mb-2 font-bold text-xs uppercase tracking-wider">
+              <Sparkles size={16} /> AI Psychological Fit
+            </div>
+            <h3 className="font-extrabold text-slate-900 text-sm">
+              "{aiReport?.archetype || 'The Precision EV Battery Specialist'}"
+            </h3>
+            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+              Profil psikometrik Anda menunjukkan kesiapan kerja tinggi dalam manufaktur baterai dan pemeliharaan keselamatan tegangan tinggi.
+            </p>
+            <Link to="/student/talent-score" className="mt-3 block text-xs font-bold text-[#0099B8] hover:underline">
+              Buka Detail Analisis AI →
+            </Link>
           </Card>
         </div>
       </div>

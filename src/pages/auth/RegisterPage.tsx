@@ -216,20 +216,6 @@ export const RegisterPage: React.FC = () => {
     navigate('/student/dashboard');
   };
 
-  const handleStudentSkipAssessment = async () => {
-    let finalName = formData.name.trim() || 'Kandidat Siswa';
-    const finalSchool = matchedSchool?.name || formData.school || 'SMKN Terverifikasi';
-
-    const payload = {
-      ...formData,
-      name: finalName,
-      school: finalSchool,
-      isSchoolVerified: isTokenMatch
-    };
-    await register(payload);
-    navigate('/student/dashboard');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step < 3) {
@@ -342,7 +328,6 @@ export const RegisterPage: React.FC = () => {
             studentName={formData.name || 'Kandidat Siswa'}
             studentEmail={formData.email}
             onComplete={handleStudentCompleteWithAssessment}
-            onSkip={handleStudentSkipAssessment}
           />
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
