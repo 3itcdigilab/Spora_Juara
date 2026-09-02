@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Logo } from '../../components/ui/Logo';
-import { GraduationCap, School, Factory, CheckCircle2, Phone, Mail, User, Lock, Sparkles, Key, ShieldCheck } from 'lucide-react';
+import { useToast } from '../../components/ui/Toast';
+import { GraduationCap, School, Factory, CheckCircle2, Phone, Mail, User, Lock, Sparkles, Key, ShieldCheck, AlertCircle } from 'lucide-react';
 import { StudentOnboardingAssessment } from '../../components/assessment/StudentOnboardingAssessment';
 import { localDB } from '../../services/db';
 import { mockSchools } from '../../data/schools';
 import { openRouterService } from '../../services/OpenRouterAI';
+import { getAll } from '../../services/firestoreSync';
 
 const roleMeta: Record<string, { title: string; subtitle: string; icon: any; color: string }> = {
   student: {
@@ -37,6 +39,7 @@ export const RegisterPage: React.FC = () => {
 
   const navigate = useNavigate();
   const { register } = useAuth();
+  const { showToast } = useToast();
   
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -48,7 +51,7 @@ export const RegisterPage: React.FC = () => {
     confirmPassword: '',
     // Student specific
     nisn: '',
-    school: 'SMKN 1 Cikarang Pusat',
+    school: '',
     schoolToken: '',
     major: 'Teknik Kendaraan Ringan (Otomotif EV)',
     graduationYear: '2025',
@@ -78,8 +81,56 @@ export const RegisterPage: React.FC = () => {
 
   const currentRoleMeta = roleMeta[formData.role] || roleMeta.student;
 
-  const currentSelectedSchool = mockSchools.find(s => s.name.toLowerCase() === formData.school.toLowerCase()) || mockSchools[0];
-  const isTokenMatch = formData.schoolToken.trim().toUpperCase() === currentSelectedSchool?.registrationToken?.toUpperCase();
+  // Resolve matched school strictly from the entered token (Anti-impersonation mechanism)
+  const matchedSchool = useMemo(() => {
+    const inputToken = formData.schoolToken.trim().toUpperCase();
+    if (!inputToken) return null;
+    
+    // Check mockSchools
+    const fromMock = mockSchools.find(s => s.registrationToken?.toUpperCase() === inputToken);
+    if (fromMock) return fromMock;
+
+    // Check dynamic schools created by admin in users db
+    try {
+      const schoolUsers = getAll('users').filter((u: any) => u.role === 'school');
+      const fromUsers = schoolUsers.find((u: any) => 
+        (u.registrationToken && u.registrationToken.toUpperCase() === inputToken) || 
+        (u.schoolToken && u.schoolToken.toUpperCase() === inputToken)
+      );
+      if (fromUsers) {
+        return {
+          id: fromUsers.id,
+          name: fromUsers.name,
+          province: fromUsers.province || 'Jawa Barat',
+          city: fromUsers.city || 'Cikarang',
+          registrationToken: inputToken
+        };
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    return null;
+  }, [formData.schoolToken]);
+
+  const isTokenMatch = Boolean(matchedSchool);
+
+  // Automatically bind school name, province, and city when token matches
+  useEffect(() => {
+    if (matchedSchool) {
+      setFormData(prev => ({
+        ...prev,
+        school: matchedSchool.name,
+        province: matchedSchool.province || prev.province,
+        city: matchedSchool.city || prev.city
+      }));
+    } else if (formData.role === 'student') {
+      setFormData(prev => ({
+        ...prev,
+        school: ''
+      }));
+    }
+  }, [matchedSchool, formData.role]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -90,14 +141,24 @@ export const RegisterPage: React.FC = () => {
     setFormData(prev => ({ ...prev, role: newRole }));
   };
 
-  const nextStep = () => setStep(step + 1);
+  const nextStep = () => {
+    if (step === 2 && formData.role === 'student' && !isTokenMatch) {
+      showToast('Wajib memasukkan Token Registrasi Sekolah yang valid untuk memverifikasi SMK asal Anda!', 'error');
+      return;
+    }
+    setStep(step + 1);
+  };
+
   const prevStep = () => setStep(step - 1);
 
   const handleStudentCompleteWithAssessment = async (result: any) => {
     let finalName = formData.name.trim() || 'Kandidat Siswa';
+    const finalSchool = matchedSchool?.name || formData.school || 'SMKN Terverifikasi';
+
     const payload = {
       ...formData,
       name: finalName,
+      school: finalSchool,
       isSchoolVerified: isTokenMatch
     };
 
@@ -144,7 +205,7 @@ export const RegisterPage: React.FC = () => {
         studentId: studentEmail,
         studentName: finalName,
         nisn: formData.nisn,
-        schoolName: formData.school,
+        schoolName: finalSchool,
         major: formData.major,
         dimensionScores: result.dimensions,
         overallScore: result.percentage,
@@ -157,9 +218,12 @@ export const RegisterPage: React.FC = () => {
 
   const handleStudentSkipAssessment = async () => {
     let finalName = formData.name.trim() || 'Kandidat Siswa';
+    const finalSchool = matchedSchool?.name || formData.school || 'SMKN Terverifikasi';
+
     const payload = {
       ...formData,
       name: finalName,
+      school: finalSchool,
       isSchoolVerified: isTokenMatch
     };
     await register(payload);
@@ -184,6 +248,7 @@ export const RegisterPage: React.FC = () => {
     const payload = {
       ...formData,
       name: finalName,
+      school: matchedSchool?.name || formData.school,
       isSchoolVerified: isTokenMatch
     };
 
@@ -401,51 +466,59 @@ export const RegisterPage: React.FC = () => {
               {/* Student Fields */}
               {formData.role === 'student' && (
                 <>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Pilih SMK Mitra</label>
-                    <select 
-                      name="school" 
-                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white"
-                      value={formData.school}
-                      onChange={handleChange}
-                    >
-                      {mockSchools.map(sch => (
-                        <option key={sch.id} value={sch.name}>
-                          {sch.name} ({sch.city})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* School Token Input */}
-                  <div className="p-4 bg-gradient-to-r from-slate-50 to-cyan-50/40 rounded-xl border border-cyan-100 space-y-2">
+                  {/* PURE TOKEN-BASED SCHOOL IDENTIFICATION (ANTI-FRAUD / ANTI-PEMALSUAN) */}
+                  <div className="p-5 bg-gradient-to-r from-slate-50 via-cyan-50/40 to-blue-50/30 rounded-2xl border border-cyan-200 space-y-3">
                     <div className="flex justify-between items-center">
-                      <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                        <Key size={14} className="text-[#0099B8]" /> Token Registrasi Sekolah (Enrollment Token)
+                      <label className="block text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                        <Key size={16} className="text-[#0099B8]" /> Token Registrasi Sekolah (Wajib Diisi)
                       </label>
                       {isTokenMatch ? (
-                        <span className="text-[11px] font-extrabold text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md flex items-center gap-1">
-                          <ShieldCheck size={13} /> Token Terverifikasi ✓
+                        <span className="text-xs font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs animate-fadeIn">
+                          <ShieldCheck size={14} /> Terverifikasi Asli ✓
                         </span>
                       ) : (
-                        <span className="text-[10px] text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
-                          Wajib Diisi
+                        <span className="text-[10px] text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md font-bold">
+                          Anti-Pemalsuan Institusi
                         </span>
                       )}
                     </div>
+
                     <input 
                       type="text" 
                       name="schoolToken" 
-                      placeholder="Kode Token Registrasi Sekolah"
-                      className={`w-full p-2.5 border rounded-lg text-xs font-mono uppercase tracking-wider focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white ${
-                        isTokenMatch ? 'border-emerald-400 ring-1 ring-emerald-300' : 'border-slate-300'
+                      placeholder="Masukkan Kode Token Resmi Sekolah Anda (contoh: SMK1CIK-2025)"
+                      className={`w-full p-3 border rounded-xl text-sm font-mono uppercase font-black tracking-widest focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white shadow-inner transition ${
+                        isTokenMatch ? 'border-emerald-500 ring-2 ring-emerald-200 text-emerald-900' : 'border-slate-300 text-slate-800'
                       }`}
                       value={formData.schoolToken} 
                       onChange={handleChange} 
+                      required
                     />
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      💡 Masukkan kode token pendaftaran dari guru atau koordinator BKK sekolah Anda.
-                    </p>
+
+                    {/* Live School Recognition Feedback Card */}
+                    {isTokenMatch && matchedSchool ? (
+                      <div className="p-3.5 bg-white rounded-xl border border-emerald-300 shadow-sm flex items-center gap-3.5 animate-fadeIn">
+                        <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold">
+                          <School size={22} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase font-bold text-emerald-700 tracking-wider flex items-center gap-1">
+                            <ShieldCheck size={12} /> Institusi Mitra Resmi Terdeteksi
+                          </p>
+                          <h4 className="text-sm font-extrabold text-slate-900">{matchedSchool.name}</h4>
+                          <p className="text-xs text-slate-500 font-medium">{matchedSchool.city}, {matchedSchool.province || 'Indonesia'}</p>
+                        </div>
+                      </div>
+                    ) : formData.schoolToken.trim().length > 0 ? (
+                      <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-700 font-semibold flex items-center gap-2 animate-fadeIn">
+                        <AlertCircle size={16} className="shrink-0" />
+                        <span>Token tidak valid atau belum terdaftar di sistem. Minta kode token resmi dari guru atau koordinator BKK sekolah Anda.</span>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        💡 <strong>Sistem Validasi Anti-Pemalsuan</strong>: Anda tidak perlu memilih nama sekolah secara manual. Cukup masukkan token resmi dari sekolah Anda, dan sistem akan mengidentifikasi SMK asal secara otomatis.
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -649,72 +722,73 @@ export const RegisterPage: React.FC = () => {
                 <div className="w-12 h-12 bg-cyan-50 text-[#0099B8] rounded-full flex items-center justify-center mx-auto shadow-sm">
                   <CheckCircle2 size={28} />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">Review & Complete Registration</h3>
-                <p className="text-xs text-slate-500">Verify your information before initializing your Spora Juara account.</p>
-                
-                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-left text-sm space-y-2 mt-4">
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-slate-500">Account Role:</span>
-                    <span className="font-bold text-slate-900 capitalize">{formData.role}</span>
-                  </div>
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-slate-500">Name / Org:</span>
-                    <span className="font-bold text-slate-900">{formData.name || 'Not provided'}</span>
-                  </div>
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-slate-500">Email Address:</span>
-                    <span className="font-bold text-slate-900">{formData.email}</span>
-                  </div>
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-slate-500">Phone / WA:</span>
-                    <span className="font-bold text-slate-900">{formData.phone || '081234567890'}</span>
-                  </div>
-                  {formData.role === 'student' && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">School & Major:</span>
-                      <span className="font-bold text-slate-900">{formData.school} • {formData.major}</span>
-                    </div>
-                  )}
-                  {formData.role === 'industry' && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Company & Sector:</span>
-                      <span className="font-bold text-slate-900">{formData.companyName} • {formData.sector}</span>
-                    </div>
-                  )}
-                  {formData.role === 'school' && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">School Name:</span>
-                      <span className="font-bold text-slate-900">{formData.schoolName}</span>
-                    </div>
-                  )}
+                <h3 className="text-lg font-bold text-slate-900">Konfirmasi Pendaftaran</h3>
+                <p className="text-xs text-slate-500">Periksa kembali data sebelum menyelesaikan pendaftaran akun Anda.</p>
+              </div>
+
+              <div className="bg-slate-50 rounded-xl p-4 border space-y-2 text-xs">
+                <div className="flex justify-between py-1 border-b">
+                  <span className="text-slate-500">Role / Peran:</span>
+                  <span className="font-bold text-slate-900 uppercase">{formData.role}</span>
                 </div>
+                <div className="flex justify-between py-1 border-b">
+                  <span className="text-slate-500">Nama:</span>
+                  <span className="font-bold text-slate-900">{formData.name || 'Kandidat'}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b">
+                  <span className="text-slate-500">Email:</span>
+                  <span className="font-bold text-slate-900">{formData.email}</span>
+                </div>
+                {formData.role === 'student' && (
+                  <>
+                    <div className="flex justify-between py-1 border-b">
+                      <span className="text-slate-500">NISN:</span>
+                      <span className="font-bold font-mono text-[#0099B8]">{formData.nisn}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b">
+                      <span className="text-slate-500">SMK Asal (Auto-Verified):</span>
+                      <span className="font-bold text-emerald-700">{matchedSchool?.name || formData.school}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b">
+                      <span className="text-slate-500">Jurusan:</span>
+                      <span className="font-bold text-slate-900">{formData.major}</span>
+                    </div>
+                  </>
+                )}
+                {formData.role === 'industry' && (
+                  <div className="flex justify-between py-1 border-b">
+                    <span className="text-slate-500">Perusahaan:</span>
+                    <span className="font-bold text-slate-900">{formData.companyName}</span>
+                  </div>
+                )}
+                {formData.role === 'school' && (
+                  <div className="flex justify-between py-1 border-b">
+                    <span className="text-slate-500">Nama Sekolah:</span>
+                    <span className="font-bold text-slate-900">{formData.schoolName}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* Form Action Controls */}
-          <div className="flex justify-between pt-4 border-t border-slate-100">
+          {/* Form Action Navigation */}
+          <div className="flex justify-between items-center pt-4 border-t">
             {step > 1 ? (
-              <Button type="button" variant="outline" onClick={prevStep} className="px-6 text-slate-700">
-                Previous
+              <Button type="button" variant="outline" onClick={prevStep} className="text-xs font-semibold">
+                Back
               </Button>
-            ) : <div />}
+            ) : <div></div>}
 
-            <Button type="submit" variant="primary" className="bg-[#0099B8] hover:bg-[#007A93] text-white px-8 font-bold">
-              {step === 3 ? 'Complete Registration ➔' : 'Next Step ➔'}
+            <Button 
+              type="submit" 
+              variant="primary" 
+              className="bg-[#0099B8] hover:bg-[#007A93] text-white text-xs font-bold px-6 py-2.5"
+            >
+              {step === 3 ? (formData.role === 'student' ? 'Mulai Asesmen Masuk' : 'Daftar Sekarang') : 'Next Step →'}
             </Button>
           </div>
         </form>
         )}
-
-        <div className="mt-6 text-center pt-4 border-t border-slate-100">
-          <p className="text-xs text-slate-500">
-            Already have an account?{' '}
-            <Link to="/login" className="font-bold text-[#0099B8] hover:underline">
-              Sign In
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );
