@@ -466,51 +466,27 @@ export const RegisterPage: React.FC = () => {
               {/* Student Fields */}
               {formData.role === 'student' && (
                 <>
-                  {/* TOKEN-BASED SCHOOL IDENTIFICATION */}
-                  <div className="p-5 bg-slate-50/70 rounded-2xl border border-slate-200 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                        <Key size={15} className="text-[#0099B8]" /> Token Registrasi Sekolah
+                  {/* Token Registrasi Sekolah */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-sm font-medium text-slate-700">
+                        Token Registrasi Sekolah
                       </label>
-                      {isTokenMatch && (
-                        <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-fadeIn">
-                          <ShieldCheck size={13} /> Terverifikasi ✓
+                      {isTokenMatch && matchedSchool && (
+                        <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                          ✓ {matchedSchool.name}
                         </span>
                       )}
                     </div>
-
                     <input 
                       type="text" 
                       name="schoolToken" 
                       placeholder="Token Registrasi Sekolah"
-                      className={`w-full p-3 border rounded-xl text-sm font-mono uppercase font-bold tracking-widest focus:ring-2 focus:ring-[#0099B8] focus:outline-none bg-white transition ${
-                        isTokenMatch ? 'border-emerald-500 ring-1 ring-emerald-200 text-emerald-900' : 'border-slate-300 text-slate-800'
-                      }`}
+                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0099B8] focus:outline-none uppercase font-mono tracking-wider bg-white" 
                       value={formData.schoolToken} 
                       onChange={handleChange} 
                       required
                     />
-
-                    {/* School Recognition Feedback Card */}
-                    {isTokenMatch && matchedSchool ? (
-                      <div className="p-3.5 bg-white rounded-xl border border-emerald-200 shadow-sm flex items-center gap-3.5 animate-fadeIn">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 font-bold">
-                          <School size={20} />
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase font-bold text-emerald-600 tracking-wider">
-                            Institusi Terverifikasi
-                          </p>
-                          <h4 className="text-sm font-extrabold text-slate-900">{matchedSchool.name}</h4>
-                          <p className="text-xs text-slate-500">{matchedSchool.city}, {(matchedSchool as any).province || 'Indonesia'}</p>
-                        </div>
-                      </div>
-                    ) : formData.schoolToken.trim().length > 0 ? (
-                      <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-700 font-medium flex items-center gap-2 animate-fadeIn">
-                        <AlertCircle size={15} className="shrink-0" />
-                        <span>Token tidak valid. Silakan periksa kembali kode token dari sekolah Anda.</span>
-                      </div>
-                    ) : null}
                   </div>
 
                   <div>
